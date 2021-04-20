@@ -12,6 +12,8 @@ public class Account {
         this.username = username;
         this.password = password;
         this.conversations = new ArrayList<>();
+
+        Database.addToDatabase(this);
     }
 
     public String toString() {
@@ -43,32 +45,29 @@ public class Account {
     }
 
     public void addToConversation(Conversation conversation) {
-        ArrayList<Conversation> currentConversations = this.getConversations();
-        currentConversations.add(conversation);
-        this.setConversations(currentConversations);
-
+        conversations.add(conversation);
     }
 
-    // DO NOT USE THIS TO REMOVE CONVERSATIONS
-    // USE CONVERSATION.REMOVEPARTICPANT WHICH CALLS THIS METHOD
-    public void removeConversation(int id) {
-        ArrayList<Conversation> currentConversations = this.getConversations();
+    public void removeConversation(Conversation conversation) {
+        conversations.remove(conversation);
+    }
 
-        for (int i = 0; i < this.getConversations().size(); i++) {
-            if (currentConversations.get(i).getConversationId() == id) {
+    // Use these id based adding or removing conversations in order to sync.
+    public void addToConversation(int id) throws ConversationNotFoundException {
+        Conversation conversation = Database.getConversationById(id);
+        conversations.add(conversation);
+        conversation.addParticipant(this);
+    }
 
-                ArrayList<Account> participants = this.getConversations().get(i).getParticipants();
-                this.getConversations().get(i).setParticipants(participants);
-                currentConversations.remove(i);
-            }
-        }
-
-        this.setConversations(currentConversations);
+    public void removeConversation(int id) throws ConversationNotFoundException {
+        Conversation conversation = Database.getConversationById(id);
+        conversations.remove(conversation);
+        conversation.removeParticipant(this);
     }
 
     public ArrayList<Integer> getConversationIds() {
 
-        ArrayList<Integer> conversationIds=  new ArrayList<>();
+        ArrayList<Integer> conversationIds = new ArrayList<>();
         for (int i = 0; i < this.getConversations().size(); i++) {
             conversationIds.add(this.getConversations().get(i).getConversationId());
         }
@@ -76,6 +75,7 @@ public class Account {
         return conversationIds;
     }
 
+    // MAIN METHOD FOR TESTING ONLY
     public static void main(String[] args) {
 
         Account a = new Account("guest", "guest");
@@ -104,7 +104,11 @@ public class Account {
         System.out.println("Conversation ID: " + conversation.getConversationId());
         System.out.println("OtherConversation ID: " + otherConversation.getConversationId());
 
-        otherConversation.removeParticipant(a.getUsername());
+        try {
+            otherConversation.removeParticipant(a.getUsername());
+        } catch (AccountNotExistException e) {
+            e.printStackTrace();
+        }
 
         System.out.println(otherConversation.getParticipants().get(0));
         System.out.println(otherConversation.getParticipants().get(1));

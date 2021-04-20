@@ -1,4 +1,5 @@
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 
 public class Conversation {
@@ -13,6 +14,8 @@ public class Conversation {
         this.participants = usersInConversation;
 
         setNextConversationId(++nextConversationId);
+
+        Database.addToDatabase(this);
     }
 
     public static int getNextConversationId() {
@@ -43,39 +46,38 @@ public class Conversation {
         this.messages = messages;
     }
 
-    public void removeParticipant(String username) {
-
-        ArrayList<Account> conversationMembers = this.getParticipants();
-
-        for (int i = 0; i < this.getParticipants().size(); i++) {
-            if (conversationMembers.get(i).getUsername().equals(username)) {
-                this.getParticipants().get(i).removeConversation(this.getConversationId());
-                conversationMembers.remove(i);
-            }
-        }
-
-        this.setParticipants(conversationMembers);
+    public void addParticipant(Account account) {
+        participants.add(account);
+    }
+    public void removeParticipant(Account account) {
+        participants.remove(account);
     }
 
+    // Use these the username based add/remove accounts in order to sync.
+    public void addParticipant(String username) throws AccountNotExistException {
+        Account account = Database.getAccountByUsername(username);
+        participants.add(account);
+        account.addToConversation(this);
+    }
+
+    public void removeParticipant(String username) throws AccountNotExistException {
+        Account account = Database.getAccountByUsername(username);
+        participants.remove(account);
+        account.removeConversation(this);
+    }
+
+
+
     public void addMessage(Message message) {
-
-        ArrayList<Message> conversationMessages = this.getMessages();
-        conversationMessages.add(message);
-        this.setMessages(conversationMessages);
-
-
+        messages.add(message);
     }
 
     public void deleteMessage(int messageId) {
 
-        ArrayList<Message> conversationMessages = this.getMessages();
-
         for (int i = 0; i < this.getMessages().size(); i++) {
             if (messageId == this.getMessages().get(i).getId()) {
-                conversationMessages.remove(i);
+                messages.remove(messages.get(i));
             }
         }
-
-        this.setMessages(conversationMessages);
     }
 }

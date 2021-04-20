@@ -1,4 +1,5 @@
 
+import javax.xml.crypto.Data;
 import java.sql.Timestamp;
 
 public class Message {
@@ -17,6 +18,8 @@ public class Message {
         this.id = getNextMessageId();
 
         setNextMessageId(++nextMessageId);
+
+        Database.addToDatabase(this);
     }
 
     public Message(int id, Timestamp timestamp, String senderUsername, String content) {
@@ -69,8 +72,12 @@ public class Message {
         String[] splitMessage = message.split(",", 4);
 
         // Does the timestamp valueOf work?
+
         return new Message(Integer.parseInt(splitMessage[0]), Timestamp.valueOf(splitMessage[1]),
                 splitMessage[2], splitMessage[3]);
+
+        // OR should it be this:
+        // return Database.getMessageById(Integer.parseInt(splitMessage[0]));
     }
 
 
