@@ -76,11 +76,12 @@ public class Account {
     }
 
     // MAIN METHOD FOR TESTING ONLY
+    //TODO Test that the new adding/removing methods work
     public static void main(String[] args) {
 
         Account a = new Account("guest", "guest");
         Account b = new Account("jim", "jim");
-        Account c = new Account("Keval", "Keval");
+        Account c = new Account("bob", "bob");
 
         ArrayList<Account> accounts = new ArrayList<>();
         accounts.add(a);
