@@ -64,5 +64,4 @@ public class ServerProcess extends Thread {
     public Account createAccount(String username, String password) {
         return new Account(username, password);
     }
-
 }
