@@ -1,9 +1,6 @@
-import javax.security.auth.login.AccountNotFoundException;
-import javax.xml.crypto.Data;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class Database {
+public final class Database {
 
     private static ArrayList<Account> accounts;
     private static ArrayList<Conversation> conversations;

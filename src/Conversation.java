@@ -13,6 +13,15 @@ public class Conversation {
         this.conversationId = getNextConversationId();
         this.participants = usersInConversation;
 
+        for (int i = 0; i < usersInConversation.size(); i++) {
+
+            try {
+                Database.getAccountByUsername(usersInConversation.get(i).getUsername()).addToConversation(this);
+            } catch (AccountNotExistException e) {
+                e.printStackTrace();
+            }
+        }
+
         setNextConversationId(++nextConversationId);
 
         Database.addToDatabase(this);
@@ -49,6 +58,7 @@ public class Conversation {
     public void addParticipant(Account account) {
         participants.add(account);
     }
+
     public void removeParticipant(Account account) {
         participants.remove(account);
     }

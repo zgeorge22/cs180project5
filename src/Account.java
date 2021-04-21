@@ -1,5 +1,3 @@
-
-
 import java.util.ArrayList;
 
 public class Account {
@@ -79,6 +77,9 @@ public class Account {
     //TODO Test that the new adding/removing methods work
     public static void main(String[] args) {
 
+        Database database;
+        database = new Database();
+
         Account a = new Account("guest", "guest");
         Account b = new Account("jim", "jim");
         Account c = new Account("bob", "bob");
@@ -89,31 +90,67 @@ public class Account {
         accounts.add(c);
 
         ArrayList<Account> otherAccounts = new ArrayList<>();
+        otherAccounts.add(a);
         otherAccounts.add(b);
         otherAccounts.add(c);
 
         Conversation conversation = new Conversation(accounts);
-        a.addToConversation(conversation);
-        b.addToConversation(conversation);
-        c.addToConversation(conversation);
 
         Conversation otherConversation = new Conversation(otherAccounts);
-        a.addToConversation(otherConversation);
-        b.addToConversation(otherConversation);
-        c.addToConversation(otherConversation);
 
         System.out.println("Conversation ID: " + conversation.getConversationId());
         System.out.println("OtherConversation ID: " + otherConversation.getConversationId());
 
+        System.out.println("People in convo 1 ------------------------");
+        for (int i = 0; i < conversation.getParticipants().size(); i++) {
+            System.out.println(conversation.getParticipants().get(i));
+        }
+
+        System.out.println("People in convo 2 -----------------------");
+        for (int i = 0; i < otherConversation.getParticipants().size(); i++) {
+            System.out.println(otherConversation.getParticipants().get(i));
+        }
+
+        System.out.println("guest's convos ------------");
+        for (int i = 0; i < a.getConversationIds().size(); i++) {
+            System.out.println(a.getConversationIds().get(i).toString());
+        }
+
+        System.out.println("jim's convos ------------");
+        for (int i = 0; i < b.getConversationIds().size(); i++) {
+            System.out.println(b.getConversationIds().get(i).toString());
+        }
+
         try {
-            otherConversation.removeParticipant(a.getUsername());
-        } catch (AccountNotExistException e) {
+            System.out.println("Removing from convos --------------------");
+            a.removeConversation(0);
+            b.removeConversation(1);
+        } catch (ConversationNotFoundException e) {
             e.printStackTrace();
         }
 
-        System.out.println(otherConversation.getParticipants().get(0));
-        System.out.println(otherConversation.getParticipants().get(1));
-        System.out.println(a.getConversationIds().get(1));
+
+        System.out.println("People in convo 1 ------------------------");
+        for (int i = 0; i < conversation.getParticipants().size(); i++) {
+            System.out.println(conversation.getParticipants().get(i));
+        }
+
+        System.out.println("People in convo 2 -----------------------");
+        for (int i = 0; i < otherConversation.getParticipants().size(); i++) {
+            System.out.println(otherConversation.getParticipants().get(i));
+        }
+
+        System.out.println("guest's convos ------------");
+        for (int i = 0; i < a.getConversationIds().size(); i++) {
+            System.out.println(a.getConversationIds().get(i).toString());
+        }
+
+        System.out.println("jim's convos ------------");
+        for (int i = 0; i < b.getConversationIds().size(); i++) {
+            System.out.println(b.getConversationIds().get(i).toString());
+        }
+
+
 
     }
 }
