@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.PropertyChangeListenerProxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,20 @@ public class MainWindow extends JFrame {
         // SIDE PANEL LAYOUT
         JPanel sidePanel = new JPanel();
         sidePanel.setLayout(new BorderLayout());
-        sidePanel.add(new JButton("Create Conversation"), BorderLayout.NORTH);
+
+        JButton createChatButton = new JButton("Create New Chat");
+        createChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // UPDATE test button functionality
+                addNewChat("0Created chat");
+
+                // JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
+                // JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        sidePanel.add(createChatButton, BorderLayout.NORTH);
 
         chatList = new JList<>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -118,9 +132,11 @@ public class MainWindow extends JFrame {
         }
     }
 
-    class ChatListCellRenderer extends JLabel implements ListCellRenderer<Object> {
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+    class ChatListCellRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
                 boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
             // UPDATE string parsing to proper conversation parsing
             String s = value.toString();
@@ -128,18 +144,8 @@ public class MainWindow extends JFrame {
             s = s.substring(1);
             setText("<html>Conversation: " + i + "<br/>&nbsp;&nbsp;" + s);
 
-            if (isSelected) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            } else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
-            }
-
             setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
-            setEnabled(list.isEnabled());
-            setFont(list.getFont());
-            setOpaque(true);
+
             return this;
         }
     }
