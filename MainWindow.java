@@ -49,6 +49,7 @@ public class MainWindow extends JFrame {
         chatList.setFixedCellWidth(250); // .setFixedCellHeight(50);
 
         JScrollPane scrollPane = new JScrollPane(chatList);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         sidePanel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel botPanel = new JPanel();
