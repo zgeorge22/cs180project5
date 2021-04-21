@@ -88,6 +88,7 @@ public class MainWindow extends JFrame {
         for (int i = 0; i < chatEntities.size(); i++) {
             ChatEntry chatEntry = chatEntities.getElementAt(i);
             if (chatEntry.contains(conversation)) {
+                // UPDATE temporary to demo update funcitonality
                 chatEntities.setElementAt(new ChatEntry(conversation + " [update]"), i);
                 break;
             }
@@ -158,6 +159,7 @@ public class MainWindow extends JFrame {
                 mw.setChatList(testList);
 
                 // will be used upon new chat
+                mw.addNewChat("8Adding chat");
 
                 mw.addNewChat("9Another chat");
 
