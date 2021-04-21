@@ -43,6 +43,16 @@ public class Conversation {
         return participants;
     }
 
+    public String getParticipantsString() {
+        String s = "";
+
+        for (Account participant : participants) {
+            s += participant.getUsername() + ", ";
+        }
+
+        return s.substring(0, s.length() - 2);
+    }
+
     public void setParticipants(ArrayList<Account> participants) {
         this.participants = participants;
     }
@@ -75,8 +85,6 @@ public class Conversation {
         participants.remove(account);
         account.removeConversation(this);
     }
-
-
 
     public void addMessage(Message message) {
         messages.add(message);

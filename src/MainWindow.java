@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MainWindow extends JFrame {
 
-    private JList<ChatEntry> chatList;
+    private JList<Conversation> chatList;
 
     public MainWindow() {
         super("Chat");
@@ -34,16 +34,16 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // UPDATE test button functionality
-                addNewChat("0Created chat");
+                // addNewChat("0Created chat");
 
-                // JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
-                // JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
         sidePanel.add(createChatButton, BorderLayout.NORTH);
 
-        chatList = new JList<>();
+        chatList = new JList<Conversation>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatList.setCellRenderer(new ChatListCellRenderer());
         chatList.setFixedCellWidth(250); // .setFixedCellHeight(50);
@@ -73,63 +73,36 @@ public class MainWindow extends JFrame {
         content.add(chatPanel, BorderLayout.CENTER);
     }
 
-    private DefaultListModel<ChatEntry> getChatEntities() {
-        ListModel<ChatEntry> chatEntities = chatList.getModel();
+    private DefaultListModel<Conversation> getChatEntities() {
+        ListModel<Conversation> chatEntities = chatList.getModel();
         if (!(chatEntities instanceof DefaultListModel)) {
-            DefaultListModel<ChatEntry> defaultChatEntries = new DefaultListModel<>();
+            DefaultListModel<Conversation> defaultChatEntries = new DefaultListModel<Conversation>();
             chatList.setModel(defaultChatEntries);
             return defaultChatEntries;
         }
-        return (DefaultListModel<ChatEntry>) chatEntities;
+        return (DefaultListModel<Conversation>) chatEntities;
     }
 
-    // UPDATE to be conversations instead of strings
-    public void setChatList(List<String> chatContentList) {
-        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
-        for (String content : chatContentList) {
-            chatEntities.addElement(new ChatEntry(content));
+    public void setChatList(ArrayList<Conversation> conversationList) {
+        DefaultListModel<Conversation> chatEntities = getChatEntities();
+        for (Conversation convo : conversationList) {
+            chatEntities.addElement(convo);
         }
     }
 
-    // UPDATE all instances of string in chat entry to be a conversation object
-    public void addNewChat(String newChat) {
-        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
-        chatEntities.addElement(new ChatEntry(newChat));
+    public void addNewChat(Conversation convo) {
+        DefaultListModel<Conversation> chatEntities = getChatEntities();
+        chatEntities.addElement(convo);
     }
 
-    // UPDATE all instances of string in chat entry to be a conversation object
-    public void updateChatEntry(String conversation) {
-        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
+    public void updateChatEntry(Conversation conversation) {
+        DefaultListModel<Conversation> chatEntities = getChatEntities();
         for (int i = 0; i < chatEntities.size(); i++) {
-            ChatEntry chatEntry = chatEntities.getElementAt(i);
-            if (chatEntry.contains(conversation)) {
-                // UPDATE temporary to demo update funcitonality
-                chatEntities.setElementAt(new ChatEntry(conversation + " [update]"), i);
+            Conversation chatEntry = chatEntities.getElementAt(i);
+            if (chatEntry.getConversationId() == conversation.getConversationId()) {
+                chatEntities.setElementAt(conversation, i);
                 break;
             }
-        }
-    }
-
-    // UPDATE to add conversation functionality instead of String
-    class ChatEntry {
-        private String content;
-
-        public ChatEntry(String content) {
-            this.content = content;
-        }
-
-        public String getContent() {
-            return this.content;
-        }
-
-        @Override
-        public String toString() {
-            return getContent();
-        }
-
-        // UPDATE to compare conversation IDs
-        public boolean contains(String s) {
-            return this.content.equals(s);
         }
     }
 
@@ -140,10 +113,10 @@ public class MainWindow extends JFrame {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
             // UPDATE string parsing to proper conversation parsing
-            String s = value.toString();
-            int i = Integer.parseInt(s.substring(0, 1));
-            s = s.substring(1);
-            setText("<html>Conversation: " + i + "<br/>&nbsp;&nbsp;" + s);
+            Conversation conversation = (Conversation) value;
+            int id = conversation.getConversationId();
+            String participants = conversation.getParticipantsString();
+            setText("<html>Conversation: " + id + "<br/>&nbsp;&nbsp;" + participants);
 
             setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
 
@@ -155,23 +128,55 @@ public class MainWindow extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
+                Database db = new Database();
+
+                Account z = new Account("Zach", "help");
+                Account r = new Account("Rishi", "1234");
+                Account j = new Account("Jack", "password");
+                Account b = new Account("Ben", "qwerty");
+                Account n = new Account("Natalie", "asdf");
+
+                ArrayList<Account> accountsListSmall = new ArrayList<>();
+                accountsListSmall.add(z);
+                accountsListSmall.add(r);
+
+                ArrayList<Account> accountsListMedium = new ArrayList<>();
+                accountsListMedium.add(z);
+                accountsListMedium.add(r);
+                accountsListMedium.add(j);
+                accountsListMedium.add(b);
+
+                ArrayList<Account> accountsListLarge = new ArrayList<>();
+                accountsListLarge.add(z);
+                accountsListLarge.add(r);
+                accountsListLarge.add(j);
+                accountsListLarge.add(b);
+                accountsListLarge.add(n);
+
+                Conversation chatSmall = new Conversation(accountsListSmall);
+                Conversation chatMedium = new Conversation(accountsListMedium);
+                Conversation chatLarge = new Conversation(accountsListLarge);
+
+                ArrayList<Conversation> conversationList = new ArrayList<Conversation>();
+                conversationList.add(chatSmall);
+                conversationList.add(chatLarge);
+
+                // TEST MAIN WINDOW
                 MainWindow mw = new MainWindow();
 
-                List<String> testList = new ArrayList<>(10);
-                for (int i = 0; i < 8; i++) {
-                    testList.add(i + "Zach, Rishi, Jack, Natalie, Ben, and more");
-                }
-
                 // will be used once a conversations list is received from the server
-                mw.setChatList(testList);
+                mw.setChatList(conversationList);
 
                 // will be used upon new chat
-                mw.addNewChat("8Adding chat");
-
-                mw.addNewChat("9Another chat");
+                mw.addNewChat(chatMedium);
 
                 // will be used for participant changes (leaving chats)
-                mw.updateChatEntry("9Another chat");
+                try {
+                    b.removeConversation(chatMedium.getConversationId());
+                } catch (ConversationNotFoundException e) {
+                    System.out.println("Could not remove conversation!");
+                }
+                mw.updateChatEntry(chatMedium);
             }
         });
     }
