@@ -1,4 +1,4 @@
-settings.json
+.vscode/*
 .idea/codeStyles/codeStyleConfig.xml
 .idea/codeStyles/Project.xml
 .idea/misc.xml
