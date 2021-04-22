@@ -1,18 +1,23 @@
-
-import javax.xml.crypto.Data;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Message {
     //TODO Implement timestamps properly
 
     private static int nextMessageId;
     private final int id;
-    private Timestamp timestamp;
+    private LocalDateTime timestamp;
     private final String sender;
     private String content;
 
-    public Message(Timestamp timestamp, String senderUsername, String content) {
-        this.timestamp = timestamp;
+    public Message(LocalDateTime localDateTime, String senderUsername, String content) {
+
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+        this.timestamp = LocalDateTime.now();
         this.sender = senderUsername;
         this.content = content;
         this.id = getNextMessageId();
@@ -23,7 +28,9 @@ public class Message {
     }
 
     public Message(int id, Timestamp timestamp, String senderUsername, String content) {
-        this.timestamp = timestamp;
+        //TODO
+        // What to do about this timestamp?
+        // this.timestamp = timestamp;
         this.sender = senderUsername;
         this.content = content;
         this.id = id;
@@ -45,11 +52,11 @@ public class Message {
         return sender;
     }
 
-    public Timestamp getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -63,22 +70,18 @@ public class Message {
 
     public String toString() {
 
-        return this.getId() + "," + this.getTimestamp().toString() + ","
-                + this.getSender() + "," + this.getContent();
+        return this.getId() + ", " + this.getTimestamp().toString() + ", "
+                + this.getSender() + ", " + this.getContent();
     }
 
-    public static Message parseMessage(String message) {
-
-        String[] splitMessage = message.split(",", 4);
-
-        // Does the timestamp valueOf work?
-
-        return new Message(Integer.parseInt(splitMessage[0]), Timestamp.valueOf(splitMessage[1]),
-                splitMessage[2], splitMessage[3]);
-
-        // OR should it be this:
-        // return Database.getMessageById(Integer.parseInt(splitMessage[0]));
-    }
-
-
+    // This method doesn't go here
+//    public static Message parseMessage(String message) {
+//
+//        String[] splitMessage = message.split(",", 4);
+//
+//        // TODO fix the timestamp stuff
+//
+//        return new Message(Integer.parseInt(splitMessage[0]), Timestamp.valueOf(splitMessage[1]),
+//                splitMessage[2], splitMessage[3]);
+//    }
 }

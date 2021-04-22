@@ -1,3 +1,6 @@
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public final class Database {
@@ -14,20 +17,18 @@ public final class Database {
         Database.accounts = accountList;
         Database.conversations = conversationList;
         Database.messages = messageList;
-    }
 
-    public Database(ArrayList<Account> accounts, ArrayList<Conversation> conversations, ArrayList<Message> messages) {
-        Database.accounts = accounts;
-        Database.conversations = conversations;
-        Database.messages = messages;
+        Database.createAccountFile();
     }
 
     public static void addToDatabase(Account account) {
         accounts.add(account);
+        Database.addAccountToFile(account);
     }
 
     public static void addToDatabase(Conversation conversation) {
         conversations.add(conversation);
+        Database.createConversationFile(conversation);
     }
 
     public static void addToDatabase(Message message) {
@@ -50,5 +51,61 @@ public final class Database {
             }
         }
         throw new ConversationNotFoundException();
+    }
+
+    public static void createAccountFile() {
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream("accounts.txt", false);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addAccountToFile(Account account) {
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream("accounts.txt", true);
+            PrintWriter accountWriter = new PrintWriter(fileOutputStream);
+
+            accountWriter.println(account.toString());
+            accountWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void createConversationFile(Conversation conversation) {
+
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", false);
+            PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+            conversationWriter.println("ConversationID: " + conversation.getConversationId());
+            conversationWriter.println("ConversationName: " + conversation.getConversationName());
+            ArrayList<Account> participants = conversation.getParticipants();
+            StringBuilder participantsString = new StringBuilder();
+            participantsString.append("Participants: ");
+
+            for (int i = 0; i < participants.size(); i++) {
+                participantsString.append(participants.get(i).getUsername()).append(",");
+            }
+            participantsString.replace(participantsString.length() - 1, participantsString.length(), "");
+            conversationWriter.println(participantsString);
+
+            conversationWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeMessageToConversationTxt(Conversation conversation, Message message) throws FileNotFoundException {
+
+        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", true);
+        PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+        conversationWriter.println(message.toString());
+        conversationWriter.close();
     }
 }

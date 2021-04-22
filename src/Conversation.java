@@ -1,5 +1,4 @@
-
-import javax.xml.crypto.Data;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 public class Conversation {
@@ -8,10 +7,13 @@ public class Conversation {
     private final int conversationId;
     private ArrayList<Account> participants;
     private ArrayList<Message> messages;
+    private String conversationName;
 
-    public Conversation(ArrayList<Account> usersInConversation) {
+    public Conversation(String conversationName, ArrayList<Account> usersInConversation) {
         this.conversationId = getNextConversationId();
         this.participants = usersInConversation;
+        this.conversationName = conversationName;
+        this.messages = new ArrayList<Message>();
 
         for (int i = 0; i < usersInConversation.size(); i++) {
 
@@ -21,7 +23,6 @@ public class Conversation {
                 e.printStackTrace();
             }
         }
-
         setNextConversationId(++nextConversationId);
 
         Database.addToDatabase(this);
@@ -33,6 +34,14 @@ public class Conversation {
 
     public static void setNextConversationId(int nextConversationId) {
         Conversation.nextConversationId = nextConversationId;
+    }
+
+    public String getConversationName() {
+        return conversationName;
+    }
+
+    public void setConversationName(String conversationName) {
+        this.conversationName = conversationName;
     }
 
     public int getConversationId() {
@@ -80,6 +89,12 @@ public class Conversation {
 
     public void addMessage(Message message) {
         messages.add(message);
+
+        try {
+            Database.writeMessageToConversationTxt(this, message);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void deleteMessage(int messageId) {
