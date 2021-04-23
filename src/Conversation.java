@@ -10,6 +10,9 @@ public class Conversation {
     private String conversationName;
     boolean addToFile;
 
+    // When you create a new Conversation, make sure addToFile is true, or else it will not add it to the file.
+    // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
+    // re-added when the database initialises it into the accounts.
     public Conversation(String conversationName, ArrayList<Account> usersInConversation, boolean addToFile) {
         this.conversationId = getNextConversationId();
         this.participants = usersInConversation;

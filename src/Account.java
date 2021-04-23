@@ -40,11 +40,16 @@ public class Account {
         return username;
     }
 
-    public void changeUsername(String newUsername) {
-        String oldUsername = this.getUsername();
-        String oldPassword = this.getPassword();
-        Database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
-        this.username = newUsername;
+    public void changeUsername(String newUsername) throws UsernameAlreadyExistsException{
+        try {
+            Database.getAccountByUsername(newUsername);
+        } catch (AccountNotExistException e) {
+            String oldUsername = this.getUsername();
+            String oldPassword = this.getPassword();
+            Database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
+            this.username = newUsername;
+        }
+        throw new UsernameAlreadyExistsException();
     }
 
     public String getPassword() {

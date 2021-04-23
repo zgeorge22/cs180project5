@@ -12,6 +12,7 @@ public class Message {
     private String content;
     private boolean addToFile;
 
+    // Call this constructor for creating new messages when users send.
     public Message(LocalDateTime localDateTime, String senderUsername, String content) {
 
         LocalDateTime now = LocalDateTime.now();
@@ -28,6 +29,7 @@ public class Message {
         Database.addToDatabase(this);
     }
 
+    // Do not call this constructor for creating new messages.
     public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile) {
 
         this.timestamp = timestamp;
