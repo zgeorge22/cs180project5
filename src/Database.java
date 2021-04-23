@@ -161,10 +161,11 @@ public final class Database {
                 fileLine = buffer.readLine();
             }
 
-            participantsList = conversationFile.get(2).split(",");
-
             buffer.close();
             filer.close();
+
+            participantsList = conversationFile.get(2).split(",");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -180,19 +181,21 @@ public final class Database {
         }
 
         toWrite = toWrite.substring(0, toWrite.length() - 1);
+
         FileOutputStream fileOutputStream = null;
-        
+
         try {
             fileOutputStream = new FileOutputStream( conversationID + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
             for (int i = 0; i < conversationFile.size(); i++) {
-                if (i != 2) {
-                    conversationWriter.println(conversationFile.get(i));
-                } else {
+                if (i == 2) {
                     conversationWriter.println(toWrite);
+                } else {
+                    conversationWriter.println(conversationFile.get(i));
                 }
             }
+            conversationWriter.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
