@@ -1,5 +1,4 @@
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -11,6 +10,7 @@ public class Message {
     private LocalDateTime timestamp;
     private final String sender;
     private String content;
+    private boolean addToFile;
 
     public Message(LocalDateTime localDateTime, String senderUsername, String content) {
 
@@ -21,19 +21,22 @@ public class Message {
         this.sender = senderUsername;
         this.content = content;
         this.id = getNextMessageId();
+        this.addToFile = true;
 
         setNextMessageId(++nextMessageId);
 
         Database.addToDatabase(this);
     }
 
-    public Message(int id, Timestamp timestamp, String senderUsername, String content) {
-        //TODO
-        // What to do about this timestamp?
-        // this.timestamp = timestamp;
+    public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile) {
+
+        this.timestamp = timestamp;
         this.sender = senderUsername;
         this.content = content;
         this.id = id;
+        this.addToFile = addToFile;
+
+        Database.addToDatabase(this);
     }
 
     public static int getNextMessageId() {
@@ -68,10 +71,14 @@ public class Message {
         this.content = content;
     }
 
+    public boolean isAddToFile() {
+        return addToFile;
+    }
+
     public String toString() {
 
-        return this.getId() + ", " + this.getTimestamp().toString() + ", "
-                + this.getSender() + ", " + this.getContent();
+        return this.getId() + "," + this.getTimestamp().toString() + ","
+                + this.getSender() + "," + this.getContent();
     }
 
     // This method doesn't go here

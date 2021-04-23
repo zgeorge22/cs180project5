@@ -40,16 +40,20 @@ public class Account {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void changeUsername(String newUsername) {
+        String oldUsername = this.getUsername();
+        String oldPassword = this.getPassword();
+        Database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
+        this.username = newUsername;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void changePassword(String newPassword) {
+        Database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
+        this.password = newPassword;
     }
 
     public Boolean getAddToFile() {
