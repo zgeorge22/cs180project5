@@ -83,6 +83,7 @@ public class Conversation {
         Account account = Database.getAccountByUsername(username);
         participants.remove(account);
         account.removeConversation(this);
+        Database.removeParticipantFromConversationFile(this.getConversationId(), username);
     }
 
 

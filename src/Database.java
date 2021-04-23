@@ -1,6 +1,5 @@
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public final class Database {
@@ -18,11 +17,49 @@ public final class Database {
         Database.conversations = conversationList;
         Database.messages = messageList;
 
-        Database.createAccountFile();
+        File accountsFile;
+
+        accountsFile = new File("accounts.txt");
+        if (accountsFile.exists()) {
+
+            ArrayList<String> accountsData = new ArrayList<>();
+
+            try {
+                FileReader filer = new FileReader(accountsFile);
+                BufferedReader buffer = new BufferedReader(filer);
+
+                String fileLine = buffer.readLine();
+
+                while (fileLine != null) {
+                    accountsData.add(fileLine);
+                    fileLine = buffer.readLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            for (int i = 0; i < accountsData.size(); i++) {
+                String[] splitAccount = accountsData.get(i).split(",");
+
+                try {
+                    Account thisAccount = new Account(splitAccount[0], splitAccount[1], false);
+                } catch (UsernameAlreadyExistsException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+
+
+        } else {
+            Database.createAccountFile();
+        }
     }
 
     public static void addToDatabase(Account account) {
         accounts.add(account);
+
+        if (account.getAddToFile())
         Database.addAccountToFile(account);
     }
 
@@ -82,11 +119,10 @@ public final class Database {
             fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
-            conversationWriter.println("ConversationID: " + conversation.getConversationId());
-            conversationWriter.println("ConversationName: " + conversation.getConversationName());
+            conversationWriter.println(conversation.getConversationId());
+            conversationWriter.println(conversation.getConversationName());
             ArrayList<Account> participants = conversation.getParticipants();
             StringBuilder participantsString = new StringBuilder();
-            participantsString.append("Participants: ");
 
             for (int i = 0; i < participants.size(); i++) {
                 participantsString.append(participants.get(i).getUsername()).append(",");
@@ -107,5 +143,68 @@ public final class Database {
 
         conversationWriter.println(message.toString());
         conversationWriter.close();
+    }
+
+    public static void removeParticipantFromConversationFile(int conversationID, String username) {
+
+        String[] participantsList = null;
+        ArrayList<String> conversationFile = new ArrayList<>();
+
+        try {
+            FileReader filer = new FileReader(conversationID + ".txt");
+            BufferedReader buffer = new BufferedReader(filer);
+
+            String fileLine = buffer.readLine();
+
+            while (fileLine != null) {
+                conversationFile.add(fileLine);
+                fileLine = buffer.readLine();
+            }
+
+            participantsList = conversationFile.get(2).split(",");
+
+            buffer.close();
+            filer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int positionInList = -1;
+
+        String toWrite = "";
+
+        for (int i = 0; i < participantsList.length; i++) {
+            if (!participantsList[i].equals(username)) {
+                toWrite = toWrite + participantsList[i] + ",";
+            }
+        }
+
+        toWrite = toWrite.substring(0, toWrite.length() - 1);
+        FileOutputStream fileOutputStream = null;
+        
+        try {
+            fileOutputStream = new FileOutputStream( conversationID + ".txt", false);
+            PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+            for (int i = 0; i < conversationFile.size(); i++) {
+                if (i != 2) {
+                    conversationWriter.println(conversationFile.get(i));
+                } else {
+                    conversationWriter.println(toWrite);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+
+
+
+
+
+
     }
 }

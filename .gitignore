@@ -8,6 +8,4 @@ src/MainTesting.java
 *.txt
 *.xml
 *.class
-*.class
 out/production/cs180project5/Message.class
-*.class
