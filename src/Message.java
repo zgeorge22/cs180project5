@@ -1,15 +1,13 @@
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Message {
-    //TODO Implement timestamps properly
 
     private static int nextMessageId;
     private final int id;
-    private LocalDateTime timestamp;
+    private final LocalDateTime timestamp;
     private final String sender;
-    private String content;
+    private final String content; //Remove Final if editing messages is to be allowed.
     private boolean addToFile;
 
     // Call this constructor for creating new messages when users send.
@@ -61,16 +59,8 @@ public class Message {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public String getContent() {
         return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     public boolean isAddToFile() {
@@ -82,15 +72,4 @@ public class Message {
         return this.getId() + "," + this.getTimestamp().toString() + ","
                 + this.getSender() + "," + this.getContent();
     }
-
-    // This method doesn't go here
-//    public static Message parseMessage(String message) {
-//
-//        String[] splitMessage = message.split(",", 4);
-//
-//        // TODO fix the timestamp stuff
-//
-//        return new Message(Integer.parseInt(splitMessage[0]), Timestamp.valueOf(splitMessage[1]),
-//                splitMessage[2], splitMessage[3]);
-//    }
 }

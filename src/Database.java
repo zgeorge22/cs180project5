@@ -37,8 +37,8 @@ public final class Database {
                 e.printStackTrace();
             }
 
-            for (int i = 0; i < accountsData.size(); i++) {
-                String[] splitAccount = accountsData.get(i).split(",");
+            for (String accountsDatum : accountsData) {
+                String[] splitAccount = accountsDatum.split(",");
 
                 try {
                     Account thisAccount = new Account(splitAccount[0], splitAccount[1], false);
@@ -74,9 +74,9 @@ public final class Database {
                 ArrayList<Account> conversationParticipants = new ArrayList<>();
                 String[] accountUsernames = conversationData.get(2).split(",");
 
-                for (int i = 0; i < accountUsernames.length; i++) {
+                for (String accountUsername : accountUsernames) {
                     try {
-                        conversationParticipants.add(Database.getAccountByUsername(accountUsernames[i]));
+                        conversationParticipants.add(Database.getAccountByUsername(accountUsername));
                     } catch (AccountNotExistException e) {
                         e.printStackTrace();
                     }
@@ -285,8 +285,8 @@ public final class Database {
             ArrayList<Account> participants = conversation.getParticipants();
             StringBuilder participantsString = new StringBuilder();
 
-            for (int i = 0; i < participants.size(); i++) {
-                participantsString.append(participants.get(i).getUsername()).append(",");
+            for (Account participant : participants) {
+                participantsString.append(participant.getUsername()).append(",");
             }
             participantsString.replace(participantsString.length() - 1, participantsString.length(), "");
             conversationWriter.println(participantsString);
@@ -309,6 +309,52 @@ public final class Database {
     public static ArrayList<Message> getMessages() {
         return messages;
     }
+
+    public static void addParticipantToConversationFile(int conversationID, String username) {
+
+        ArrayList<String> conversationFile = new ArrayList<>();
+
+        try {
+            FileReader filer = new FileReader(conversationID + ".txt");
+            BufferedReader buffer = new BufferedReader(filer);
+
+            String fileLine = buffer.readLine();
+
+            while (fileLine != null) {
+                conversationFile.add(fileLine);
+                fileLine = buffer.readLine();
+            }
+
+            buffer.close();
+            filer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String toAdd = conversationFile.get(2);
+        toAdd = toAdd + "," + username;
+
+        FileOutputStream fileOutputStream = null;
+
+        try {
+            fileOutputStream = new FileOutputStream( conversationID + ".txt", false);
+            PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+            for (int i = 0; i < conversationFile.size(); i++) {
+                if (i == 2) {
+                    conversationWriter.println(toAdd);
+                } else {
+                    conversationWriter.println(conversationFile.get(i));
+                }
+            }
+            conversationWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
+        }
 
     public static void removeParticipantFromConversationFile(int conversationID, String username) {
 
@@ -335,13 +381,11 @@ public final class Database {
             e.printStackTrace();
         }
 
-        int positionInList = -1;
-
         String toWrite = "";
 
-        for (int i = 0; i < participantsList.length; i++) {
-            if (!participantsList[i].equals(username)) {
-                toWrite = toWrite + participantsList[i] + ",";
+        for (String s : participantsList) {
+            if (!s.equals(username)) {
+                toWrite = toWrite + s + ",";
             }
         }
 

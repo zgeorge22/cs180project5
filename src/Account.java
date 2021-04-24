@@ -14,7 +14,7 @@ public class Account {
     public Account(String username, String password, boolean addToFile) throws UsernameAlreadyExistsException {
 
         try {
-            String user = Database.getAccountByUsername(username).getUsername();
+            Database.getAccountByUsername(username).getUsername();
         } catch (AccountNotExistException a) {
             this.username = username;
             this.password = password;
@@ -40,7 +40,7 @@ public class Account {
         return username;
     }
 
-    public void changeUsername(String newUsername) throws UsernameAlreadyExistsException{
+    public void changeUsername(String newUsername) throws UsernameAlreadyExistsException {
         try {
             Database.getAccountByUsername(newUsername);
         } catch (AccountNotExistException e) {
@@ -86,6 +86,7 @@ public class Account {
         Conversation conversation = Database.getConversationById(id);
         conversations.add(conversation);
         conversation.addParticipant(this);
+        Database.addParticipantToConversationFile(id, this.getUsername());
     }
 
     public void removeConversation(int id) throws ConversationNotFoundException {

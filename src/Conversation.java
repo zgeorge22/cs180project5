@@ -20,10 +20,10 @@ public class Conversation {
         this.messages = new ArrayList<Message>();
         this.addToFile = addToFile;
 
-        for (int i = 0; i < usersInConversation.size(); i++) {
+        for (Account account : usersInConversation) {
 
             try {
-                Database.getAccountByUsername(usersInConversation.get(i).getUsername()).addToConversation(this);
+                Database.getAccountByUsername(account.getUsername()).addToConversation(this);
             } catch (AccountNotExistException e) {
                 e.printStackTrace();
             }
@@ -57,16 +57,8 @@ public class Conversation {
         return participants;
     }
 
-    public void setParticipants(ArrayList<Account> participants) {
-        this.participants = participants;
-    }
-
     public ArrayList<Message> getMessages() {
         return messages;
-    }
-
-    public void setMessages(ArrayList<Message> messages) {
-        this.messages = messages;
     }
 
     public boolean isAddToFile() {
@@ -86,6 +78,7 @@ public class Conversation {
         Account account = Database.getAccountByUsername(username);
         participants.add(account);
         account.addToConversation(this);
+        Database.addParticipantToConversationFile(this.getConversationId(), username);
     }
 
     public void removeParticipant(String username) throws AccountNotExistException {
@@ -94,8 +87,6 @@ public class Conversation {
         account.removeConversation(this);
         Database.removeParticipantFromConversationFile(this.getConversationId(), username);
     }
-
-
 
     public void addMessage(Message message) {
 
@@ -109,13 +100,14 @@ public class Conversation {
             e.printStackTrace();
         }
     }
+// TODO is this method needed?
 
-    public void deleteMessage(int messageId) {
-
-        for (int i = 0; i < this.getMessages().size(); i++) {
-            if (messageId == this.getMessages().get(i).getId()) {
-                messages.remove(messages.get(i));
-            }
-        }
-    }
+//    public void deleteMessage(int messageId) {
+//
+//        for (int i = 0; i < this.getMessages().size(); i++) {
+//            if (messageId == this.getMessages().get(i).getId()) {
+//                messages.remove(messages.get(i));
+//            }
+//        }
+//    }
 }
