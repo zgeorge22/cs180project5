@@ -27,6 +27,7 @@ public class MainWindow extends JFrame {
     private JTextPane convoDisplay;
     private JScrollPane convoDisplayScrollPane;
     private JPanel composeBar;
+    private JButton sendButton;
 
     private Conversation currentChat;
 
@@ -86,6 +87,9 @@ public class MainWindow extends JFrame {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     currentChat = chatList.getSelectedValue();
+
+                    // CHECK IF CURENT CHAT HAS LOADED MESSAGES
+
                     if (currentChat != null) {
                         fillConvoDisplay();
                     }
@@ -120,7 +124,14 @@ public class MainWindow extends JFrame {
         composeBar = new JPanel();
         composeBar.setLayout(new BorderLayout());
         composeBar.add(new JTextArea(), BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
-        composeBar.add(new JButton("Send"), BorderLayout.EAST);
+        sendButton = new JButton("Send");
+        composeBar.add(sendButton, BorderLayout.EAST);
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // UPDATE send button action
+            }
+        });
         chatPanel.add(composeBar, BorderLayout.SOUTH);
 
         content.add(sidePanel, BorderLayout.WEST);
@@ -222,5 +233,12 @@ public class MainWindow extends JFrame {
                 appendMessageToConvoDisplay(String.format(OTHER_CHAT_FORMAT, formatHTMLMessage(m)));
             }
         }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                JScrollBar scrollBar = convoDisplayScrollPane.getVerticalScrollBar();
+                scrollBar.setValue(scrollBar.getMaximum());
+            }
+        });
     }
 }

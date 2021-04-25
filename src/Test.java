@@ -53,14 +53,6 @@ public class Test {
                 // will be used upon new chat
                 mw.addNewChat(chatMedium);
 
-                // will be used for participant changes (leaving chats)
-                try {
-                    b.removeConversation(chatMedium.getConversationId());
-                } catch (ConversationNotFoundException e) {
-                    System.out.println("Could not remove conversation!");
-                }
-                mw.updateChatEntry(chatMedium);
-
                 // TEST CHAT WINDOW
                 final int minMessages = 20;
                 final int maxMessages = 50;
@@ -75,6 +67,14 @@ public class Test {
                 chatSmall.setMessages(messagesListSmall);
                 chatMedium.setMessages(messagesListMedium);
                 chatLarge.setMessages(messagesListLarge);
+
+                // will be used for participant changes (leaving chats)
+                try {
+                    b.removeConversation(chatMedium.getConversationId());
+                } catch (ConversationNotFoundException e) {
+                    System.out.println("Could not remove conversation!");
+                }
+                mw.updateChatEntry(chatMedium);
             }
         });
     }
