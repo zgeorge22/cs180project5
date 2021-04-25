@@ -1,5 +1,4 @@
-
-import javax.xml.crypto.Data;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 public class Conversation {
@@ -8,10 +7,18 @@ public class Conversation {
     private final int conversationId;
     private ArrayList<Account> participants;
     private ArrayList<Message> messages;
+    private String conversationName;
+    boolean addToFile;
 
-    public Conversation(ArrayList<Account> usersInConversation) {
+    // When you create a new Conversation, make sure addToFile is true, or else it will not add it to the file.
+    // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
+    // re-added when the database initialises it into the accounts.
+    public Conversation(String conversationName, ArrayList<Account> usersInConversation, boolean addToFile) {
         this.conversationId = getNextConversationId();
         this.participants = usersInConversation;
+        this.conversationName = conversationName;
+        this.messages = new ArrayList<Message>();
+        this.addToFile = addToFile;
 
         for (int i = 0; i < usersInConversation.size(); i++) {
 
@@ -21,7 +28,6 @@ public class Conversation {
                 e.printStackTrace();
             }
         }
-
         setNextConversationId(++nextConversationId);
 
         Database.addToDatabase(this);
@@ -33,6 +39,14 @@ public class Conversation {
 
     public static void setNextConversationId(int nextConversationId) {
         Conversation.nextConversationId = nextConversationId;
+    }
+
+    public String getConversationName() {
+        return conversationName;
+    }
+
+    public void setConversationName(String conversationName) {
+        this.conversationName = conversationName;
     }
 
     public int getConversationId() {
@@ -55,6 +69,10 @@ public class Conversation {
         this.messages = messages;
     }
 
+    public boolean isAddToFile() {
+        return addToFile;
+    }
+
     public void addParticipant(Account account) {
         participants.add(account);
     }
@@ -74,12 +92,22 @@ public class Conversation {
         Account account = Database.getAccountByUsername(username);
         participants.remove(account);
         account.removeConversation(this);
+        Database.removeParticipantFromConversationFile(this.getConversationId(), username);
     }
 
 
 
     public void addMessage(Message message) {
+
         messages.add(message);
+
+        try {
+            if (message.isAddToFile()) {
+                Database.writeMessageToConversationFile(this, message);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void deleteMessage(int messageId) {
