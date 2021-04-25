@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.StringTokenizer;
 
 public class MainWindow extends JFrame {
 
@@ -27,6 +28,8 @@ public class MainWindow extends JFrame {
     private JTextPane convoDisplay;
     private JScrollPane convoDisplayScrollPane;
     private JPanel composeBar;
+    private JScrollPane composeScrollPane;
+    private JTextArea composeMessage;
     private JButton sendButton;
 
     private Conversation currentChat;
@@ -123,7 +126,40 @@ public class MainWindow extends JFrame {
 
         composeBar = new JPanel();
         composeBar.setLayout(new BorderLayout());
-        composeBar.add(new JTextArea(), BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
+        composeMessage = new JTextArea();
+        composeMessage.setLineWrap(true);
+        composeMessage.setWrapStyleWord(true);
+        composeScrollPane = new JScrollPane(composeMessage);
+        composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        composeBar.add(composeScrollPane, BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
+
+        composeMessage.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateLineCount();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateLineCount();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateLineCount();
+            }
+
+            private void updateLineCount() {
+                int lineCount = getWrappedLines(composeMessage);
+                if (lineCount <= 3) {
+                    composeMessage.setRows(lineCount);
+                    composeBar.revalidate();
+                    chatPanel.revalidate();
+                }
+            }
+        });
+
         sendButton = new JButton("Send");
         composeBar.add(sendButton, BorderLayout.EAST);
         sendButton.addActionListener(new ActionListener() {
@@ -136,6 +172,36 @@ public class MainWindow extends JFrame {
 
         content.add(sidePanel, BorderLayout.WEST);
         content.add(chatPanel, BorderLayout.CENTER);
+    }
+
+    public static int getWrappedLines(JTextComponent c) {
+        int len = c.getDocument().getLength();
+        int offset = 0;
+        // Increase 10% for extra newlines
+        StringBuffer buf = new StringBuffer((int) (len * 1.10));
+        try {
+            while (offset < len) {
+                int end = javax.swing.text.Utilities.getRowEnd(c, offset);
+                if (end < 0) {
+                    break;
+                }
+                // Include the last character on the line
+                end = Math.min(end + 1, len);
+                String s = c.getDocument().getText(offset, end - offset);
+                buf.append(s);
+                // Add a newline if s does not have one
+                if (!s.endsWith("\n")) {
+                    buf.append('\n');
+                }
+                offset = end;
+            }
+        } catch (BadLocationException e) {
+        }
+        StringTokenizer token = new StringTokenizer(buf.toString(), "\n");
+        int linesOfText = token.countTokens();
+        if (linesOfText == 0)
+            linesOfText = 1;
+        return linesOfText;
     }
 
     private DefaultListModel<Conversation> getChatEntities() {
@@ -173,7 +239,7 @@ public class MainWindow extends JFrame {
 
     class ChatListCellRenderer extends DefaultListCellRenderer {
         @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
                 boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
