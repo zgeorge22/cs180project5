@@ -6,6 +6,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainWindow extends JFrame {
 
@@ -30,7 +33,7 @@ public class MainWindow extends JFrame {
     private static final String STYLE_SHEET = ".chat-box { margin: 2px; }"
             + ".chat-box p { display: block; word-wrap: break-word; justify-items: end; }"
             + ".chat-msg1 { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }"
-            + ".chat-msg2 { color: #ffffff; background-color: #149dff; text-align: right; padding: 7px; margin-top: 2px; margin-bottom: 2px; }";
+            + ".chat-msg2 { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }";
 
     private static final String HTML_FORMAT = "<style>" + STYLE_SHEET + "</style>"
             + "<div id=content class=chat-box></div>";
@@ -199,14 +202,24 @@ public class MainWindow extends JFrame {
         }
     }
 
+    private String formatHTMLMessage(Message message) {
+        Date d = new Date(message.getTimestamp().getTime());
+        DateFormat f = new SimpleDateFormat("MM/dd/yy, hh:mm aa");
+        String timestamp = f.format(d);
+        String sender = message.getSender();
+        String content = message.getContent();
+
+        return "<b>" + sender + "</b>" + " - " + "<i>" + timestamp + "</i>" + "<br>" + content;
+    }
+
     public void fillConvoDisplay() {
         convoDisplay.setText(HTML_FORMAT);
         for (Message m : currentChat.getMessages()) {
             // UPDATE LATER
             if (m.getSender().equals("Zach")) {
-                appendMessageToConvoDisplay(String.format(MY_CHAT_FORMAT, m.getContent()));
+                appendMessageToConvoDisplay(String.format(MY_CHAT_FORMAT, formatHTMLMessage(m)));
             } else {
-                appendMessageToConvoDisplay(String.format(OTHER_CHAT_FORMAT, m.getContent()));
+                appendMessageToConvoDisplay(String.format(OTHER_CHAT_FORMAT, formatHTMLMessage(m)));
             }
         }
     }
