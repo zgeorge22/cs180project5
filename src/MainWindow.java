@@ -1,13 +1,42 @@
 import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
+import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyChangeListenerProxy;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainWindow extends JFrame {
 
+    // -----------------------------ToDo-----------------------------
+    // SWITCH FROM ARRAY LIST TO LINKED LIST FOR CONVERSATIONS LIST
+    // Order matters but should never need to skip
+    // ADD "reorder" function to move conversation to front!
+    // --------------------------------------------------------------
+    private Container content;
+    private JPanel sidePanel;
+    private JButton createChatButton;
     private JList<Conversation> chatList;
+    private JScrollPane chatListScrollPane;
+    private JPanel botPanel;
+    private JPanel chatPanel;
+    private JTextPane convoDisplay;
+    private JScrollPane convoDisplayScrollPane;
+    private JPanel composeBar;
+
+    private Conversation currentChat;
+
+    private static final String STYLE_SHEET = ".chat-box { margin: 2px; }"
+            + ".chat-box p { display: block; word-wrap: break-word; justify-items: end; }"
+            + ".chat-msg1 { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }"
+            + ".chat-msg2 { color: #ffffff; background-color: #149dff; text-align: right; padding: 7px; margin-top: 2px; margin-bottom: 2px; }";
+
+    private static final String HTML_FORMAT = "<style>" + STYLE_SHEET + "</style>"
+            + "<div id=content class=chat-box></div>";
+
+    private static final String OTHER_CHAT_FORMAT = "<p class=chat-msg1>%s</p>";
+    private static final String MY_CHAT_FORMAT = "<p class=chat-msg2>%s</p>";
 
     public MainWindow() {
         super("Chat");
@@ -22,22 +51,24 @@ public class MainWindow extends JFrame {
     }
 
     protected void initializeComponents() {
-        Container content = getContentPane();
+        content = getContentPane();
         content.setLayout(new BorderLayout());
 
         // SIDE PANEL LAYOUT
-        JPanel sidePanel = new JPanel();
+        sidePanel = new JPanel();
         sidePanel.setLayout(new BorderLayout());
 
-        JButton createChatButton = new JButton("Create New Chat");
+        createChatButton = new JButton("Create New Chat");
         createChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // UPDATE test button functionality
                 // addNewChat("0Created chat");
 
-                JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
-                        JOptionPane.INFORMATION_MESSAGE);
+                // JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
+                // JOptionPane.INFORMATION_MESSAGE);
+
+                System.out.println(convoDisplay.getText());
             }
         });
 
@@ -47,27 +78,47 @@ public class MainWindow extends JFrame {
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatList.setCellRenderer(new ChatListCellRenderer());
         chatList.setFixedCellWidth(250); // .setFixedCellHeight(50);
+        chatList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    currentChat = chatList.getSelectedValue();
+                    if (currentChat != null) {
+                        fillConvoDisplay();
+                    }
+                }
+            }
+        });
 
-        JScrollPane scrollPane = new JScrollPane(chatList);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        sidePanel.add(scrollPane, BorderLayout.CENTER);
+        chatListScrollPane = new JScrollPane(chatList);
+        chatListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
 
-        JPanel botPanel = new JPanel();
+        botPanel = new JPanel();
         botPanel.add(new JButton("Account"));
         botPanel.add(new JButton("Sign Out"));
         sidePanel.add(botPanel, BorderLayout.SOUTH);
 
         // CHAT PANEL LAYOUT
-        JPanel chatPanel = new JPanel();
+        chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
-        chatPanel.setBackground(Color.gray);
+        // chatPanel.setBackground(Color.gray);
         chatPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-        JPanel composePanel = new JPanel();
-        composePanel.setLayout(new BorderLayout());
-        composePanel.add(new JTextField(), BorderLayout.CENTER);
-        composePanel.add(new JButton("Send"), BorderLayout.EAST);
-        chatPanel.add(composePanel, BorderLayout.SOUTH);
+        convoDisplay = new JTextPane();
+        convoDisplay.setContentType("text/html");
+        convoDisplay.setEditable(false);
+        convoDisplay.setText(HTML_FORMAT);
+
+        convoDisplayScrollPane = new JScrollPane(convoDisplay);
+        convoDisplayScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        chatPanel.add(convoDisplayScrollPane, BorderLayout.CENTER); // chatPanel.remove(convoDisplayScrollPane);
+
+        composeBar = new JPanel();
+        composeBar.setLayout(new BorderLayout());
+        composeBar.add(new JTextArea(), BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
+        composeBar.add(new JButton("Send"), BorderLayout.EAST);
+        chatPanel.add(composeBar, BorderLayout.SOUTH);
 
         content.add(sidePanel, BorderLayout.WEST);
         content.add(chatPanel, BorderLayout.CENTER);
@@ -124,60 +175,39 @@ public class MainWindow extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
+    // public void appendFriendMessage(String message) {
+    // fillConvoDisplay(String.format(OTHER_CHAT_FORMAT, message));
+    // }
 
-            public void run() {
-                Database db = new Database();
+    // public void appendMeMyMessage(String message) {
+    // fillConvoDisplay(String.format(MY_CHAT_FORMAT, message));
+    // }
 
-                Account z = new Account("Zach", "help");
-                Account r = new Account("Rishi", "1234");
-                Account j = new Account("Jack", "password");
-                Account b = new Account("Ben", "qwerty");
-                Account n = new Account("Natalie", "asdf");
-
-                ArrayList<Account> accountsListSmall = new ArrayList<>();
-                accountsListSmall.add(z);
-                accountsListSmall.add(r);
-
-                ArrayList<Account> accountsListMedium = new ArrayList<>();
-                accountsListMedium.add(z);
-                accountsListMedium.add(r);
-                accountsListMedium.add(j);
-                accountsListMedium.add(b);
-
-                ArrayList<Account> accountsListLarge = new ArrayList<>();
-                accountsListLarge.add(z);
-                accountsListLarge.add(r);
-                accountsListLarge.add(j);
-                accountsListLarge.add(b);
-                accountsListLarge.add(n);
-
-                Conversation chatSmall = new Conversation(accountsListSmall);
-                Conversation chatMedium = new Conversation(accountsListMedium);
-                Conversation chatLarge = new Conversation(accountsListLarge);
-
-                ArrayList<Conversation> conversationList = new ArrayList<Conversation>();
-                conversationList.add(chatSmall);
-                conversationList.add(chatLarge);
-
-                // TEST MAIN WINDOW
-                MainWindow mw = new MainWindow();
-
-                // will be used once a conversations list is received from the server
-                mw.setChatList(conversationList);
-
-                // will be used upon new chat
-                mw.addNewChat(chatMedium);
-
-                // will be used for participant changes (leaving chats)
-                try {
-                    b.removeConversation(chatMedium.getConversationId());
-                } catch (ConversationNotFoundException e) {
-                    System.out.println("Could not remove conversation!");
-                }
-                mw.updateChatEntry(chatMedium);
+    public void appendMessageToConvoDisplay(String message) {
+        HTMLDocument document = (HTMLDocument) convoDisplay.getDocument();
+        Element contentElement = document.getElement("content");
+        try {
+            if (contentElement.getElementCount() > 0) {
+                Element lastElement = contentElement.getElement(contentElement.getElementCount() - 1);
+                document = (HTMLDocument) contentElement.getDocument();
+                document.insertAfterEnd(lastElement, message);
+            } else {
+                document.insertBeforeEnd(contentElement, message);
             }
-        });
+        } catch (BadLocationException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void fillConvoDisplay() {
+        convoDisplay.setText(HTML_FORMAT);
+        for (Message m : currentChat.getMessages()) {
+            // UPDATE LATER
+            if (m.getSender().equals("Zach")) {
+                appendMessageToConvoDisplay(String.format(MY_CHAT_FORMAT, m.getContent()));
+            } else {
+                appendMessageToConvoDisplay(String.format(OTHER_CHAT_FORMAT, m.getContent()));
+            }
+        }
     }
 }
