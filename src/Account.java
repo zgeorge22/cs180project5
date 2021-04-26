@@ -37,10 +37,6 @@ public class Account {
         return addToFile;
     }
 
-    public String toString() {
-        return this.getUsername() + "," + this.getPassword();
-    }
-
     public String getUsername() {
         return username;
     }
@@ -54,14 +50,17 @@ public class Account {
             this.database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
             this.username = newUsername;
         }
-        throw new UsernameAlreadyExistsException();
+
+        if (this.getUsername() != newUsername) {
+            throw new UsernameAlreadyExistsException();
+        }
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void changePassword(String newPassword, Database database) {
+    public void changePassword(String newPassword) {
         this.database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
         this.password = newPassword;
     }
@@ -70,9 +69,9 @@ public class Account {
         return conversations;
     }
 
-    public void setConversations(ArrayList<Conversation> conversations) {
-        this.conversations = conversations;
-    }
+//    public void setConversations(ArrayList<Conversation> conversations) {
+//        this.conversations = conversations;
+//    }
 
     public void addToConversation(Conversation conversation) {
         conversations.add(conversation);
@@ -106,4 +105,10 @@ public class Account {
 
         return conversationIds;
     }
+
+    public String toString() {
+        return this.getUsername() + "," + this.getPassword();
+    }
+
 }
+

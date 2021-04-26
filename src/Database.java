@@ -24,6 +24,10 @@ public class Database {
         }
     }
 
+    public boolean isServer() {
+        return isServer;
+    }
+
     public void startup() {
 
         File accountsFile;
@@ -109,29 +113,6 @@ public class Database {
         }
     }
 
-    public boolean isServer() {
-        return isServer;
-    }
-
-    public void addToDatabase(Account account) {
-        accounts.add(account);
-        if (this.isServer && account.isAddToFile()) {
-            this.addAccountToFile(account);
-        }
-    }
-
-    public void addToDatabase(Conversation conversation) {
-        conversations.add(conversation);
-
-        if (this.isServer && conversation.isAddToFile()) {
-            this.createConversationFile(conversation);
-        }
-    }
-
-    public void addToDatabase(Message message) {
-        messages.add(message);
-    }
-
     public Account getAccountByUsername(String username) throws AccountNotExistException {
         for (Account account : accounts) {
             if (username.equals(account.getUsername())) {
@@ -157,6 +138,25 @@ public class Database {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addToDatabase(Account account) {
+        accounts.add(account);
+        if (this.isServer && account.isAddToFile()) {
+            this.addAccountToFile(account);
+        }
+    }
+
+    public void addToDatabase(Conversation conversation) {
+        conversations.add(conversation);
+
+        if (this.isServer && conversation.isAddToFile()) {
+            this.createConversationFile(conversation);
+        }
+    }
+
+    public void addToDatabase(Message message) {
+        messages.add(message);
     }
 
     public void addAccountToFile(Account account) {
