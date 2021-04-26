@@ -9,9 +9,10 @@ public class Message {
     private final String sender;
     private final String content; //Remove Final if editing messages is to be allowed.
     private boolean addToFile;
+    private Database database;
 
     // Call this constructor for creating new messages when users send.
-    public Message(LocalDateTime localDateTime, String senderUsername, String content) {
+    public Message(LocalDateTime localDateTime, String senderUsername, String content, Database database) {
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
@@ -21,22 +22,25 @@ public class Message {
         this.content = content;
         this.id = getNextMessageId();
         this.addToFile = true;
+        this.database = database;
 
         setNextMessageId(++nextMessageId);
 
-        Database.addToDatabase(this);
+        this.database.addToDatabase(this);
     }
 
     // Do not call this constructor for creating new messages.
-    public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile) {
+    public Message(int id, LocalDateTime timestamp, String senderUsername, String content,
+                   boolean addToFile, Database database) {
 
         this.timestamp = timestamp;
         this.sender = senderUsername;
         this.content = content;
         this.id = id;
         this.addToFile = addToFile;
+        this.database = database;
 
-        Database.addToDatabase(this);
+        this.database.addToDatabase(this);
     }
 
     public static int getNextMessageId() {

@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 
 public class Account {
@@ -5,24 +6,22 @@ public class Account {
     private String username;
     private String password;
     private ArrayList<Conversation> conversations;
-    private Boolean addToFile;
+    private Database database;
 
     // When you create a new Account, make sure addToFile is true, or else it will not add it to the file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
 
-    public Account(String username, String password, boolean addToFile) throws UsernameAlreadyExistsException {
+    public Account(String username, String password, Database database) throws UsernameAlreadyExistsException {
 
         try {
-            Database.getAccountByUsername(username).getUsername();
+            database.getAccountByUsername(username).getUsername();
         } catch (AccountNotExistException a) {
             this.username = username;
             this.password = password;
             this.conversations = new ArrayList<>();
-            this.addToFile = addToFile;
-
-            Database.addToDatabase(this);
-
+            this.database = database;
+            this.database.addToDatabase(this);
         }
 
         try {
@@ -42,11 +41,11 @@ public class Account {
 
     public void changeUsername(String newUsername) throws UsernameAlreadyExistsException {
         try {
-            Database.getAccountByUsername(newUsername);
+            this.database.getAccountByUsername(newUsername);
         } catch (AccountNotExistException e) {
             String oldUsername = this.getUsername();
             String oldPassword = this.getPassword();
-            Database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
+            this.database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
             this.username = newUsername;
         }
         throw new UsernameAlreadyExistsException();
@@ -56,13 +55,9 @@ public class Account {
         return password;
     }
 
-    public void changePassword(String newPassword) {
-        Database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
+    public void changePassword(String newPassword, Database database) {
+        this.database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
         this.password = newPassword;
-    }
-
-    public Boolean getAddToFile() {
-        return addToFile;
     }
 
     public ArrayList<Conversation> getConversations() {
@@ -83,17 +78,17 @@ public class Account {
 
     // Use these id based adding or removing conversations in order to sync.
     public void addToConversation(int id) throws ConversationNotFoundException {
-        Conversation conversation = Database.getConversationById(id);
+        Conversation conversation = this.database.getConversationById(id);
         conversations.add(conversation);
         conversation.addParticipant(this);
-        Database.addParticipantToConversationFile(id, this.getUsername());
+        this.database.addParticipantToConversationFile(id, this.getUsername());
     }
 
     public void removeConversation(int id) throws ConversationNotFoundException {
-        Conversation conversation = Database.getConversationById(id);
+        Conversation conversation = this.database.getConversationById(id);
         conversations.remove(conversation);
         conversation.removeParticipant(this);
-        Database.removeParticipantFromConversationFile(id, this.getUsername());
+        this.database.removeParticipantFromConversationFile(id, this.getUsername());
     }
 
     public ArrayList<Integer> getConversationIds() {
