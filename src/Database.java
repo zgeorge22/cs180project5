@@ -50,7 +50,7 @@ public class Database {
                 String[] splitAccount = accountsDatum.split(",");
 
                 try {
-                    Account thisAccount = new Account(splitAccount[0], splitAccount[1], this);
+                    Account thisAccount = new Account(splitAccount[0], splitAccount[1], this, false);
                 } catch (UsernameAlreadyExistsException e) {
                     e.printStackTrace();
                 }
@@ -98,7 +98,8 @@ public class Database {
                     String[] thisMessage = conversationData.get(i).split(",", 4);
 
                     Message message = new Message(Integer.parseInt(thisMessage[0]),
-                            LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3], false);
+                            LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3],
+                            false, this);
                     conversation.addMessage(message);
                 }
 
@@ -114,7 +115,7 @@ public class Database {
 
     public void addToDatabase(Account account) {
         accounts.add(account);
-        if (this.isServer) {
+        if (this.isServer && account.isAddToFile()) {
             this.addAccountToFile(account);
         }
     }

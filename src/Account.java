@@ -7,12 +7,13 @@ public class Account {
     private String password;
     private ArrayList<Conversation> conversations;
     private Database database;
+    private boolean addToFile;
 
     // When you create a new Account, make sure addToFile is true, or else it will not add it to the file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
 
-    public Account(String username, String password, Database database) throws UsernameAlreadyExistsException {
+    public Account(String username, String password, Database database, boolean addToFile) throws UsernameAlreadyExistsException {
 
         try {
             database.getAccountByUsername(username).getUsername();
@@ -21,6 +22,7 @@ public class Account {
             this.password = password;
             this.conversations = new ArrayList<>();
             this.database = database;
+            this.addToFile = addToFile;
             this.database.addToDatabase(this);
         }
 
@@ -29,6 +31,10 @@ public class Account {
         } catch (NullPointerException nullPointerException) {
             throw new UsernameAlreadyExistsException();
         }
+    }
+
+    public boolean isAddToFile() {
+        return addToFile;
     }
 
     public String toString() {
