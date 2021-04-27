@@ -72,6 +72,10 @@ public class Message {
         this.database.editMessageInConversationFile(this.getId(), content);
     }
 
+    public void deleteMessage() {
+        this.database.deleteMessageFromConversationFile(this.getId());
+    }
+
     public boolean isAddToFile() {
         return addToFile;
     }

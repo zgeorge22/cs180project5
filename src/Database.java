@@ -237,12 +237,12 @@ public class Database {
 
         ArrayList<Integer> conversationIds = thisAccount.getConversationIds();
 
-        for (int i = 0; i < conversationIds.size(); i++) {
+        for (Integer conversationId : conversationIds) {
 
             ArrayList<String> conversationData = new ArrayList<>();
 
             try {
-                FileReader filer = new FileReader(conversationIds.get(i) + ".txt");
+                FileReader filer = new FileReader(conversationId + ".txt");
                 BufferedReader buffer = new BufferedReader(filer);
 
                 String fileLine = buffer.readLine();
@@ -265,8 +265,8 @@ public class Database {
 
             String participantsToFile = "";
 
-            for (int j = 0; j < conversationParticipants.length; j++) {
-                participantsToFile = participantsToFile + conversationParticipants[j] + ",";
+            for (String conversationParticipant : conversationParticipants) {
+                participantsToFile = participantsToFile + conversationParticipant + ",";
             }
             participantsToFile = participantsToFile.substring(0, participantsToFile.length() - 1);
             conversationData.set(2, participantsToFile);
@@ -283,10 +283,10 @@ public class Database {
 
             FileOutputStream fileOutputStream = null;
             try {
-                fileOutputStream = new FileOutputStream(conversationIds.get(i) + ".txt", false);
+                fileOutputStream = new FileOutputStream(conversationId + ".txt", false);
                 PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
-                for (int j = 0; j < conversationData.size(); j++) {
-                    conversationWriter.println(conversationData.get(j));
+                for (String conversationDatum : conversationData) {
+                    conversationWriter.println(conversationDatum);
                 }
                 conversationWriter.close();
             } catch (FileNotFoundException e) {
@@ -431,12 +431,13 @@ public class Database {
 
         int conversationID = -1;
 
-        for (int i = 0; i < this.conversations.size(); i++) {
-           for (int j = 0; j < this.conversations.get(i).getMessages().size(); j++) {
-               if(this.conversations.get(i).getMessages().get(j).getId() == messageID) {
-                   conversationID = this.conversations.get(i).getConversationId();
-               }
-           }
+        for (Conversation conversation : this.conversations) {
+            for (int j = 0; j < conversation.getMessages().size(); j++) {
+                if (conversation.getMessages().get(j).getId() == messageID) {
+                    conversationID = conversation.getConversationId();
+                    break;
+                }
+            }
         }
 
         ArrayList<String> conversationFile = new ArrayList<>();
@@ -475,8 +476,8 @@ public class Database {
             fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
-            for (int i = 0; i < conversationFile.size(); i++) {
-                conversationWriter.println(conversationFile.get(i));
+            for (String s : conversationFile) {
+                conversationWriter.println(s);
             }
             conversationWriter.close();
         } catch (FileNotFoundException e) {
@@ -485,7 +486,67 @@ public class Database {
 
     }
 
-    public void exportToCSV(Conversation conversation) {
+    public void deleteMessageFromConversationFile(int messageID) {
+
+        int conversationID = -1;
+
+        for (Conversation conversation : this.conversations) {
+            for (int j = 0; j < conversation.getMessages().size(); j++) {
+                if (conversation.getMessages().get(j).getId() == messageID) {
+                    conversationID = conversation.getConversationId();
+                    conversation.getMessages().remove(j);
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < this.messages.size(); i++) {
+            if (this.messages.get(i).getId() == messageID) {
+                this.messages.remove(i);
+            }
+        }
+
+        ArrayList<String> conversationFile = new ArrayList<>();
+
+        try {
+            FileReader filer = new FileReader(conversationID + ".txt");
+            BufferedReader buffer = new BufferedReader(filer);
+            String fileLine = buffer.readLine();
+
+            while (fileLine != null) {
+                conversationFile.add(fileLine);
+                fileLine = buffer.readLine();
+            }
+            buffer.close();
+            filer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int lineToRemove = -1;
+
+        for (int i = 0; i < conversationFile.size(); i++) {
+            if (conversationFile.get(i).startsWith(Integer.toString(messageID))) {
+                lineToRemove = i;
+            }
+        }
+
+        conversationFile.remove(lineToRemove);
+
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
+            PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+            for (String s : conversationFile) {
+                conversationWriter.println(s);
+            }
+            conversationWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportToCSV(int ConversationId) {
         // TODO
 
     }

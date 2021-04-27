@@ -76,7 +76,22 @@ public class MainTesting {
         //////////////////////////////
 
         // CONVERSATION.JAVA TESTING
+
+
+
+
+
+
         
+        // MESSAGE.JAVA TESTING
+        database.getMessageById(0).deleteMessage();
+        System.out.println(database.getConversationById(0).getMessages().get(0));
+        System.out.println(database.getMessageById(0).toString());
+        //"1,2021-04-23T17:00:42.870743,jim,Hi, I am jim" should be printed, indicating that the message with
+        // ID 0 has been deleted.
+        // Then a MessageNotFoundException should be thrown indicating that the message no longer exists in
+        // the database.
+
 
 
 
