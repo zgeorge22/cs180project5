@@ -127,42 +127,10 @@ public class MainTesting {
 
         database.getMessageById(0).deleteMessage();
         System.out.println(database.getConversationById(0).getMessages().get(0));
-        System.out.println(database.getMessageById(0).toString());
         //"1,2021-04-23T17:00:42.870743,jim,Hello, i'm editing this message" should be printed,
         // indicating that the message with ID 0 has been deleted.
-        // Then a MessageNotFoundException should be thrown indicating that the message no longer exists in
-        // the database.
 
-
-
-
+        database.getConversationById(2).exportToCSV();
+        //A csvFile named "conversationName".txt should be created with the details of the messages.
     }
 }
-// TODO:
-// 1. Add isServer to Database Constructor
-// 2. Change all static methods to non static.
-// 3. Change all methods in the database to ensure they do not read/write unless isServer = true
-//
-// EXAMPLE
-//
-// public static void addToDatabase(Account account) {
-//    accounts.add(account);
-//    if (this.isServer == true) {
-//        Database.addAccountToFile(account);
-//    }
-//}
-//
-// 4. Add a Database parameter to the constructor for Account, Conversation, Message
-// 5. If any methods in conversation/account/message contain "Database.method" methods,
-//  make sure that they only run if this.getDatabase.getIsServer = true
-//
-// EXAMPLE
-//
-// public void addParticipant(String username) throws AccountNotExistException {
-//        Account account = Database.getAccountByUsername(username);
-//        participants.add(account);
-//        account.addToConversation(this);
-//        if (this.getDatabase.getIsServer == true) {
-//            this.getDatabase.addParticipantToConversationFile(this.getConversationId(), username);
-//        }
-//    }

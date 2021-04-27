@@ -81,6 +81,4 @@ public class Message {
         return this.getId() + "," + this.getTimestamp().toString() + ","
                 + this.getSender() + "," + this.getContent();
     }
-
 }
-

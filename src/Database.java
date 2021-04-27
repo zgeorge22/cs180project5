@@ -7,7 +7,7 @@ public class Database {
     private ArrayList<Account> accounts;
     private ArrayList<Conversation> conversations;
     private ArrayList<Message> messages;
-    private boolean isServer;
+    private final boolean isServer;
 
     public Database(boolean isServer) {
         ArrayList<Account> accountList = new ArrayList<>();
@@ -54,7 +54,7 @@ public class Database {
                 String[] splitAccount = accountsDatum.split(",");
 
                 try {
-                    Account thisAccount = new Account(splitAccount[0], splitAccount[1], this, false);
+                    new Account(splitAccount[0], splitAccount[1], this, false);
                 } catch (UsernameAlreadyExistsException e) {
                     e.printStackTrace();
                 }
@@ -144,9 +144,9 @@ public class Database {
     }
 
     public void createAccountFile() {
-        FileOutputStream fileOutputStream = null;
+
         try {
-            fileOutputStream = new FileOutputStream("accounts.txt", false);
+            new FileOutputStream("accounts.txt", false);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -172,7 +172,7 @@ public class Database {
     }
 
     public void addAccountToFile(Account account) {
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
         try {
             fileOutputStream = new FileOutputStream("accounts.txt", true);
             PrintWriter accountWriter = new PrintWriter(fileOutputStream);
@@ -218,13 +218,13 @@ public class Database {
             }
         }
 
-        FileOutputStream accountOutputStream = null;
+        FileOutputStream accountOutputStream;
         try {
             accountOutputStream = new FileOutputStream("accounts.txt", false);
             PrintWriter accountsWriter = new PrintWriter(accountOutputStream);
 
-            for (int i = 0; i < accountsData.size(); i++) {
-                accountsWriter.println(accountsData.get(i));
+            for (String accountsDatum : accountsData) {
+                accountsWriter.println(accountsDatum);
             }
             accountsWriter.close();
         } catch (FileNotFoundException e) {
@@ -266,13 +266,13 @@ public class Database {
                 }
             }
 
-            String participantsToFile = "";
+            StringBuilder participantsToFile = new StringBuilder();
 
             for (String conversationParticipant : conversationParticipants) {
-                participantsToFile = participantsToFile + conversationParticipant + ",";
+                participantsToFile.append(conversationParticipant).append(",");
             }
-            participantsToFile = participantsToFile.substring(0, participantsToFile.length() - 1);
-            conversationData.set(2, participantsToFile);
+            participantsToFile = new StringBuilder(participantsToFile.substring(0, participantsToFile.length() - 1));
+            conversationData.set(2, participantsToFile.toString());
 
             for (int j = 3; j < conversationData.size(); j++) {
                 String[] messageSplit = conversationData.get(j).split(",", 4);
@@ -284,7 +284,7 @@ public class Database {
                 conversationData.set(j, newMessage);
             }
 
-            FileOutputStream fileOutputStream = null;
+            FileOutputStream fileOutputStream;
             try {
                 fileOutputStream = new FileOutputStream(conversationId + ".txt", false);
                 PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
@@ -302,7 +302,7 @@ public class Database {
 
     public void createConversationFile(Conversation conversation) {
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
         try {
             fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
@@ -357,7 +357,7 @@ public class Database {
         String toAdd = conversationFile.get(2);
         toAdd = toAdd + "," + username;
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
 
         try {
             fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
@@ -401,17 +401,17 @@ public class Database {
             e.printStackTrace();
         }
 
-        String toWrite = "";
+        StringBuilder toWrite = new StringBuilder();
 
         for (String s : participantsList) {
             if (!s.equals(username)) {
-                toWrite = toWrite + s + ",";
+                toWrite.append(s).append(",");
             }
         }
 
-        toWrite = toWrite.substring(0, toWrite.length() - 1);
+        toWrite = new StringBuilder(toWrite.substring(0, toWrite.length() - 1));
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
 
         try {
             fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
@@ -464,7 +464,7 @@ public class Database {
 
         for (int i = 0; i < conversationFile.size(); i++) {
             if (conversationFile.get(i).startsWith(Integer.toString(messageID))) {
-              lineToEdit = i;
+                lineToEdit = i;
             }
         }
 
@@ -474,7 +474,7 @@ public class Database {
         String toWrite = splitEditMessage[0] + "," + splitEditMessage[1] + "," + splitEditMessage[2] + "," + splitEditMessage[3];
         conversationFile.set(lineToEdit, toWrite);
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
         try {
             fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
@@ -535,7 +535,7 @@ public class Database {
 
         conversationFile.remove(lineToRemove);
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream fileOutputStream;
         try {
             fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
             PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
@@ -549,8 +549,59 @@ public class Database {
         }
     }
 
-    public void exportToCSV(int ConversationId) {
-        // TODO
+    // DO NOT USE THIS TO EXPORT TO CSV - USE EQUIVALENT IN CONVERSATION FILE
+    public void createCSV(int conversationID) {
 
+        ArrayList<String> conversationFile = new ArrayList<>();
+
+
+        try {
+            FileReader filer = new FileReader(conversationID + ".txt");
+            BufferedReader buffer = new BufferedReader(filer);
+            String fileLine = buffer.readLine();
+
+            while (fileLine != null) {
+                conversationFile.add(fileLine);
+                fileLine = buffer.readLine();
+            }
+            buffer.close();
+            filer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String conversationName = conversationFile.get(1);
+
+        conversationFile.remove(0);
+        conversationFile.remove(0);
+        conversationFile.remove(0);
+
+        conversationFile.add(0, "MessageID,Timestamp,SenderUsername,Message");
+
+        for (int i = 1; i < conversationFile.size(); i++) {
+            String fileLine = conversationFile.get(i);
+            String[] fileLineSplit = fileLine.split(",", 4);
+            String newFileLine = "\"" + fileLineSplit[3] + "\"";
+            conversationFile.set(i, fileLineSplit[0] + "," + fileLineSplit[1] + ","
+                    + fileLineSplit[2] + "," + newFileLine);
+        }
+
+
+        FileWriter fileWriter;
+        File csvFile = new File(conversationName + ".csv");
+
+        try {
+            fileWriter = new FileWriter(csvFile);
+
+            for (String s : conversationFile) {
+                fileWriter.append(s);
+                fileWriter.append("\n");
+            }
+            fileWriter.flush();
+            fileWriter.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

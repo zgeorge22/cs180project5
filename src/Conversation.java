@@ -1,4 +1,3 @@
-import javax.xml.crypto.Data;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
@@ -20,7 +19,7 @@ public class Conversation {
         this.conversationId = getNextConversationId();
         this.participants = usersInConversation;
         this.conversationName = conversationName;
-        this.messages = new ArrayList<Message>();
+        this.messages = new ArrayList<>();
         this.addToFile = addToFile;
         this.database = database;
 
@@ -49,9 +48,9 @@ public class Conversation {
         return conversationName;
     }
 
-    public void setConversationName(String conversationName) {
-        this.conversationName = conversationName;
-    }
+//    public void setConversationName(String conversationName) {
+//        this.conversationName = conversationName;
+//    }
 
     public int getConversationId() {
         return conversationId;
@@ -105,5 +104,9 @@ public class Conversation {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public void exportToCSV() {
+        this.database.createCSV(this.getConversationId());
     }
 }

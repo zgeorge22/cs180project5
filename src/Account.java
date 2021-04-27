@@ -1,4 +1,3 @@
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 
 public class Account {
@@ -51,7 +50,7 @@ public class Account {
             this.username = newUsername;
         }
 
-        if (this.getUsername() != newUsername) {
+        if (!this.getUsername().equals(newUsername)) {
             throw new UsernameAlreadyExistsException();
         }
     }
@@ -111,4 +110,3 @@ public class Account {
     }
 
 }
-
