@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class MainTesting {
     public static void main(String[] args) throws AccountNotExistException, InterruptedException,
             ConversationNotFoundException, MessageNotFoundException {
@@ -8,7 +10,8 @@ public class MainTesting {
         // "jim,jim bean,dumb" should be printed indicating that the accounts have been imported from text
         System.out.println(database.getConversationById(0).getMessages().get(0));
         // "0,2021-04-23T17:00:42.870743,guest,Hi, I am a guest user" should be printed indicating
-        // that the conversations were correctly imported from text
+        // that the conversations were correctly imported from text (note: this will no longer exist in the
+        // file because this message gets deleted later on).
 
         //////////////////////////////
 
@@ -75,20 +78,58 @@ public class MainTesting {
 
         //////////////////////////////
 
-        // CONVERSATION.JAVA TESTING
+        // CONVERSATION.JAVA / MESSAGE.JAVA TESTING
+
+        ArrayList<Account> thirdConversationAccounts = new ArrayList<>();
+        thirdConversationAccounts.add(database.getAccountByUsername("sheila"));
+        thirdConversationAccounts.add(database.getAccountByUsername("goodUser"));
+        thirdConversationAccounts.add(database.getAccountByUsername("bean"));
+
+        Conversation conversation = new Conversation("Third Conversation",
+                thirdConversationAccounts, true, database);
+        //A new text file called 2.txt should be created with the details for this conversation - it should include
+        //the users sheila, goodUser and bean (
+
+        System.out.println(database.getConversationById(2).getConversationName());
+        //"Third Conversation" should be printed in the terminal indicating this conversation now
+        // exists in the terminal
+
+        System.out.println(database.getAccountByUsername("sheila").getConversationIds().get(0));
+        //"2" should be printed in the terminal indicating that this conversation is in sheila's list of conversations
+
+        database.getConversationById(1).addParticipant("sheila");
+        database.getConversationById(1).removeParticipant("guest");
+        for (int i = 0; i < database.getConversationById(1).getParticipants().size(); i++) {
+            System.out.print(database.getConversationById(1).getParticipants().get(i).getUsername() + " ");
+        }
+        System.out.println();
+        //"bob bean sheila" should be printed in the terminal indicating that guest was removed and bob was added.
+        //1.txt should reflect this change
+
+        Message newMessage = new Message("sheila", "hello, my name is sheila", database);
+        database.getConversationById(2).addMessage(newMessage);
+        //2.txt should now have this message
+        System.out.println(database.getConversationById(2).getMessages().get(0).toString());
+        //"" should be printed in the terminal indicating that the message is created and exists in the conversation database.
+        System.out.println(database.getMessageById(2).toString());
+        //"" should be printed in the terminal indicating that the message is created and exists in the messages database.
+
+        Message newMessage2 = new Message("bean", "hello, my name is bean", database);
+        database.getConversationById(2).addMessage(newMessage2);
+        //Another message should be added to 2.txt
+
+        database.getMessageById(1).editMessage("Hello, i'm editing this message");
+        System.out.println(database.getMessageById(1).getContent());
+        //"Hello, i'm editing this message" should be printed in the terminal, indicating the
+        // edited message has been updated in the database.
+        // The message with id = 1 in 0.txt should have the content be set to be "Hello, i'm editing this message"
 
 
-
-
-
-
-        
-        // MESSAGE.JAVA TESTING
         database.getMessageById(0).deleteMessage();
         System.out.println(database.getConversationById(0).getMessages().get(0));
         System.out.println(database.getMessageById(0).toString());
-        //"1,2021-04-23T17:00:42.870743,jim,Hi, I am jim" should be printed, indicating that the message with
-        // ID 0 has been deleted.
+        //"1,2021-04-23T17:00:42.870743,jim,Hello, i'm editing this message" should be printed,
+        // indicating that the message with ID 0 has been deleted.
         // Then a MessageNotFoundException should be thrown indicating that the message no longer exists in
         // the database.
 

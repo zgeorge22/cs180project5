@@ -1,5 +1,4 @@
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class Message {
 
@@ -12,10 +11,7 @@ public class Message {
     private Database database;
 
     // Call this constructor for creating new messages when users send.
-    public Message(LocalDateTime localDateTime, String senderUsername, String content, Database database) {
-
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    public Message(String senderUsername, String content, Database database) {
 
         this.timestamp = LocalDateTime.now();
         this.sender = senderUsername;

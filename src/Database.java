@@ -111,6 +111,9 @@ public class Database {
                 conversationFile = new File(thisConversationId + ".txt");
             } while (conversationFile.exists());
         }
+
+        int messagesCreated = this.messages.size();
+        Message.setNextMessageId(messagesCreated);
     }
 
     public Account getAccountByUsername(String username) throws AccountNotExistException {
