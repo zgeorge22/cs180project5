@@ -1,6 +1,6 @@
 public class MainTesting {
     public static void main(String[] args) throws AccountNotExistException, InterruptedException,
-            ConversationNotFoundException {
+            ConversationNotFoundException, MessageNotFoundException {
 
         // DATABASE.JAVA TESTING
         Database database = new Database(true);
@@ -76,7 +76,7 @@ public class MainTesting {
         //////////////////////////////
 
         // CONVERSATION.JAVA TESTING
-
+        
 
 
 

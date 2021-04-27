@@ -131,6 +131,15 @@ public class Database {
         throw new ConversationNotFoundException();
     }
 
+    public Message getMessageById(int id) throws MessageNotFoundException {
+        for (Message message : messages) {
+            if (id == message.getId()) {
+                return message;
+            }
+        }
+        throw new MessageNotFoundException();
+    }
+
     public void createAccountFile() {
         FileOutputStream fileOutputStream = null;
         try {
@@ -416,6 +425,64 @@ public class Database {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public void editMessageInConversationFile(int messageID, String newMessage) {
+
+        int conversationID = -1;
+
+        for (int i = 0; i < this.conversations.size(); i++) {
+           for (int j = 0; j < this.conversations.get(i).getMessages().size(); j++) {
+               if(this.conversations.get(i).getMessages().get(j).getId() == messageID) {
+                   conversationID = this.conversations.get(i).getConversationId();
+               }
+           }
+        }
+
+        ArrayList<String> conversationFile = new ArrayList<>();
+
+        try {
+            FileReader filer = new FileReader(conversationID + ".txt");
+            BufferedReader buffer = new BufferedReader(filer);
+            String fileLine = buffer.readLine();
+
+            while (fileLine != null) {
+                conversationFile.add(fileLine);
+                fileLine = buffer.readLine();
+            }
+            buffer.close();
+            filer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int lineToEdit = -1;
+
+        for (int i = 0; i < conversationFile.size(); i++) {
+            if (conversationFile.get(i).startsWith(Integer.toString(messageID))) {
+              lineToEdit = i;
+            }
+        }
+
+        String editMessage = conversationFile.get(lineToEdit);
+        String[] splitEditMessage = editMessage.split(",", 4);
+        splitEditMessage[3] = newMessage;
+        String toWrite = splitEditMessage[0] + "," + splitEditMessage[1] + "," + splitEditMessage[2] + "," + splitEditMessage[3];
+        conversationFile.set(lineToEdit, toWrite);
+
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(conversationID + ".txt", false);
+            PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
+
+            for (int i = 0; i < conversationFile.size(); i++) {
+                conversationWriter.println(conversationFile.get(i));
+            }
+            conversationWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void exportToCSV(Conversation conversation) {

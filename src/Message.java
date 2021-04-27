@@ -7,7 +7,7 @@ public class Message {
     private final int id;
     private final LocalDateTime timestamp;
     private final String sender;
-    private final String content; //Remove Final if editing messages is to be allowed.
+    private String content; //Remove Final if editing messages is to be allowed.
     private boolean addToFile;
     private Database database;
 
@@ -67,6 +67,11 @@ public class Message {
         return content;
     }
 
+    public void editMessage(String content) {
+        this.content = content;
+        this.database.editMessageInConversationFile(this.getId(), content);
+    }
+
     public boolean isAddToFile() {
         return addToFile;
     }
@@ -76,4 +81,6 @@ public class Message {
         return this.getId() + "," + this.getTimestamp().toString() + ","
                 + this.getSender() + "," + this.getContent();
     }
+
 }
+
