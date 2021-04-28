@@ -13,9 +13,11 @@ public class Test {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
-                db = new Database(false);
-
                 try {
+                    Client client = new Client();
+                    MainWindow mw = client.getMainWindow();
+                    db = client.getDatabase();
+
                     Account z = new Account("Zach", "help", db, false);
                     Account r = new Account("Rishi", "1234", db, false);
                     Account j = new Account("Jack", "password", db, false);
@@ -47,9 +49,9 @@ public class Test {
                     conversationList.add(chatSmall);
                     conversationList.add(chatLarge);
 
-                    // TEST CHAT LIST
-                    MainWindow mw = new MainWindow();
+                    // TEST INITIAL DATA DUMP TO CLIENT MAIN WINDOW
 
+                    // TEST CHAT LIST
                     // will be used once a conversations list is received from the server
                     mw.setChatList(conversationList);
 
@@ -73,12 +75,10 @@ public class Test {
 
                     mw.sortChatEntries();
 
-                    // TEST NEW MESSAGE
-                    Message newMsg = new Message(Message.getNextMessageId(), LocalDateTime.now(), "Jack",
-                            "Hello World!", false, db);
+                    // TEST NEW MESSAGE TO CLIENT
                     Message.setNextMessageId(Message.getNextMessageId() + 1);
-                    chatLarge.addMessage(newMsg);
-                    mw.updateChatEntry(chatLarge);
+                    client.receivedMessage(chatLarge.getConversationId(), Message.getNextMessageId(), "Jack",
+                            LocalDateTime.now(), "Hello World!");
 
                     // will be used for participant changes (leaving chats)
                     try {

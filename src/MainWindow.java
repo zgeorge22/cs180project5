@@ -5,7 +5,6 @@ import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -13,11 +12,8 @@ import java.util.Collections;
 
 public class MainWindow extends JFrame {
 
-    // -----------------------------ToDo-----------------------------
-    // SWITCH FROM ARRAY LIST TO LINKED LIST FOR CONVERSATIONS LIST
-    // Order matters but should never need to skip
-    // ADD "reorder" function to move conversation to front!
-    // --------------------------------------------------------------
+    private Client client;
+
     private Container content;
     private JPanel sidePanel;
     private JButton createChatButton;
@@ -45,8 +41,10 @@ public class MainWindow extends JFrame {
     private static final String OTHER_CHAT_FORMAT = "<p class=chat-msg1>%s</p>";
     private static final String MY_CHAT_FORMAT = "<p class=chat-msg2>%s</p>";
 
-    public MainWindow() {
+    public MainWindow(Client client) {
         super("Chat");
+
+        this.client = client;
 
         initializeComponents();
 
@@ -90,11 +88,9 @@ public class MainWindow extends JFrame {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     currentChat = chatList.getSelectedValue().getConversation();
-
-                    // CHECK IF CURENT CHAT HAS LOADED MESSAGES
-
                     if (currentChat != null) {
                         fillConvoDisplay();
+                        clearComposeMessage();
                     }
                 }
             }
@@ -165,13 +161,19 @@ public class MainWindow extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // UPDATE send button action
+                if (currentChat != null && !composeMessage.getText().equals("")) {
+                    client.sendMessage(currentChat, composeMessage.getText());
+                }
             }
         });
         chatPanel.add(composeBar, BorderLayout.SOUTH);
 
         content.add(sidePanel, BorderLayout.WEST);
         content.add(chatPanel, BorderLayout.CENTER);
+    }
+
+    public void clearComposeMessage() {
+        composeMessage.setText("");
     }
 
     public static int getWrappedLines(JTextComponent c) {
@@ -233,6 +235,12 @@ public class MainWindow extends JFrame {
             if (chatEntry.getConversation().getConversationId() == conversation.getConversationId()) {
                 chatEntities.setElementAt(new ChatEntry(conversation, true), i);
                 break;
+            }
+        }
+
+        if (currentChat != null) {
+            if (chatList.getSelectedValue().getConversation().getConversationId() == conversation.getConversationId()) {
+                fillConvoDisplay();
             }
         }
     }
