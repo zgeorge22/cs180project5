@@ -1,7 +1,7 @@
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
-public class Conversation implements Comparable<Conversation> {
+public class Conversation {
 
     private static int nextConversationId;
     private final int conversationId;
@@ -128,11 +128,5 @@ public class Conversation implements Comparable<Conversation> {
 
     public void exportToCSV() {
         this.database.createCSV(this.getConversationId());
-    }
-
-    @Override
-    public int compareTo(Conversation o) {
-        return messages.get(messages.size() - 1).getTimestamp()
-                .compareTo(o.getMessages().get(o.getMessages().size() - 1).getTimestamp());
     }
 }

@@ -73,6 +73,13 @@ public class Test {
 
                     mw.sortChatEntries();
 
+                    // TEST NEW MESSAGE
+                    Message newMsg = new Message(Message.getNextMessageId(), LocalDateTime.now(), "Jack",
+                            "Hello World!", false, db);
+                    Message.setNextMessageId(Message.getNextMessageId() + 1);
+                    chatLarge.addMessage(newMsg);
+                    mw.updateChatEntry(chatLarge);
+
                     // will be used for participant changes (leaving chats)
                     try {
                         b.removeConversation(chatMedium.getConversationId());
@@ -97,8 +104,8 @@ public class Test {
         final int minWords = 2;
         final int maxWords = 10;
 
-        for (int i = 0; i < numMessages; i++) {
-            LocalDateTime later = now.plusMinutes(i * messageDelay);
+        for (int i = numMessages; i > 0; i--) {
+            LocalDateTime later = now.plusMinutes(-i * messageDelay);
             String sender = participants.get(getRandomIntBetween(0, participants.size() - 1)).getUsername();
             String content = generateRandomMessage(getRandomIntBetween(minWords, maxWords));
             Message newMessage = new Message(Message.getNextMessageId(), later, sender, content, false, db);

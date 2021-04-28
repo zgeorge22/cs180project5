@@ -21,7 +21,7 @@ public class MainWindow extends JFrame {
     private Container content;
     private JPanel sidePanel;
     private JButton createChatButton;
-    private JList<Conversation> chatList;
+    private JList<ChatEntry> chatList;
     private JScrollPane chatListScrollPane;
     private JPanel botPanel;
     private JPanel chatPanel;
@@ -81,7 +81,7 @@ public class MainWindow extends JFrame {
 
         sidePanel.add(createChatButton, BorderLayout.NORTH);
 
-        chatList = new JList<Conversation>();
+        chatList = new JList<ChatEntry>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatList.setCellRenderer(new ChatListCellRenderer());
         chatList.setFixedCellWidth(250); // .setFixedCellHeight(50);
@@ -89,7 +89,7 @@ public class MainWindow extends JFrame {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    currentChat = chatList.getSelectedValue();
+                    currentChat = chatList.getSelectedValue().getConversation();
 
                     // CHECK IF CURENT CHAT HAS LOADED MESSAGES
 
@@ -204,49 +204,77 @@ public class MainWindow extends JFrame {
         return linesOfText;
     }
 
-    private DefaultListModel<Conversation> getChatEntities() {
-        ListModel<Conversation> chatEntities = chatList.getModel();
+    private DefaultListModel<ChatEntry> getChatEntities() {
+        ListModel<ChatEntry> chatEntities = chatList.getModel();
         if (!(chatEntities instanceof DefaultListModel)) {
-            DefaultListModel<Conversation> defaultChatEntries = new DefaultListModel<Conversation>();
+            DefaultListModel<ChatEntry> defaultChatEntries = new DefaultListModel<ChatEntry>();
             chatList.setModel(defaultChatEntries);
             return defaultChatEntries;
         }
-        return (DefaultListModel<Conversation>) chatEntities;
+        return (DefaultListModel<ChatEntry>) chatEntities;
     }
 
     public void setChatList(ArrayList<Conversation> conversationList) {
-        DefaultListModel<Conversation> chatEntities = getChatEntities();
+        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (Conversation convo : conversationList) {
-            chatEntities.addElement(convo);
+            chatEntities.addElement(new ChatEntry(convo, false));
         }
     }
 
     public void addNewChat(Conversation convo) {
-        DefaultListModel<Conversation> chatEntities = getChatEntities();
-        chatEntities.addElement(convo);
+        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
+        chatEntities.addElement(new ChatEntry(convo, true));
     }
 
     public void updateChatEntry(Conversation conversation) {
-        DefaultListModel<Conversation> chatEntities = getChatEntities();
+        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (int i = 0; i < chatEntities.size(); i++) {
-            Conversation chatEntry = chatEntities.getElementAt(i);
-            if (chatEntry.getConversationId() == conversation.getConversationId()) {
-                chatEntities.setElementAt(conversation, i);
+            ChatEntry chatEntry = chatEntities.getElementAt(i);
+            if (chatEntry.getConversation().getConversationId() == conversation.getConversationId()) {
+                chatEntities.setElementAt(new ChatEntry(conversation, true), i);
                 break;
             }
         }
     }
 
     public void sortChatEntries() {
-        DefaultListModel<Conversation> chatEntities = getChatEntities();
-        ArrayList<Conversation> list = new ArrayList<Conversation>();
+        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
+        ArrayList<ChatEntry> list = new ArrayList<ChatEntry>();
         for (int i = 0; i < chatEntities.size(); i++) {
-            list.add((Conversation) chatEntities.get(i));
+            list.add((ChatEntry) chatEntities.get(i));
         }
         Collections.sort(list, Collections.reverseOrder());
         chatEntities.removeAllElements();
-        for (Conversation c : list) {
+        for (ChatEntry c : list) {
             chatEntities.addElement(c);
+        }
+    }
+
+    class ChatEntry implements Comparable<ChatEntry> {
+        Conversation conversation;
+        boolean unread;
+
+        public ChatEntry(Conversation conversation, boolean unread) {
+            this.conversation = conversation;
+            this.unread = unread;
+        }
+
+        public Conversation getConversation() {
+            return conversation;
+        }
+
+        public boolean getUnread() {
+            return unread;
+        }
+
+        public void setUnread(boolean unread) {
+            this.unread = unread;
+        }
+
+        @Override
+        public int compareTo(ChatEntry o) {
+            return conversation.getMessages().get(conversation.getMessages().size() - 1).getTimestamp().compareTo(
+                    o.conversation.getMessages().get(o.conversation.getMessages().size() - 1).getTimestamp());
         }
     }
 
@@ -257,10 +285,20 @@ public class MainWindow extends JFrame {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
             // UPDATE string parsing to proper conversation parsing
-            Conversation conversation = (Conversation) value;
+            ChatEntry chatEntry = (ChatEntry) value;
+            Conversation conversation = chatEntry.getConversation();
             String participants = conversation.getParticipantsString();
             String lastMsg = conversation.getMessages().get(conversation.getMessages().size() - 1).getContent();
+
             setText("<html><b>" + participants + "</b><br>&nbsp;&nbsp;" + lastMsg);
+
+            if (isSelected) {
+                chatEntry.setUnread(false);
+            }
+
+            if (chatEntry.getUnread()) {
+                setForeground(Color.BLUE);
+            }
 
             setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
 
