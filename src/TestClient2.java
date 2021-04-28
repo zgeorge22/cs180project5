@@ -3,10 +3,10 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
-public class TestClient {
+public class TestClient2 {
 
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 1111);
+        Socket socket = new Socket("localhost", 4242);
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter writer = new PrintWriter(socket.getOutputStream());

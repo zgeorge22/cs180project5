@@ -7,4 +7,3 @@ public class ConversationNotFoundException extends Exception {
         super();
     }
 }
-
