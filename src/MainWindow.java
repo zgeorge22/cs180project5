@@ -5,11 +5,11 @@ import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.StringTokenizer;
+import java.util.Collections;
 
 public class MainWindow extends JFrame {
 
@@ -237,6 +237,19 @@ public class MainWindow extends JFrame {
         }
     }
 
+    public void sortChatEntries() {
+        DefaultListModel<Conversation> chatEntities = getChatEntities();
+        ArrayList<Conversation> list = new ArrayList<Conversation>();
+        for (int i = 0; i < chatEntities.size(); i++) {
+            list.add((Conversation) chatEntities.get(i));
+        }
+        Collections.sort(list, Collections.reverseOrder());
+        chatEntities.removeAllElements();
+        for (Conversation c : list) {
+            chatEntities.addElement(c);
+        }
+    }
+
     class ChatListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
@@ -245,9 +258,9 @@ public class MainWindow extends JFrame {
 
             // UPDATE string parsing to proper conversation parsing
             Conversation conversation = (Conversation) value;
-            int id = conversation.getConversationId();
             String participants = conversation.getParticipantsString();
-            setText("<html>Conversation: " + id + "<br/>&nbsp;&nbsp;" + participants);
+            String lastMsg = conversation.getMessages().get(conversation.getMessages().size() - 1).getContent();
+            setText("<html><b>" + participants + "</b><br>&nbsp;&nbsp;" + lastMsg);
 
             setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
 
@@ -280,9 +293,8 @@ public class MainWindow extends JFrame {
     }
 
     private String formatHTMLMessage(Message message) {
-        Date d = new Date(message.getTimestamp().getTime());
-        DateFormat f = new SimpleDateFormat("MM/dd/yy, hh:mm aa");
-        String timestamp = f.format(d);
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd/yy, hh:mm a");
+        String timestamp = message.getTimestamp().format(f);
         String sender = message.getSender();
         String content = message.getContent();
 

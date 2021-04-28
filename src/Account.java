@@ -8,11 +8,14 @@ public class Account {
     private Database database;
     private boolean addToFile;
 
-    // When you create a new Account, make sure addToFile is true, or else it will not add it to the file.
-    // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
+    // When you create a new Account, make sure addToFile is true, or else it will
+    // not add it to the file.
+    // Accounts retrieved from an existing file will have addToFile = false,
+    // ensuring that they will not get
     // re-added when the database initialises it into the accounts.
 
-    public Account(String username, String password, Database database, boolean addToFile) throws UsernameAlreadyExistsException {
+    public Account(String username, String password, Database database, boolean addToFile)
+            throws UsernameAlreadyExistsException {
 
         try {
             database.getAccountByUsername(username).getUsername();
@@ -68,9 +71,9 @@ public class Account {
         return conversations;
     }
 
-//    public void setConversations(ArrayList<Conversation> conversations) {
-//        this.conversations = conversations;
-//    }
+    // public void setConversations(ArrayList<Conversation> conversations) {
+    // this.conversations = conversations;
+    // }
 
     public void addToConversation(Conversation conversation) {
         conversations.add(conversation);
@@ -85,14 +88,18 @@ public class Account {
         Conversation conversation = this.database.getConversationById(id);
         conversations.add(conversation);
         conversation.addParticipant(this);
-        this.database.addParticipantToConversationFile(id, this.getUsername());
+        if (database.isServer()) {
+            this.database.addParticipantToConversationFile(id, this.getUsername());
+        }
     }
 
     public void removeConversation(int id) throws ConversationNotFoundException {
         Conversation conversation = this.database.getConversationById(id);
         conversations.remove(conversation);
         conversation.removeParticipant(this);
-        this.database.removeParticipantFromConversationFile(id, this.getUsername());
+        if (database.isServer()) {
+            this.database.removeParticipantFromConversationFile(id, this.getUsername());
+        }
     }
 
     public ArrayList<Integer> getConversationIds() {
