@@ -67,13 +67,26 @@ public class MainWindow extends JFrame {
         createChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // UPDATE test button functionality
-                // addNewChat("0Created chat");
 
-                // JOptionPane.showMessageDialog(MainWindow.this, "Button Pressed", "Hey",
-                // JOptionPane.INFORMATION_MESSAGE);
+                // =====================================================================
+                // -------------------------------- TEMP -------------------------------
+                try {
+                    Account z = client.getDatabase().getAccountByUsername("Zach");
+                    Account n = client.getDatabase().getAccountByUsername("Natalie");
 
-                System.out.println(convoDisplay.getText());
+                    ArrayList<Account> accountsList = new ArrayList<Account>();
+                    accountsList.add(z);
+                    accountsList.add(n);
+
+                    Conversation chat = new Conversation("new", accountsList, false, client.getDatabase());
+
+                    addNewChat(chat);
+                } catch (AccountNotExistException error) {
+                    error.printStackTrace();
+                }
+                // ---------------------------------------------------------------------
+                // =====================================================================
+
             }
         });
 
@@ -296,7 +309,10 @@ public class MainWindow extends JFrame {
             ChatEntry chatEntry = (ChatEntry) value;
             Conversation conversation = chatEntry.getConversation();
             String participants = conversation.getParticipantsString();
-            String lastMsg = conversation.getMessages().get(conversation.getMessages().size() - 1).getContent();
+            String lastMsg = "";
+            if (conversation.getMessages().size() > 0) {
+                lastMsg = conversation.getMessages().get(conversation.getMessages().size() - 1).getContent();
+            }
 
             setText("<html><b>" + participants + "</b><br>&nbsp;&nbsp;" + lastMsg);
 
