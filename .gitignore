@@ -3,5 +3,7 @@
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+*.xml
+*.class
 .vscode/settings.json
 src/.vscode/settings.json
