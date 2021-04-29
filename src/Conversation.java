@@ -14,16 +14,18 @@ public class Conversation {
     // When you create a new Conversation, make sure addToFile is true, or else it will not add it to the file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
-    public Conversation(String conversationName, ArrayList<Account> usersInConversation,
+
+    //Use this constructor in the server to create new messages.
+    public Conversation(String conversationName, ArrayList<Account> participants,
                         boolean addToFile, Database database) {
         this.conversationId = getNextConversationId();
-        this.participants = usersInConversation;
+        this.participants = participants;
         this.conversationName = conversationName;
         this.messages = new ArrayList<>();
         this.addToFile = addToFile;
         this.database = database;
 
-        for (Account account : usersInConversation) {
+        for (Account account : participants) {
 
             try {
                 this.database.getAccountByUsername(account.getUsername()).addToConversation(this);
@@ -32,6 +34,18 @@ public class Conversation {
             }
         }
         setNextConversationId(++nextConversationId);
+
+        this.database.addToDatabase(this);
+    }
+
+    // Do not call this constructor for creating new messages in the server.
+    public Conversation(int id, String conversationName, ArrayList<Account> participants, Database database) {
+        this.conversationId = id;
+        this.conversationName = conversationName;
+        this.participants = participants;
+        this.messages = new ArrayList<>();
+        this.addToFile = false;
+        this.database = database;
 
         this.database.addToDatabase(this);
     }
