@@ -22,6 +22,8 @@ public class TestServer {
                 "SERVER - Received message from " + sender + " for conversationID " + conversationID + ": " + content);
 
         Message.setNextMessageId(Message.getNextMessageId() + 1);
+
+        // BROADCAST ALL CLINETS
         client.receivedMessage(conversationID, Message.getNextMessageId(), sender, LocalDateTime.now(), content);
 
         return true;

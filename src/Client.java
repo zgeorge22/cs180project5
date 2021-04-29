@@ -13,6 +13,8 @@ public class Client {
         mw = new MainWindow(this);
         db = new Database(false);
 
+        // Login stuff
+
         // ----- REMOVE later! once server socket established -----
         username = "Zach";
         server = new TestServer(this);
