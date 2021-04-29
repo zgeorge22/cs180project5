@@ -16,11 +16,13 @@ public class MainWindow extends JFrame {
 
     private Container content;
     private JPanel sidePanel;
-    private JButton createChatButton;
+    private JButton createChatSideButton;
     private JList<ChatEntry> chatList;
     private JScrollPane chatListScrollPane;
     private JPanel botPanel;
     private JPanel chatPanel;
+    private JPanel convoHeader;
+    private JTextField participantsField;
     private JTextPane convoDisplay;
     private JScrollPane convoDisplayScrollPane;
     private JPanel composeBar;
@@ -45,6 +47,7 @@ public class MainWindow extends JFrame {
         super("Chat");
 
         this.client = client;
+        this.currentChat = null;
 
         initializeComponents();
 
@@ -60,13 +63,12 @@ public class MainWindow extends JFrame {
         content.setLayout(new BorderLayout());
 
         // SIDE PANEL LAYOUT
-        sidePanel = new JPanel();
-        sidePanel.setLayout(new BorderLayout());
-
-        createChatButton = new JButton("Create New Chat");
-        createChatButton.addActionListener(new ActionListener() {
+        createChatSideButton = new JButton("Create New Chat");
+        createChatSideButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                clearConvoDisplay();
+                clearComposeMessage();
 
                 // =====================================================================
                 // -------------------------------- TEMP -------------------------------
@@ -90,8 +92,6 @@ public class MainWindow extends JFrame {
             }
         });
 
-        sidePanel.add(createChatButton, BorderLayout.NORTH);
-
         chatList = new JList<ChatEntry>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatList.setCellRenderer(new ChatListCellRenderer());
@@ -111,18 +111,30 @@ public class MainWindow extends JFrame {
 
         chatListScrollPane = new JScrollPane(chatList);
         chatListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
 
         botPanel = new JPanel();
         botPanel.add(new JButton("Account"));
         botPanel.add(new JButton("Sign Out"));
+
+        sidePanel = new JPanel();
+        sidePanel.setLayout(new BorderLayout());
+        sidePanel.add(createChatSideButton, BorderLayout.NORTH);
+        sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
         sidePanel.add(botPanel, BorderLayout.SOUTH);
 
         // CHAT PANEL LAYOUT
         chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
-        // chatPanel.setBackground(Color.gray);
         chatPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        participantsField = new JTextField();
+
+        convoHeader = new JPanel();
+        convoHeader.setLayout(new BorderLayout());
+        convoHeader.add(new JLabel(" Participants: "), BorderLayout.WEST);
+        convoHeader.add(participantsField, BorderLayout.CENTER);
+
+        chatPanel.add(convoHeader, BorderLayout.NORTH);
 
         convoDisplay = new JTextPane();
         convoDisplay.setContentType("text/html");
@@ -174,8 +186,25 @@ public class MainWindow extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (currentChat != null && !composeMessage.getText().equals("")) {
-                    client.sendMessage(currentChat, composeMessage.getText());
+                if (currentChat != null) {
+                    if (!composeMessage.getText().equals("")) {
+                        client.requestSendMessage(currentChat, composeMessage.getText());
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    if (!participantsField.getText().equals("")) {
+                        if (!composeMessage.getText().equals("")) {
+                            client.requestNewChat(participantsField.getText(), composeMessage.getText());
+                        } else {
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No participants entered!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
@@ -308,13 +337,14 @@ public class MainWindow extends JFrame {
             // UPDATE string parsing to proper conversation parsing
             ChatEntry chatEntry = (ChatEntry) value;
             Conversation conversation = chatEntry.getConversation();
+            String name = conversation.getConversationName();
             String participants = conversation.getParticipantsString();
             String lastMsg = "";
             if (conversation.getMessages().size() > 0) {
                 lastMsg = conversation.getMessages().get(conversation.getMessages().size() - 1).getContent();
             }
 
-            setText("<html><b>" + participants + "</b><br>&nbsp;&nbsp;" + lastMsg);
+            setText("<html><b>" + name + ": " + participants + "</b><br>&nbsp;&nbsp;" + lastMsg);
 
             if (isSelected) {
                 chatEntry.setUnread(false);
@@ -364,7 +394,10 @@ public class MainWindow extends JFrame {
     }
 
     public void fillConvoDisplay() {
+        participantsField.setText(currentChat.getParticipantsString());
+        participantsField.setEditable(false);
         convoDisplay.setText(HTML_FORMAT);
+
         for (Message m : currentChat.getMessages()) {
             // UPDATE LATER
             if (m.getSender().equals("Zach")) {
@@ -380,5 +413,12 @@ public class MainWindow extends JFrame {
                 scrollBar.setValue(scrollBar.getMaximum());
             }
         });
+    }
+
+    public void clearConvoDisplay() {
+        currentChat = null;
+        participantsField.setText("");
+        participantsField.setEditable(true);
+        convoDisplay.setText("");
     }
 }

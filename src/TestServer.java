@@ -7,6 +7,16 @@ public class TestServer {
         this.client = client;
     }
 
+    public boolean receivedNewChat(String participantsString, String content) {
+        String[] usernames = participantsString.split(",");
+
+        // CREATE A NEW CHAT WITH A NEW IDEA
+        // "BROADCAST" NEW CHAT TO ALL USERS
+        // "BROADCAST" INITIAL MESSAGE TO ALL USERS
+
+        return true;
+    }
+
     public boolean receivedMessage(int conversationID, String sender, String content) {
         System.out.println(
                 "SERVER - Received message from " + sender + " for conversationID " + conversationID + ": " + content);
