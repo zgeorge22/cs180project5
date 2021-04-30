@@ -1,12 +1,10 @@
-//package com.company;
+//ackage com.company;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class ServerProcess extends Thread {
 
@@ -67,8 +65,6 @@ public class ServerProcess extends Thread {
         String loginOption = reader.readLine();
         boolean loggedIn = false;
         Account userAccount = new Account("PH", "PH", false);
-
-
         if (loginOption.equals("Login")) {
             String username = reader.readLine();
             String password = reader.readLine();
@@ -81,7 +77,6 @@ public class ServerProcess extends Thread {
             userAccount = createAccount(username, password);
             loggedIn = true;
         }
-
         if (loggedIn && !userAccount.getUsername().equals("PH") && !userAccount.getPassword().equals("PH")) {
             pw.write("User logged in " + userAccount.getUsername());
             pw.println();
@@ -109,9 +104,7 @@ public class ServerProcess extends Thread {
     }
     /*
     private Account accountLogin(String username, String password) throws AccountNotExistException {
-
         Account checkAccount = Database.getAccountByUsername(username);
-
         if (usernameList.contains(username) && passwordList.contains(password)) {
             if (usernameList.indexOf(username) == passwordList.indexOf(password)) {
                 return checkAccount;
@@ -122,7 +115,6 @@ public class ServerProcess extends Thread {
             throw new AccountNotExistException();
         }
     }
-
     public Account createAccount(String username, String password) throws UsernameAlreadyExistsException {
         return new Account(username, password, true);
     }
@@ -147,6 +139,7 @@ public class ServerProcess extends Thread {
                     Account newAccount = new Account(newUsername, newPassword, true);
                     this.currentAccount = newAccount;
                     activeUsersList.add(newAccount);
+                    Database.addToDatabase(newAccount);
                     break;
                 case ("loginAccount"):
                     String existingUsername = token[1];
@@ -166,6 +159,7 @@ public class ServerProcess extends Thread {
                 case ("createConvo"):
                     String participantsString = token[1];
                     String[] participantsUsernameList = participantsString.split(",");
+                    // create conversation
                     ArrayList<Account> newConvoAccountList = new ArrayList<>();
                     for (String username : participantsUsernameList) {
                         for (Account activeUser : activeUsersList) {
@@ -176,8 +170,20 @@ public class ServerProcess extends Thread {
                     }
                     String initialMsg = token[2];
                     Conversation newConvo = new Conversation(null, newConvoAccountList, true);
-                    // TODO: send initialMsg to users in newConvo
-                    // TODO: send commands to client
+                    int newConvoID = newConvo.getConversationId();
+                    Database.addToDatabase(newConvo);
+                    // send intialMsg to users in newConvo
+                    ArrayList<ServerProcess> serverProcessList = Server.getServerList();
+                    for (ServerProcess process: serverProcessList) {
+                        for (Account account: newConvoAccountList) {
+                            if (process.getAccount().equals(account)) {
+                                send(initialMsg);
+                            }
+                        }
+                    }
+                    // send commands back to client
+                    send(String.format("addConvo %d %s", newConvoID, participantsString));
+                    send(String.format("addMsg %d %s", newConvoID, initialMsg));
                     break;
                 case ("leaveConvo"):
                     try {
@@ -257,15 +263,12 @@ public class ServerProcess extends Thread {
         int conversationID = Integer.parseInt(bfr.readLine());
         String message = bfr.readLine();
         Account currentAccount = createAccount(username, password);
-
         accountList.add(currentAccount);
-
         for (int i = 0; i < accountList.size(); i++) {
             if (accountList.get(i).getUsername().equals(conversationID)) {
                 sendDirectMessage(accountList.get(i), message);
             }
         }
-
         for (int i = 0; i < Database.conversations.size(); i++) {
             if (Database.conversations.get(i).getConversationId() == (conversationID)) {
                 Database.conversations.get(i).addMessage(new Message(null, currentAccount.getUsername(),
@@ -279,7 +282,6 @@ public class ServerProcess extends Thread {
                 }
             }
         }
-
  */
     }
 
@@ -329,6 +331,10 @@ public class ServerProcess extends Thread {
 
     public Account getAccount() {
         return currentAccount;
+    }
+
+    public void send(String message) throws IOException{
+        outputStream.write(message.getBytes());
     }
 
 }
