@@ -1,4 +1,4 @@
-//ackage com.company;
+//package com.company;
 
 import java.io.*;
 import java.net.Socket;
@@ -334,7 +334,11 @@ public class ServerProcess extends Thread {
     }
 
     public void send(String message) throws IOException{
-        outputStream.write(message.getBytes());
+        PrintWriter writer = new PrintWriter(outputStream);
+        writer.write(message);
+        writer.println();
+        writer.flush();
+        writer.close();
     }
 
 }
