@@ -50,6 +50,14 @@ public class Conversation {
         this.addToFile = false;
         this.database = database;
 
+        for (Account account : participants) {
+            try {
+                this.database.getAccountByUsername(account.getUsername()).addToConversation(this);
+            } catch (AccountNotExistException e) {
+                e.printStackTrace();
+            }
+        }
+
         this.database.addToDatabase(this);
     }
 

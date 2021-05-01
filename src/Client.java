@@ -34,59 +34,88 @@ public class Client {
         return status;
     }
 
-    public void requestNewChat(String participantsString, String initialMsg) {
+    public boolean requestCreateConvo(String participantsString, String initialMsg) {
         participantsString = participantsString.replaceAll("\\s", "");
-        // VALIDATE characters!
+        // VALIDATE characters better!
+        participantsString = username + "," + participantsString;
 
-        System.out.println("CLIENT - Create Chat: " + participantsString + " - Send: " + initialMsg);
+        System.out.println(
+                "CLIENT - Requested createConvo for [" + participantsString + "] with initialMsg [" + initialMsg + "]");
 
-        // ----- REMOVE later! call broadcast function -----
-        boolean successful = server.receivedNewChat(participantsString, initialMsg);
-        // -------------------------------------------------
-
-        // REPLACE WITH THIS LATER
-        // boolean successful = sendServer("createConvo " + participantsString + " " +
-        // initialMsg);
-        if (successful) {
-            mw.clearComposeMessage();
-        } else {
-            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void receivedNewChat(int conversationID) {
-        // NEED TO BE ABLE TO CONSTRUCT A LOCAL CONVERSATION OBJECT THAT DOESN'T NEED
-        // ALL THE ACCOUNT OBJECTS (which require usernames and passwords to construct)
-    }
-
-    public void requestCreateMsg(Conversation conversation, String content) {
-        System.out.println("CLIENT - Send " + conversation.getConversationName() + ": " + content);
-
-        // ----- REMOVE later! call broadcast function -----
+        // REMOVE later!
         // server won't need username, client handler will know sender
-        boolean successful = server.receivedMessage(conversation.getConversationId(), username, content);
-        // -------------------------------------------------
+        return server.receivedCreateConvo(participantsString, username, initialMsg);
 
-        // REPLACE WITH THIS LATER
-        // boolean successful = sendServer("createMsg " +
-        // conversation.getConversationId() + " " + content);
-        if (successful) {
-            mw.clearComposeMessage();
-        } else {
-            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error", JOptionPane.ERROR_MESSAGE);
+        // return sendServer("createConvo " + participantsString + " " + initialMsg);
+    }
+
+    public boolean requestCreateMsg(Conversation conversation, String content) {
+        System.out.println("CLIENT - Requested createMsg for conversationID [" + conversation.getConversationId()
+                + "] with content [" + content + "]");
+
+        // REMOVE later!
+        // server won't need username, client handler will know sender
+        return server.receivedCreateMessage(conversation.getConversationId(), username, content);
+
+        // return sendServer("createMsg " + conversation.getConversationId() + " " +
+        // content);
+    }
+
+    public void receivedAddConvo(String details) {
+        String placeholder = details;
+
+        int conversationID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String participantsString = placeholder;
+
+        ArrayList<Account> participants = new ArrayList<Account>();
+        for (String username : participantsString.split(",")) {
+            try {
+                participants.add(db.getAccountByUsername(username));
+            } catch (AccountNotExistException e1) {
+                try {
+                    participants.add(new Account(username, "", db, false));
+                } catch (UsernameAlreadyExistsException e2) {
+                    e2.printStackTrace(); // should never happen!
+                }
+            }
+        }
+        String name = participants.size() > 2 ? "GC" : "DM";
+
+        Conversation conversation;
+        try {
+            conversation = db.getConversationById(conversationID);
+
+            System.out.println("ConversationID " + conversationID + " already exists!");
+        } catch (ConversationNotFoundException e) {
+            // Create new local conversation object
+            conversation = new Conversation(conversationID, name, participants, db);
+
+            mw.addNewChat(conversation);
         }
     }
 
-    public void receivedMessage(int conversationID, int messageID, String sender, LocalDateTime timestamp,
-            String content) {
-        Message message;
+    public void receivedAddMsg(String details) {
+        // Parse message details
+        String placeholder = details;
 
+        int conversationID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int messageID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String sender = placeholder.substring(0, placeholder.indexOf(" "));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        LocalDateTime timestamp = LocalDateTime.parse(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String content = placeholder;
+
+        Message message;
         try {
             message = db.getMessageById(messageID);
 
-            // QUESTION: should we update messages here??
             System.out.println("MessageID " + messageID + " already exists!");
         } catch (MessageNotFoundException e1) {
+            // Create new local message object
             message = new Message(messageID, timestamp, sender, content, false, db);
 
             try {

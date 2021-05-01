@@ -14,15 +14,8 @@ editUsername username
 
 editPassword password
 
-createConvo participantsString initialMsg
--> addConvo conversationID participantsString
--> addMsg conversationID initialMsg
-
 leaveConvo conversationID
 -> removeUser conversationID username
-
-createMsg conversationID content
--> addMsg conversationID messageID sender timestamp content
 
 editMsg conversationID messageID content
 -> editMsg conversationID messageID sender timestamp content
@@ -44,24 +37,27 @@ public class TestServer {
         this.client = client;
     }
 
-    public boolean receivedNewChat(String participantsString, String content) {
-        String[] usernames = participantsString.split(",");
+    public boolean receivedCreateConvo(String participantsString, String sender, String content) {
+        System.out.println("SERVER - Received createConvo for [" + participantsString + "] with initialMsg [" + content
+                + "] from [" + sender + "]");
 
-        // CREATE A NEW CHAT WITH A NEW ID
-        // "BROADCAST" NEW CHAT TO ALL USERS
-        // "BROADCAST" INITIAL MESSAGE TO ALL USERS
+        Conversation.setNextConversationId(Conversation.getNextConversationId() + 1);
+        client.receivedAddConvo(Conversation.getNextConversationId() + " " + participantsString);
+
+        Message.setNextMessageId(Message.getNextMessageId() + 1);
+        client.receivedAddMsg(Conversation.getNextConversationId() + " " + Message.getNextMessageId() + " " + sender
+                + " " + LocalDateTime.now() + " " + content);
 
         return true;
     }
 
-    public boolean receivedMessage(int conversationID, String sender, String content) {
-        System.out.println(
-                "SERVER - Received message from " + sender + " for conversationID " + conversationID + ": " + content);
+    public boolean receivedCreateMessage(int conversationID, String sender, String content) {
+        System.out.println("SERVER - Received createMessage for conversationID [" + conversationID + "] with content ["
+                + content + "] from [" + sender + "]");
 
         Message.setNextMessageId(Message.getNextMessageId() + 1);
-
-        // BROADCAST ALL CLINETS
-        client.receivedMessage(conversationID, Message.getNextMessageId(), sender, LocalDateTime.now(), content);
+        client.receivedAddMsg(conversationID + " " + Message.getNextMessageId() + " " + sender + " "
+                + LocalDateTime.now() + " " + content);
 
         return true;
     }

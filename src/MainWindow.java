@@ -32,7 +32,8 @@ public class MainWindow extends JFrame {
     private JTextArea composeMessage;
     private JButton sendButton;
 
-    private Conversation currentChat;
+    private ChatEntry currentChat;
+    private ChatEntry newChat;
 
     private static final String STYLE_SHEET = ".chat-box { margin: 2px; }"
             + ".chat-box p { display: block; word-wrap: break-word; justify-items: end; }"
@@ -50,6 +51,7 @@ public class MainWindow extends JFrame {
 
         this.client = client;
         this.currentChat = null;
+        this.newChat = null;
 
         initializeComponents();
 
@@ -70,27 +72,7 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 clearConvoDisplay();
-                clearComposeMessage();
-
-                // =====================================================================
-                // -------------------------------- TEMP -------------------------------
-                try {
-                    Account z = client.getDatabase().getAccountByUsername("Zach");
-                    Account n = client.getDatabase().getAccountByUsername("Natalie");
-
-                    ArrayList<Account> accountsList = new ArrayList<Account>();
-                    accountsList.add(z);
-                    accountsList.add(n);
-
-                    Conversation chat = new Conversation("new", accountsList, false, client.getDatabase());
-
-                    addNewChat(chat);
-                } catch (AccountNotExistException error) {
-                    error.printStackTrace();
-                }
-                // ---------------------------------------------------------------------
-                // =====================================================================
-
+                composeMessage.setText("");
             }
         });
 
@@ -102,10 +84,10 @@ public class MainWindow extends JFrame {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    currentChat = chatList.getSelectedValue().getConversation();
-                    if (currentChat != null) {
+                    if (chatList.getSelectedValue() != null) {
+                        currentChat = chatList.getSelectedValue();
                         fillConvoDisplay();
-                        clearComposeMessage();
+                        composeMessage.setText("");
                     }
                 }
             }
@@ -190,7 +172,12 @@ public class MainWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (currentChat != null) {
                     if (!composeMessage.getText().equals("")) {
-                        client.requestCreateMsg(currentChat, composeMessage.getText());
+                        if (client.requestCreateMsg(currentChat.getConversation(), composeMessage.getText())) {
+                            composeMessage.setText("");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                     } else {
                         JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
                                 JOptionPane.WARNING_MESSAGE);
@@ -198,7 +185,15 @@ public class MainWindow extends JFrame {
                 } else {
                     if (!participantsField.getText().equals("")) {
                         if (!composeMessage.getText().equals("")) {
-                            client.requestNewChat(participantsField.getText(), composeMessage.getText());
+                            if (client.requestCreateConvo(participantsField.getText(), composeMessage.getText())) {
+                                participantsField.setText("");
+                                composeMessage.setText("");
+                                System.out.println(newChat);
+                                chatList.setSelectedValue(currentChat, true);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
                         } else {
                             JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
                                     JOptionPane.WARNING_MESSAGE);
@@ -217,7 +212,7 @@ public class MainWindow extends JFrame {
     }
 
     public void clearComposeMessage() {
-        composeMessage.setText("");
+
     }
 
     public static int getWrappedLines(JTextComponent c) {
@@ -269,7 +264,8 @@ public class MainWindow extends JFrame {
 
     public void addNewChat(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
-        chatEntities.addElement(new ChatEntry(convo, true));
+        newChat = new ChatEntry(convo, true);
+        chatEntities.add(0, newChat);
     }
 
     public void updateChatEntry(Conversation conversation) {
@@ -282,14 +278,18 @@ public class MainWindow extends JFrame {
             }
         }
 
+        sortChatEntries();
+
         if (currentChat != null) {
-            if (chatList.getSelectedValue().getConversation().getConversationId() == conversation.getConversationId()) {
+            if (currentChat.getConversation().getConversationId() == conversation.getConversationId()) {
                 fillConvoDisplay();
             }
         }
     }
 
     public void sortChatEntries() {
+        ChatEntry oldSelection = chatList.getSelectedValue();
+
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         ArrayList<ChatEntry> list = new ArrayList<ChatEntry>();
         for (int i = 0; i < chatEntities.size(); i++) {
@@ -300,6 +300,8 @@ public class MainWindow extends JFrame {
         for (ChatEntry c : list) {
             chatEntities.addElement(c);
         }
+
+        chatList.setSelectedValue(oldSelection, false);
     }
 
     class ChatEntry implements Comparable<ChatEntry> {
@@ -396,11 +398,11 @@ public class MainWindow extends JFrame {
     }
 
     public void fillConvoDisplay() {
-        participantsField.setText(currentChat.getParticipantsString());
+        participantsField.setText(currentChat.getConversation().getParticipantsString());
         participantsField.setEditable(false);
         convoDisplay.setText(HTML_FORMAT);
 
-        for (Message m : currentChat.getMessages()) {
+        for (Message m : currentChat.getConversation().getMessages()) {
             // UPDATE LATER
             if (m.getSender().equals("Zach")) {
                 appendMessageToConvoDisplay(String.format(MY_CHAT_FORMAT, formatHTMLMessage(m)));
@@ -419,6 +421,7 @@ public class MainWindow extends JFrame {
 
     public void clearConvoDisplay() {
         currentChat = null;
+        chatList.setSelectedValue(null, false);
         participantsField.setText("");
         participantsField.setEditable(true);
         convoDisplay.setText("");
