@@ -190,7 +190,7 @@ public class MainWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (currentChat != null) {
                     if (!composeMessage.getText().equals("")) {
-                        client.requestSendMessage(currentChat, composeMessage.getText());
+                        client.requestCreateMsg(currentChat, composeMessage.getText());
                     } else {
                         JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
                                 JOptionPane.WARNING_MESSAGE);

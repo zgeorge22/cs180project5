@@ -23,16 +23,30 @@ public class Client {
         // --------------------------------------------------------
     }
 
-    public void requestNewChat(String participantsString, String content) {
+    public boolean sendServer(String command) {
+        boolean status = false;
+
+        // SEND SERVER: command + " " details
+        // if recieve back "succeeded" return true
+        // else if receive back "failed" return false
+        // else throw unknown server message error
+
+        return status;
+    }
+
+    public void requestNewChat(String participantsString, String initialMsg) {
         participantsString = participantsString.replaceAll("\\s", "");
         // VALIDATE characters!
 
-        System.out.println("CLIENT - Create Chat: " + participantsString + " - Send: " + content);
+        System.out.println("CLIENT - Create Chat: " + participantsString + " - Send: " + initialMsg);
 
         // ----- REMOVE later! call broadcast function -----
-        boolean successful = server.receivedNewChat(participantsString, content);
+        boolean successful = server.receivedNewChat(participantsString, initialMsg);
         // -------------------------------------------------
 
+        // REPLACE WITH THIS LATER
+        // boolean successful = sendServer("createConvo " + participantsString + " " +
+        // initialMsg);
         if (successful) {
             mw.clearComposeMessage();
         } else {
@@ -45,7 +59,7 @@ public class Client {
         // ALL THE ACCOUNT OBJECTS (which require usernames and passwords to construct)
     }
 
-    public void requestSendMessage(Conversation conversation, String content) {
+    public void requestCreateMsg(Conversation conversation, String content) {
         System.out.println("CLIENT - Send " + conversation.getConversationName() + ": " + content);
 
         // ----- REMOVE later! call broadcast function -----
@@ -53,6 +67,9 @@ public class Client {
         boolean successful = server.receivedMessage(conversation.getConversationId(), username, content);
         // -------------------------------------------------
 
+        // REPLACE WITH THIS LATER
+        // boolean successful = sendServer("createMsg " +
+        // conversation.getConversationId() + " " + content);
         if (successful) {
             mw.clearComposeMessage();
         } else {
