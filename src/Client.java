@@ -143,4 +143,8 @@ public class Client {
     public void setDatabase(Database db) {
         this.db = db;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }
