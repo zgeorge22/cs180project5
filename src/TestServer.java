@@ -37,6 +37,19 @@ public class TestServer {
         this.client = client;
     }
 
+    public boolean receivedEditPassword(String password, String user) {
+        System.out.println("SERVER - Received editPassword to [" + password + "] for [" + user + "]");
+
+        try {
+            client.getDatabase().getAccountByUsername(user).changePassword(password);
+
+            return true;
+        } catch (AccountNotExistException e) {
+            e.printStackTrace(); // should never happen!
+            return false;
+        }
+    }
+
     public boolean receivedCreateConvo(String participantsString, String sender, String content) {
         System.out.println("SERVER - Received createConvo for [" + participantsString + "] with initialMsg [" + content
                 + "] from [" + sender + "]");
@@ -47,6 +60,15 @@ public class TestServer {
         Message.setNextMessageId(Message.getNextMessageId() + 1);
         client.receivedAddMsg(Conversation.getNextConversationId() + " " + Message.getNextMessageId() + " " + sender
                 + " " + LocalDateTime.now() + " " + content);
+
+        return true;
+    }
+
+    public boolean receivedLeaveConvo(int conversationID, String sender) {
+        System.out.println(
+                "SERVER - Received leaveConvo for conversationID [" + conversationID + "] from [" + sender + "]");
+
+        client.receivedRemoveUser(conversationID + " " + sender);
 
         return true;
     }
@@ -72,6 +94,24 @@ public class TestServer {
                 message.editMessage(content);
                 client.receivedEditMsg(conversationID + " " + message.getId() + " " + sender + " "
                         + message.getTimestamp() + " " + content); // update timestamp as well?
+                return true;
+            }
+        } catch (MessageNotFoundException e) {
+            e.printStackTrace(); // should never happen!
+        }
+
+        return false;
+    }
+
+    public boolean receivedDeleteMsg(int conversationID, int messageID, String sender) {
+        System.out.println("SERVER - Received deleteMsg for conversationID [" + conversationID + "] and messageID ["
+                + messageID + "]");
+
+        try {
+            Message message = client.getDatabase().getMessageById(messageID);
+            if (message.getSender().equals(sender)) {
+                message.deleteMessage();
+                client.receivedRemoveMsg(conversationID + " " + message.getId());
                 return true;
             }
         } catch (MessageNotFoundException e) {

@@ -133,7 +133,9 @@ public class Conversation {
         Account account = this.database.getAccountByUsername(username);
         participants.remove(account);
         account.removeConversation(this);
-        this.database.removeParticipantFromConversationFile(this.getConversationId(), username);
+        if (this.database.isServer()) {
+            this.database.removeParticipantFromConversationFile(this.getConversationId(), username);
+        }
     }
 
     public void addMessage(Message message) {

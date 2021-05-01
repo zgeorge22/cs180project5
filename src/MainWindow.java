@@ -2,14 +2,10 @@ package src;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.text.*;
-import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 import java.util.Collections;
 
 public class MainWindow extends JFrame {
@@ -37,6 +33,7 @@ public class MainWindow extends JFrame {
     private JScrollPane composeScrollPane;
     private JTextArea composeMessage;
     private JComboBox<String> messageActions;
+    private JSplitPane splitPane;
     private final String SEND_ACTION = "SEND";
     private final String EDIT_ACTION = "EDIT";
     private final String DELETE_ACTION = "DELETE";
@@ -72,9 +69,6 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 hideMsgList();
-                composeMessage.setText("");
-                messageActions.setSelectedItem(SEND_ACTION);
-                participantsField.requestFocusInWindow();
             }
         });
 
@@ -83,7 +77,17 @@ public class MainWindow extends JFrame {
         leaveChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Leave chat!
+                if (currentChat != null) {
+                    if (client.requestLeaveConvo(currentChat.getConversation())) {
+                        hideMsgList();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Unable to leave chat!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No chat selected to leave!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
 
@@ -103,6 +107,7 @@ public class MainWindow extends JFrame {
                     if (chatList.getSelectedValue() != null) {
                         currentChat = chatList.getSelectedValue();
                         showMsgList();
+                        splitPane.resetToPreferredSizes();
                         composeMessage.setText("");
                         composeMessage.requestFocusInWindow();
                     }
@@ -133,7 +138,14 @@ public class MainWindow extends JFrame {
         accountButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Open account edit window!
+                String password = JOptionPane.showInputDialog("Enter new password: ");
+
+                if (validPassword(password)) {
+                    client.requestEditPassword(password);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid password!", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+
             }
         });
 
@@ -141,7 +153,7 @@ public class MainWindow extends JFrame {
         signOutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // call client quit!
+                // UPDATE later! call client quit
                 dispose();
             }
         });
@@ -178,7 +190,6 @@ public class MainWindow extends JFrame {
 
         msgListScrollPane = new JScrollPane(msgList);
         msgListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        chatPanel.add(msgListScrollPane, BorderLayout.CENTER);
 
         composeBar = new JPanel();
         composeBar.setLayout(new BorderLayout());
@@ -188,33 +199,6 @@ public class MainWindow extends JFrame {
         composeScrollPane = new JScrollPane(composeMessage);
         composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         composeBar.add(composeScrollPane, BorderLayout.CENTER);
-
-        composeMessage.getDocument().addDocumentListener(new DocumentListener() {
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateLineCount();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateLineCount();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateLineCount();
-            }
-
-            private void updateLineCount() {
-                int lineCount = getWrappedLines(composeMessage);
-                if (lineCount <= 3) {
-                    composeMessage.setRows(lineCount);
-                    composeBar.revalidate();
-                    chatPanel.revalidate();
-                }
-            }
-        });
 
         InputMap inputMap = composeMessage.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = composeMessage.getActionMap();
@@ -252,7 +236,10 @@ public class MainWindow extends JFrame {
         });
 
         composeBar.add(messageActions, BorderLayout.EAST);
-        chatPanel.add(composeBar, BorderLayout.SOUTH);
+
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgListScrollPane, composeBar);
+        splitPane.setResizeWeight(1);
+        chatPanel.add(splitPane, BorderLayout.CENTER);
 
         content.add(sidePanel, BorderLayout.WEST);
         content.add(chatPanel, BorderLayout.CENTER);
@@ -327,40 +314,35 @@ public class MainWindow extends JFrame {
                 }
                 break;
             case DELETE_ACTION:
+                if (currentMsg != null) {
+                    if (currentMsg.getMessage().getSender().equals(client.getUsername())) {
+                        if (client.requestDeleteMsg(currentChat.getConversation(), currentMsg.getMessage())) {
+                            currentMsg = null;
+                            msgList.setSelectedValue(null, false);
+                            composeMessage.setText("");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unable to delete message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "You can only delete messages that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No message selected to delete!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }
                 break;
             default:
                 System.out.println("ERROR: invalid action attempted!"); // should never happen!
         }
     }
 
-    public static int getWrappedLines(JTextComponent c) {
-        int len = c.getDocument().getLength();
-        int offset = 0;
-        // Increase 10% for extra newlines
-        StringBuffer buf = new StringBuffer((int) (len * 1.10));
-        try {
-            while (offset < len) {
-                int end = javax.swing.text.Utilities.getRowEnd(c, offset);
-                if (end < 0) {
-                    break;
-                }
-                // Include the last character on the line
-                end = Math.min(end + 1, len);
-                String s = c.getDocument().getText(offset, end - offset);
-                buf.append(s);
-                // Add a newline if s does not have one
-                if (!s.endsWith("\n")) {
-                    buf.append('\n');
-                }
-                offset = end;
-            }
-        } catch (BadLocationException e) {
-        }
-        StringTokenizer token = new StringTokenizer(buf.toString(), "\n");
-        int linesOfText = token.countTokens();
-        if (linesOfText == 0)
-            linesOfText = 1;
-        return linesOfText;
+    private boolean validPassword(String password) {
+        // UPDATE LATER
+        System.out.println(password);
+
+        return true;
     }
 
     private DefaultListModel<ChatEntry> getChatEntities() {
@@ -469,7 +451,6 @@ public class MainWindow extends JFrame {
                 boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            // UPDATE string parsing to proper conversation parsing
             ChatEntry chatEntry = (ChatEntry) value;
             Conversation conversation = chatEntry.getConversation();
             String name = conversation.getConversationName();
@@ -483,6 +464,7 @@ public class MainWindow extends JFrame {
 
             if (isSelected) {
                 chatEntry.setUnread(false);
+                setForeground(Color.decode("#ffffff"));
                 setBackground(Color.decode("#149dff"));
             } else {
                 setBackground(Color.decode("#dedede"));
@@ -552,19 +534,20 @@ public class MainWindow extends JFrame {
     }
 
     class MsgEntry extends JPanel implements Comparable<MsgEntry> {
-        private static final String STYLE_SHEET = ".chat-box { margin: 2px; }"
-                + ".chat-box p { display: block; justify-items: end; }"
-                + ".chat-msg1 { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }"
-                + ".chat-msg2 { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }";
-
-        private static final String HTML_FORMAT = "<style>" + STYLE_SHEET + "</style>";
+        private static final String STYLE_SHEET = "<style>" + ".msg-box { margin: 2px; }"
+                + ".msg-box p { display: block; justify-items: end; }"
+                + ".other-msg { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 1px; }"
+                + ".my-msg { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 1px; }"
+                + "</style>";
 
         Message message;
         boolean mine;
+        boolean edited;
 
         public MsgEntry(Message message, boolean mine, boolean edited) {
             this.message = message;
             this.mine = mine;
+            this.edited = edited;
         }
 
         public Message getMessage() {
@@ -585,9 +568,11 @@ public class MainWindow extends JFrame {
             String timestamp = message.getTimestamp().format(f);
             String sender = message.getSender();
             String content = message.getContent();
+            String editTag = edited ? " (Edited)" : "";
+            String style = mine ? "my-msg" : "other-msg";
 
-            return "<html>" + HTML_FORMAT + "<div style='width: 300px' class=chat-box><p class=chat-msg1><b>" + sender
-                    + "</b>" + " - " + "<i>" + timestamp + "</i>" + "<br>" + content + "</p></div>";
+            return "<html>" + STYLE_SHEET + "<div style='width: 275px' class=msg-box><p class=" + style + "><b>"
+                    + sender + "</b>" + " - " + "<i>" + timestamp + editTag + "</i>" + "<br>" + content + "</p></div>";
         }
     }
 
@@ -604,21 +589,23 @@ public class MainWindow extends JFrame {
             String selectedAction = (String) messageActions.getSelectedItem();
 
             if (isSelected) {
-                currentMsg = msgEntry;
-                if (selectedAction.equals(EDIT_ACTION)) {
-                    if (msgEntry.getMine()) {
-                        composeMessage.setText(msgEntry.getMessage().getContent());
-                        setBackground(Color.decode("#35A437"));
-                    } else {
-                        composeMessage.setText("");
-                    }
-                }
-                if (selectedAction.equals(DELETE_ACTION)) {
+                if (!selectedAction.equals(SEND_ACTION)) {
+                    currentMsg = msgEntry;
+
+                    composeMessage.requestFocusInWindow();
                     composeMessage.setText("");
 
                     if (msgEntry.getMine()) {
-                        setBackground(Color.decode("#FF3E31"));
+                        if (selectedAction.equals(EDIT_ACTION)) {
+                            composeMessage.setText(msgEntry.getMessage().getContent());
+                            setBackground(Color.decode("#35A437"));
+                        } else if (selectedAction.equals(DELETE_ACTION)) {
+                            composeMessage.setText("Press ENTER to confirm delete...");
+                            setBackground(Color.decode("#FF3E31"));
+                        }
                     }
+                } else {
+                    currentMsg = null;
                 }
             }
 
@@ -627,6 +614,7 @@ public class MainWindow extends JFrame {
     }
 
     public void showMsgList() {
+        // In "using chat" mode...
         participantsField.setText(currentChat.getConversation().getParticipantsString());
         participantsField.setEditable(false);
         clearMsgList();
@@ -642,10 +630,13 @@ public class MainWindow extends JFrame {
     }
 
     public void hideMsgList() {
+        // In "creating chat" mode...
         currentChat = null;
         chatList.setSelectedValue(null, false);
         participantsField.setText("");
         participantsField.setEditable(true);
+        participantsField.requestFocusInWindow();
+        messageActions.setSelectedItem(SEND_ACTION);
         clearMsgList();
     }
 }

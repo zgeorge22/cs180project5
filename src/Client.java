@@ -15,6 +15,8 @@ public class Client {
         mw = new MainWindow(this);
         db = new Database(false);
 
+        // start socket
+
         // Login stuff
 
         // ----- REMOVE later! once server socket established -----
@@ -34,6 +36,16 @@ public class Client {
         return status;
     }
 
+    public boolean requestEditPassword(String password) {
+        System.out.println("CLIENT - Requested editPassword to [" + password + "]");
+
+        // ****************************** REMOVE later! ******************************
+        // server won't need username, client handler will know sender
+        return server.receivedEditPassword(password, username);
+
+        // return sendServer("editPassword " + password);
+    }
+
     public boolean requestCreateConvo(String participantsString, String initialMsg) {
         participantsString = participantsString.replaceAll("\\s", "");
         // VALIDATE characters better!
@@ -47,6 +59,18 @@ public class Client {
         return server.receivedCreateConvo(participantsString, username, initialMsg);
 
         // return sendServer("createConvo " + participantsString + " " + initialMsg);
+    }
+
+    public boolean requestLeaveConvo(Conversation conversation) {
+        System.out
+                .println("CLIENT - Requested leaveConvo for conversationID [" + conversation.getConversationId() + "]");
+
+        // ****************************** REMOVE later! ******************************
+        // server won't need username, client handler will know sender
+        return server.receivedLeaveConvo(conversation.getConversationId(), username);
+
+        // return sendServer("leaveConvo " + conversation.getConversationId() + " " +
+        // username);
     }
 
     public boolean requestCreateMsg(Conversation conversation, String content) {
@@ -71,6 +95,18 @@ public class Client {
 
         // return sendServer("editMsg " + conversation.getConversationId() + " " +
         // message.getId() + " " + content);
+    }
+
+    public boolean requestDeleteMsg(Conversation conversation, Message message) {
+        System.out.println("CLIENT - Requested deleteMsg for conversationID [" + conversation.getConversationId()
+                + "] and messageID [" + message.getId() + "]");
+
+        // ****************************** REMOVE later! ******************************
+        // server won't need username, client handler will know sender
+        return server.receivedDeleteMsg(conversation.getConversationId(), message.getId(), username);
+
+        // return sendServer("deleteMsg " + conversation.getConversationId() + " " +
+        // message.getId());
     }
 
     public void receivedAddConvo(String details) {
@@ -106,6 +142,28 @@ public class Client {
             conversation = new Conversation(conversationID, name, participants, db);
 
             mw.addNewChat(conversation);
+        }
+    }
+
+    public void receivedRemoveUser(String details) {
+        // Parse message details
+        String placeholder = details;
+
+        int conversationID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String user = placeholder;
+
+        System.out.println(
+                "CLIENT - Received removeUser for conversationID [" + conversationID + "] from [" + user + "]");
+
+        try {
+            Conversation conversation = db.getConversationById(conversationID);
+            conversation.removeParticipant(user);
+            mw.updateChatEntry(conversation);
+        } catch (ConversationNotFoundException e) {
+            System.out.println("ConversationID " + conversationID + " does not exist!");
+        } catch (AccountNotExistException e) {
+            System.out.println("User " + user + " does not exist!");
         }
     }
 
@@ -162,13 +220,42 @@ public class Client {
         System.out.println("CLIENT - Received editMsg for conversationID [" + conversationID + "] and messageID ["
                 + messageID + "] with content [" + content + "]");
 
-        Message message;
         try {
-            message = db.getMessageById(messageID);
+            Message message = db.getMessageById(messageID);
             message.editMessage(content); // update timestamp as well?
             mw.updateMsgEntry(message);
+
+            Conversation conversation = db.getConversationById(conversationID);
+            mw.updateChatEntry(conversation);
         } catch (MessageNotFoundException e1) {
-            System.out.println("MessageID " + conversationID + " does not exist!");
+            System.out.println("MessageID " + messageID + " does not exist!");
+        } catch (ConversationNotFoundException e) {
+            System.out.println("ConversationID " + conversationID + " does not exist!");
+        }
+    }
+
+    public void receivedRemoveMsg(String details) {
+        // Parse message details
+        String placeholder = details;
+
+        int conversationID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int messageID = Integer.parseInt(placeholder);
+
+        System.out.println("CLIENT - Received removeMsg for conversationID [" + conversationID + "] and messageID ["
+                + messageID + "]");
+
+        try {
+            Message message = db.getMessageById(messageID);
+            db.removeMessagById(messageID);
+            mw.removeMsgEntry(message);
+
+            Conversation conversation = db.getConversationById(conversationID);
+            mw.updateChatEntry(conversation);
+        } catch (MessageNotFoundException e1) {
+            System.out.println("MessageID " + messageID + " does not exist!");
+        } catch (ConversationNotFoundException e) {
+            System.out.println("ConversationID " + conversationID + " does not exist!");
         }
     }
 
