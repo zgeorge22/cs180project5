@@ -8,7 +8,7 @@ public class Message {
     private final int id;
     private final LocalDateTime timestamp;
     private final String sender;
-    private String content; // Remove Final if editing messages is to be allowed.
+    private String content;
     private boolean addToFile;
     private Database database;
 
@@ -27,9 +27,9 @@ public class Message {
         this.database.addToDatabase(this);
     }
 
-    // Do not call this constructor for creating new messages.
-    public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile,
-            Database database) {
+    // Do not call this constructor for creating new messages in the server.
+    public Message(int id, LocalDateTime timestamp, String senderUsername, String content,
+                   boolean addToFile, Database database) {
 
         this.timestamp = timestamp;
         this.sender = senderUsername;
@@ -79,7 +79,7 @@ public class Message {
     }
 
     public String toString() {
-
-        return this.getId() + "," + this.getTimestamp().toString() + "," + this.getSender() + "," + this.getContent();
+        return this.getId() + "," + this.getTimestamp().toString() + ","
+                + this.getSender() + "," + this.getContent();
     }
 }
