@@ -1,3 +1,5 @@
+package src;
+
 public class ConversationNotFoundException extends Exception {
     public ConversationNotFoundException(String message) {
         super(message);
@@ -7,4 +9,3 @@ public class ConversationNotFoundException extends Exception {
         super();
     }
 }
-

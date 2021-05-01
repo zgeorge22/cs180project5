@@ -1,3 +1,5 @@
+package src;
+
 import java.io.IOException;
 import java.io.*;
 import java.net.*;
@@ -8,7 +10,7 @@ public class Server {
     public static void main(String[] args) throws IOException {
         ArrayList<Account> activeUsers = new ArrayList<>();
         ServerSocket serverSocket = new ServerSocket(1111);
-        while(true) {
+        while (true) {
             Socket clientSocket = serverSocket.accept();
             System.out.println("Client Connected " + clientSocket.getPort());
             ServerProcess process = new ServerProcess(clientSocket);

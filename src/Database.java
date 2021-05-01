@@ -1,3 +1,5 @@
+package src;
+
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -95,15 +97,14 @@ public class Database {
                     }
                 }
 
-                Conversation conversation = new Conversation(conversationData.get(1),
-                        conversationParticipants, false, this);
+                Conversation conversation = new Conversation(conversationData.get(1), conversationParticipants, false,
+                        this);
 
                 for (int i = 3; i < conversationData.size(); i++) {
                     String[] thisMessage = conversationData.get(i).split(",", 4);
 
-                    Message message = new Message(Integer.parseInt(thisMessage[0]),
-                            LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3],
-                            false, this);
+                    Message message = new Message(Integer.parseInt(thisMessage[0]), LocalDateTime.parse(thisMessage[1]),
+                            thisMessage[2], thisMessage[3], false, this);
                     conversation.addMessage(message);
                 }
 
@@ -184,8 +185,8 @@ public class Database {
         }
     }
 
-    public void changeAccountDetailsInFile(String oldUsername, String oldPassword,
-                                           String newUsername, String newPassword) {
+    public void changeAccountDetailsInFile(String oldUsername, String oldPassword, String newUsername,
+            String newPassword) {
 
         if (newUsername == null) {
             newUsername = oldUsername;
@@ -279,8 +280,8 @@ public class Database {
                 if (messageSplit[2].equals(oldUsername)) {
                     messageSplit[2] = newUsername;
                 }
-                String newMessage = messageSplit[0] + "," + messageSplit[1] + ","
-                        + messageSplit[2] + "," + messageSplit[3];
+                String newMessage = messageSplit[0] + "," + messageSplit[1] + "," + messageSplit[2] + ","
+                        + messageSplit[3];
                 conversationData.set(j, newMessage);
             }
 
@@ -295,7 +296,6 @@ public class Database {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-
 
         }
     }
@@ -324,7 +324,8 @@ public class Database {
         }
     }
 
-    public void writeMessageToConversationFile(Conversation conversation, Message message) throws FileNotFoundException {
+    public void writeMessageToConversationFile(Conversation conversation, Message message)
+            throws FileNotFoundException {
 
         FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", true);
         PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
@@ -471,7 +472,8 @@ public class Database {
         String editMessage = conversationFile.get(lineToEdit);
         String[] splitEditMessage = editMessage.split(",", 4);
         splitEditMessage[3] = newMessage;
-        String toWrite = splitEditMessage[0] + "," + splitEditMessage[1] + "," + splitEditMessage[2] + "," + splitEditMessage[3];
+        String toWrite = splitEditMessage[0] + "," + splitEditMessage[1] + "," + splitEditMessage[2] + ","
+                + splitEditMessage[3];
         conversationFile.set(lineToEdit, toWrite);
 
         FileOutputStream fileOutputStream;
@@ -554,7 +556,6 @@ public class Database {
 
         ArrayList<String> conversationFile = new ArrayList<>();
 
-
         try {
             FileReader filer = new FileReader(conversationID + ".txt");
             BufferedReader buffer = new BufferedReader(filer);
@@ -582,10 +583,9 @@ public class Database {
             String fileLine = conversationFile.get(i);
             String[] fileLineSplit = fileLine.split(",", 4);
             String newFileLine = "\"" + fileLineSplit[3] + "\"";
-            conversationFile.set(i, fileLineSplit[0] + "," + fileLineSplit[1] + ","
-                    + fileLineSplit[2] + "," + newFileLine);
+            conversationFile.set(i,
+                    fileLineSplit[0] + "," + fileLineSplit[1] + "," + fileLineSplit[2] + "," + newFileLine);
         }
-
 
         FileWriter fileWriter;
         File csvFile = new File(conversationName + ".csv");
