@@ -1,3 +1,5 @@
+package src;
+
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -104,6 +106,7 @@ public class Database {
                     Message message = new Message(Integer.parseInt(thisMessage[0]),
                             LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3],
                             false, this);
+
                     conversation.addMessage(message);
                 }
 
@@ -295,8 +298,6 @@ public class Database {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-
-
         }
     }
 
@@ -554,7 +555,6 @@ public class Database {
 
         ArrayList<String> conversationFile = new ArrayList<>();
 
-
         try {
             FileReader filer = new FileReader(conversationID + ".txt");
             BufferedReader buffer = new BufferedReader(filer);
@@ -585,7 +585,6 @@ public class Database {
             conversationFile.set(i, fileLineSplit[0] + "," + fileLineSplit[1] + ","
                     + fileLineSplit[2] + "," + newFileLine);
         }
-
 
         FileWriter fileWriter;
         File csvFile = new File(conversationName + ".csv");

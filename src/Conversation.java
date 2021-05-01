@@ -1,3 +1,5 @@
+package src;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
@@ -26,7 +28,6 @@ public class Conversation {
         this.database = database;
 
         for (Account account : participants) {
-
             try {
                 this.database.getAccountByUsername(account.getUsername()).addToConversation(this);
             } catch (AccountNotExistException e) {
@@ -74,8 +75,26 @@ public class Conversation {
         return participants;
     }
 
+    public String getParticipantsString() {
+        String s = "";
+
+        for (Account participant : participants) {
+            s += participant.getUsername() + ", ";
+        }
+
+        return s.substring(0, s.length() - 2);
+    }
+
+    public void setParticipants(ArrayList<Account> participants) {
+        this.participants = participants;
+    }
+
     public ArrayList<Message> getMessages() {
         return messages;
+    }
+
+    public boolean isAddToFile() {
+        return addToFile;
     }
 
     public boolean isAddToFile() {

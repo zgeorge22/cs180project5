@@ -1,3 +1,5 @@
+package src;
+
 import java.time.LocalDateTime;
 
 public class Message {
@@ -77,7 +79,6 @@ public class Message {
     }
 
     public String toString() {
-
         return this.getId() + "," + this.getTimestamp().toString() + ","
                 + this.getSender() + "," + this.getContent();
     }

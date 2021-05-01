@@ -1,3 +1,5 @@
+package src;
+
 import java.util.ArrayList;
 
 public class Account {
@@ -13,7 +15,6 @@ public class Account {
     // re-added when the database initialises it into the accounts.
 
     public Account(String username, String password, Database database, boolean addToFile) throws UsernameAlreadyExistsException {
-
         try {
             database.getAccountByUsername(username).getUsername();
         } catch (AccountNotExistException a) {

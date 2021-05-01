@@ -1,4 +1,3 @@
-.vscode/*
 .idea/codeStyles/codeStyleConfig.xml
 .idea/codeStyles/Project.xml
 .idea/misc.xml
@@ -6,3 +5,6 @@
 .idea/vcs.xml
 *.xml
 *.class
+.vscode/settings.json
+src/.vscode/settings.json
+
