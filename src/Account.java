@@ -5,24 +5,24 @@ public class Account {
     private String username;
     private String password;
     private ArrayList<Conversation> conversations;
-    private Boolean addToFile;
+    private Database database;
+    private boolean addToFile;
 
     // When you create a new Account, make sure addToFile is true, or else it will not add it to the file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
 
-    public Account(String username, String password, boolean addToFile) throws UsernameAlreadyExistsException {
+    public Account(String username, String password, Database database, boolean addToFile) throws UsernameAlreadyExistsException {
 
         try {
-            String user = Database.getAccountByUsername(username).getUsername();
+            database.getAccountByUsername(username).getUsername();
         } catch (AccountNotExistException a) {
             this.username = username;
             this.password = password;
             this.conversations = new ArrayList<>();
+            this.database = database;
             this.addToFile = addToFile;
-
-            Database.addToDatabase(this);
-
+            this.database.addToDatabase(this);
         }
 
         try {
@@ -32,24 +32,27 @@ public class Account {
         }
     }
 
-    public String toString() {
-        return this.getUsername() + "," + this.getPassword();
+    public boolean isAddToFile() {
+        return addToFile;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public void changeUsername(String newUsername) throws UsernameAlreadyExistsException{
+    public void changeUsername(String newUsername) throws UsernameAlreadyExistsException {
         try {
-            Database.getAccountByUsername(newUsername);
+            this.database.getAccountByUsername(newUsername);
         } catch (AccountNotExistException e) {
             String oldUsername = this.getUsername();
             String oldPassword = this.getPassword();
-            Database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
+            this.database.changeAccountDetailsInFile(oldUsername, oldPassword, newUsername, null);
             this.username = newUsername;
         }
-        throw new UsernameAlreadyExistsException();
+
+        if (!this.getUsername().equals(newUsername)) {
+            throw new UsernameAlreadyExistsException();
+        }
     }
 
     public String getPassword() {
@@ -57,21 +60,17 @@ public class Account {
     }
 
     public void changePassword(String newPassword) {
-        Database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
+        this.database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
         this.password = newPassword;
-    }
-
-    public Boolean getAddToFile() {
-        return addToFile;
     }
 
     public ArrayList<Conversation> getConversations() {
         return conversations;
     }
 
-    public void setConversations(ArrayList<Conversation> conversations) {
-        this.conversations = conversations;
-    }
+//    public void setConversations(ArrayList<Conversation> conversations) {
+//        this.conversations = conversations;
+//    }
 
     public void addToConversation(Conversation conversation) {
         conversations.add(conversation);
@@ -83,16 +82,17 @@ public class Account {
 
     // Use these id based adding or removing conversations in order to sync.
     public void addToConversation(int id) throws ConversationNotFoundException {
-        Conversation conversation = Database.getConversationById(id);
+        Conversation conversation = this.database.getConversationById(id);
         conversations.add(conversation);
         conversation.addParticipant(this);
+        this.database.addParticipantToConversationFile(id, this.getUsername());
     }
 
     public void removeConversation(int id) throws ConversationNotFoundException {
-        Conversation conversation = Database.getConversationById(id);
+        Conversation conversation = this.database.getConversationById(id);
         conversations.remove(conversation);
         conversation.removeParticipant(this);
-        Database.removeParticipantFromConversationFile(id, this.getUsername());
+        this.database.removeParticipantFromConversationFile(id, this.getUsername());
     }
 
     public ArrayList<Integer> getConversationIds() {
@@ -104,4 +104,9 @@ public class Account {
 
         return conversationIds;
     }
+
+    public String toString() {
+        return this.getUsername() + "," + this.getPassword();
+    }
+
 }

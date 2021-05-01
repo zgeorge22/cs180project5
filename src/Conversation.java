@@ -9,28 +9,45 @@ public class Conversation {
     private ArrayList<Message> messages;
     private String conversationName;
     boolean addToFile;
+    Database database;
 
     // When you create a new Conversation, make sure addToFile is true, or else it will not add it to the file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
-    public Conversation(String conversationName, ArrayList<Account> usersInConversation, boolean addToFile) {
-        this.conversationId = getNextConversationId();
-        this.participants = usersInConversation;
-        this.conversationName = conversationName;
-        this.messages = new ArrayList<Message>();
-        this.addToFile = addToFile;
 
-        for (int i = 0; i < usersInConversation.size(); i++) {
+    //Use this constructor in the server to create new messages.
+    public Conversation(String conversationName, ArrayList<Account> participants,
+                        boolean addToFile, Database database) {
+        this.conversationId = getNextConversationId();
+        this.participants = participants;
+        this.conversationName = conversationName;
+        this.messages = new ArrayList<>();
+        this.addToFile = addToFile;
+        this.database = database;
+
+        for (Account account : participants) {
 
             try {
-                Database.getAccountByUsername(usersInConversation.get(i).getUsername()).addToConversation(this);
+                this.database.getAccountByUsername(account.getUsername()).addToConversation(this);
             } catch (AccountNotExistException e) {
                 e.printStackTrace();
             }
         }
         setNextConversationId(++nextConversationId);
 
-        Database.addToDatabase(this);
+        this.database.addToDatabase(this);
+    }
+
+    // Do not call this constructor for creating new messages in the server.
+    public Conversation(int id, String conversationName, ArrayList<Account> participants, Database database) {
+        this.conversationId = id;
+        this.conversationName = conversationName;
+        this.participants = participants;
+        this.messages = new ArrayList<>();
+        this.addToFile = false;
+        this.database = database;
+
+        this.database.addToDatabase(this);
     }
 
     public static int getNextConversationId() {
@@ -45,9 +62,9 @@ public class Conversation {
         return conversationName;
     }
 
-    public void setConversationName(String conversationName) {
-        this.conversationName = conversationName;
-    }
+//    public void setConversationName(String conversationName) {
+//        this.conversationName = conversationName;
+//    }
 
     public int getConversationId() {
         return conversationId;
@@ -57,16 +74,8 @@ public class Conversation {
         return participants;
     }
 
-    public void setParticipants(ArrayList<Account> participants) {
-        this.participants = participants;
-    }
-
     public ArrayList<Message> getMessages() {
         return messages;
-    }
-
-    public void setMessages(ArrayList<Message> messages) {
-        this.messages = messages;
     }
 
     public boolean isAddToFile() {
@@ -83,19 +92,20 @@ public class Conversation {
 
     // Use these the username based add/remove accounts in order to sync.
     public void addParticipant(String username) throws AccountNotExistException {
-        Account account = Database.getAccountByUsername(username);
+        Account account = this.database.getAccountByUsername(username);
         participants.add(account);
         account.addToConversation(this);
+        if (this.database.isServer()) {
+            this.database.addParticipantToConversationFile(this.getConversationId(), username);
+        }
     }
 
     public void removeParticipant(String username) throws AccountNotExistException {
-        Account account = Database.getAccountByUsername(username);
+        Account account = this.database.getAccountByUsername(username);
         participants.remove(account);
         account.removeConversation(this);
-        Database.removeParticipantFromConversationFile(this.getConversationId(), username);
+        this.database.removeParticipantFromConversationFile(this.getConversationId(), username);
     }
-
-
 
     public void addMessage(Message message) {
 
@@ -103,19 +113,14 @@ public class Conversation {
 
         try {
             if (message.isAddToFile()) {
-                Database.writeMessageToConversationFile(this, message);
+                this.database.writeMessageToConversationFile(this, message);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    public void deleteMessage(int messageId) {
-
-        for (int i = 0; i < this.getMessages().size(); i++) {
-            if (messageId == this.getMessages().get(i).getId()) {
-                messages.remove(messages.get(i));
-            }
-        }
+    public void exportToCSV() {
+        this.database.createCSV(this.getConversationId());
     }
 }

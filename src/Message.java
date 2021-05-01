@@ -1,44 +1,42 @@
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class Message {
-    //TODO Implement timestamps properly
 
     private static int nextMessageId;
     private final int id;
-    private LocalDateTime timestamp;
+    private final LocalDateTime timestamp;
     private final String sender;
     private String content;
     private boolean addToFile;
+    private Database database;
 
     // Call this constructor for creating new messages when users send.
-    public Message(LocalDateTime localDateTime, String senderUsername, String content) {
-
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    public Message(String senderUsername, String content, Database database) {
 
         this.timestamp = LocalDateTime.now();
         this.sender = senderUsername;
         this.content = content;
         this.id = getNextMessageId();
         this.addToFile = true;
+        this.database = database;
 
         setNextMessageId(++nextMessageId);
 
-        Database.addToDatabase(this);
+        this.database.addToDatabase(this);
     }
 
-    // Do not call this constructor for creating new messages.
-    public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile) {
+    // Do not call this constructor for creating new messages in the server.
+    public Message(int id, LocalDateTime timestamp, String senderUsername, String content,
+                   boolean addToFile, Database database) {
 
         this.timestamp = timestamp;
         this.sender = senderUsername;
         this.content = content;
         this.id = id;
         this.addToFile = addToFile;
+        this.database = database;
 
-        Database.addToDatabase(this);
+        this.database.addToDatabase(this);
     }
 
     public static int getNextMessageId() {
@@ -61,16 +59,17 @@ public class Message {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public String getContent() {
         return content;
     }
 
-    public void setContent(String content) {
+    public void editMessage(String content) {
         this.content = content;
+        this.database.editMessageInConversationFile(this.getId(), content);
+    }
+
+    public void deleteMessage() {
+        this.database.deleteMessageFromConversationFile(this.getId());
     }
 
     public boolean isAddToFile() {
@@ -82,15 +81,4 @@ public class Message {
         return this.getId() + "," + this.getTimestamp().toString() + ","
                 + this.getSender() + "," + this.getContent();
     }
-
-    // This method doesn't go here
-//    public static Message parseMessage(String message) {
-//
-//        String[] splitMessage = message.split(",", 4);
-//
-//        // TODO fix the timestamp stuff
-//
-//        return new Message(Integer.parseInt(splitMessage[0]), Timestamp.valueOf(splitMessage[1]),
-//                splitMessage[2], splitMessage[3]);
-//    }
 }
