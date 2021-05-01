@@ -61,4 +61,23 @@ public class TestServer {
 
         return true;
     }
+
+    public boolean receivedEditMsg(int conversationID, int messageID, String sender, String content) {
+        System.out.println("SERVER - Received editMsg for conversationID [" + conversationID + "] and messageID ["
+                + messageID + "] with content [" + content + "]");
+
+        try {
+            Message message = client.getDatabase().getMessageById(messageID);
+            if (message.getSender().equals(sender)) {
+                message.editMessage(content);
+                client.receivedEditMsg(conversationID + " " + message.getId() + " " + sender + " "
+                        + message.getTimestamp() + " " + content); // update timestamp as well?
+                return true;
+            }
+        } catch (MessageNotFoundException e) {
+            e.printStackTrace(); // should never happen!
+        }
+
+        return false;
+    }
 }

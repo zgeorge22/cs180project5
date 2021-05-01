@@ -18,9 +18,15 @@ public class MainWindow extends JFrame {
 
     private Container content;
     private JPanel sidePanel;
-    private JButton createChatSideButton;
+    private JPanel sideHeader;
+    private JButton createChatButton;
+    private JButton leaveChatButton;
     private JList<ChatEntry> chatList;
     private JScrollPane chatListScrollPane;
+    private JButton importChatButton;
+    private JButton exportChatButton;
+    private JButton accountButton;
+    private JButton signOutButton;
     private JPanel botPanel;
     private JPanel chatPanel;
     private JPanel convoHeader;
@@ -36,12 +42,12 @@ public class MainWindow extends JFrame {
     private final String DELETE_ACTION = "DELETE";
 
     private ChatEntry currentChat;
+    private MsgEntry currentMsg;
 
     public MainWindow(Client client) {
         super("Chat");
 
         this.client = client;
-        this.currentChat = null;
 
         initializeComponents();
 
@@ -59,15 +65,32 @@ public class MainWindow extends JFrame {
         content.setLayout(new BorderLayout());
 
         // SIDE PANEL LAYOUT
-        createChatSideButton = new JButton("Create New Chat");
-        createChatSideButton.addActionListener(new ActionListener() {
+        createChatButton = new JButton("Create Chat");
+        createChatButton.setForeground(Color.decode("#35A437"));
+
+        createChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 hideMsgList();
                 composeMessage.setText("");
+                messageActions.setSelectedItem(SEND_ACTION);
                 participantsField.requestFocusInWindow();
             }
         });
+
+        leaveChatButton = new JButton("Leave Chat");
+        leaveChatButton.setForeground(Color.decode("#FF3E31"));
+        leaveChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Leave chat!
+            }
+        });
+
+        sideHeader = new JPanel();
+        sideHeader.setLayout(new GridLayout(1, 2));
+        sideHeader.add(createChatButton);
+        sideHeader.add(leaveChatButton);
 
         chatList = new JList<ChatEntry>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -90,13 +113,49 @@ public class MainWindow extends JFrame {
         chatListScrollPane = new JScrollPane(chatList);
         chatListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+        importChatButton = new JButton("Import Chat(s)");
+        importChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Import selected chats!
+            }
+        });
+
+        exportChatButton = new JButton("Export Chat(s)");
+        exportChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Export selected chats!
+            }
+        });
+
+        accountButton = new JButton("Account");
+        accountButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Open account edit window!
+            }
+        });
+
+        signOutButton = new JButton("Sign Out");
+        signOutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // call client quit!
+                dispose();
+            }
+        });
+
         botPanel = new JPanel();
-        botPanel.add(new JButton("Account"));
-        botPanel.add(new JButton("Sign Out"));
+        botPanel.setLayout(new GridLayout(2, 2));
+        botPanel.add(importChatButton);
+        botPanel.add(accountButton);
+        botPanel.add(exportChatButton);
+        botPanel.add(signOutButton);
 
         sidePanel = new JPanel();
         sidePanel.setLayout(new BorderLayout());
-        sidePanel.add(createChatSideButton, BorderLayout.NORTH);
+        sidePanel.add(sideHeader, BorderLayout.NORTH);
         sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
         sidePanel.add(botPanel, BorderLayout.SOUTH);
 
@@ -111,29 +170,15 @@ public class MainWindow extends JFrame {
         convoHeader.setLayout(new BorderLayout());
         convoHeader.add(new JLabel(" Participants: "), BorderLayout.WEST);
         convoHeader.add(participantsField, BorderLayout.CENTER);
-
         chatPanel.add(convoHeader, BorderLayout.NORTH);
 
         msgList = new JList<MsgEntry>();
         msgList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         msgList.setCellRenderer(new MsgListCellRenderer());
-        // chatList.setFixedCellWidth(250); // .setFixedCellHeight(50);
-        // chatList.addListSelectionListener(new ListSelectionListener() {
-        // @Override
-        // public void valueChanged(ListSelectionEvent e) {
-        // if (!e.getValueIsAdjusting()) {
-        // if (chatList.getSelectedValue() != null) {
-        // currentChat = chatList.getSelectedValue();
-        // showMsgList();
-        // composeMessage.setText("");
-        // }
-        // }
-        // }
-        // });
 
         msgListScrollPane = new JScrollPane(msgList);
         msgListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        chatPanel.add(msgListScrollPane, BorderLayout.CENTER); // chatPanel.remove(convoDisplayScrollPane);
+        chatPanel.add(msgListScrollPane, BorderLayout.CENTER);
 
         composeBar = new JPanel();
         composeBar.setLayout(new BorderLayout());
@@ -142,7 +187,7 @@ public class MainWindow extends JFrame {
         composeMessage.setWrapStyleWord(true);
         composeScrollPane = new JScrollPane(composeMessage);
         composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        composeBar.add(composeScrollPane, BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
+        composeBar.add(composeScrollPane, BorderLayout.CENTER);
 
         composeMessage.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -186,6 +231,25 @@ public class MainWindow extends JFrame {
         messageActions.addItem(SEND_ACTION);
         messageActions.addItem(EDIT_ACTION);
         messageActions.addItem(DELETE_ACTION);
+        messageActions.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedAction = (String) messageActions.getSelectedItem();
+
+                switch (selectedAction) {
+                    case SEND_ACTION:
+                        currentMsg = null;
+                        break;
+                    case EDIT_ACTION:
+                        chatListScrollPane.revalidate();
+                        break;
+                    case DELETE_ACTION:
+                        break;
+                    default:
+                        System.out.println("ERROR: invalid action attempted!"); // should never happen!
+                }
+            }
+        });
 
         composeBar.add(messageActions, BorderLayout.EAST);
         chatPanel.add(composeBar, BorderLayout.SOUTH);
@@ -197,34 +261,75 @@ public class MainWindow extends JFrame {
     public void attemptMessageAction() {
         String selectedAction = (String) messageActions.getSelectedItem();
 
-        if (currentChat != null) {
-            if (!composeMessage.getText().equals("")) {
-                if (client.requestCreateMsg(currentChat.getConversation(), composeMessage.getText())) {
-                    composeMessage.setText("");
-                    composeMessage.requestFocusInWindow();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Unable to send message!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "No message to send!", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-        } else {
-            if (!participantsField.getText().equals("")) {
-                if (!composeMessage.getText().equals("")) {
-                    if (client.requestCreateConvo(participantsField.getText(), composeMessage.getText())) {
-                        participantsField.setText("");
-                        composeMessage.setText("");
-                        chatList.setSelectedIndex(0);
+        switch (selectedAction) {
+            case SEND_ACTION:
+                if (currentChat != null) {
+                    // Using chat...
+                    if (!composeMessage.getText().equals("")) {
+                        if (client.requestCreateMsg(currentChat.getConversation(), composeMessage.getText())) {
+                            composeMessage.setText("");
+                            composeMessage.requestFocusInWindow();
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                     } else {
-                        JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "No message to send!", "Warning", JOptionPane.WARNING_MESSAGE);
+                    // Creating chat...
+                    if (!participantsField.getText().equals("")) {
+                        if (!composeMessage.getText().equals("")) {
+                            if (client.requestCreateConvo(participantsField.getText(), composeMessage.getText())) {
+                                participantsField.setText("");
+                                composeMessage.setText("");
+                                chatList.setSelectedIndex(0);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No participants entered!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                    }
                 }
-            } else {
-                JOptionPane.showMessageDialog(null, "No participants entered!", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
+                break;
+            case EDIT_ACTION:
+                if (currentMsg != null) {
+                    if (currentMsg.getMessage().getSender().equals(client.getUsername())) {
+                        if (!composeMessage.getText().equals("")) {
+                            if (client.requestEditMsg(currentChat.getConversation(), currentMsg.getMessage(),
+                                    composeMessage.getText())) {
+                                currentMsg = null;
+                                msgList.setSelectedValue(null, false);
+                                composeMessage.setText("");
+                                composeMessage.requestFocusInWindow();
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Unable to edit message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "You can only edit messages that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No message selected to edit!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+                break;
+            case DELETE_ACTION:
+                break;
+            default:
+                System.out.println("ERROR: invalid action attempted!"); // should never happen!
         }
     }
 
@@ -387,7 +492,7 @@ public class MainWindow extends JFrame {
                 setForeground(Color.decode("#1466ff"));
             }
 
-            setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+            setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
 
             return this;
         }
@@ -454,9 +559,6 @@ public class MainWindow extends JFrame {
 
         private static final String HTML_FORMAT = "<style>" + STYLE_SHEET + "</style>";
 
-        private static final String OTHER_CHAT_FORMAT = "<p class=chat-msg1>%s</p>";
-        private static final String MY_CHAT_FORMAT = "<p class=chat-msg2>%s</p>";
-
         Message message;
         boolean mine;
 
@@ -484,7 +586,7 @@ public class MainWindow extends JFrame {
             String sender = message.getSender();
             String content = message.getContent();
 
-            return "<html>" + HTML_FORMAT + "<div style='width: 100px' class=chat-box><p class=chat-msg1><b>" + sender
+            return "<html>" + HTML_FORMAT + "<div style='width: 300px' class=chat-box><p class=chat-msg1><b>" + sender
                     + "</b>" + " - " + "<i>" + timestamp + "</i>" + "<br>" + content + "</p></div>";
         }
     }
@@ -497,13 +599,26 @@ public class MainWindow extends JFrame {
 
             MsgEntry msgEntry = (MsgEntry) value;
             setText(msgEntry.getFormattedHTML());
-            // setBackground(Color.decode(msgEntry.getMine() ? "#149dff" : "#dedede"));
+            setBackground(Color.decode(msgEntry.getMine() ? "#149dff" : "#dedede"));
+
+            String selectedAction = (String) messageActions.getSelectedItem();
 
             if (isSelected) {
-                if (msgEntry.getMine()) {
-                    composeMessage.setText(msgEntry.getMessage().getContent());
-                } else {
+                currentMsg = msgEntry;
+                if (selectedAction.equals(EDIT_ACTION)) {
+                    if (msgEntry.getMine()) {
+                        composeMessage.setText(msgEntry.getMessage().getContent());
+                        setBackground(Color.decode("#35A437"));
+                    } else {
+                        composeMessage.setText("");
+                    }
+                }
+                if (selectedAction.equals(DELETE_ACTION)) {
                     composeMessage.setText("");
+
+                    if (msgEntry.getMine()) {
+                        setBackground(Color.decode("#FF3E31"));
+                    }
                 }
             }
 

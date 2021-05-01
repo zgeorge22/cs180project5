@@ -42,7 +42,7 @@ public class Client {
         System.out.println(
                 "CLIENT - Requested createConvo for [" + participantsString + "] with initialMsg [" + initialMsg + "]");
 
-        // REMOVE later!
+        // ****************************** REMOVE later! ******************************
         // server won't need username, client handler will know sender
         return server.receivedCreateConvo(participantsString, username, initialMsg);
 
@@ -53,12 +53,24 @@ public class Client {
         System.out.println("CLIENT - Requested createMsg for conversationID [" + conversation.getConversationId()
                 + "] with content [" + content + "]");
 
-        // REMOVE later!
+        // ****************************** REMOVE later! ******************************
         // server won't need username, client handler will know sender
         return server.receivedCreateMessage(conversation.getConversationId(), username, content);
 
         // return sendServer("createMsg " + conversation.getConversationId() + " " +
         // content);
+    }
+
+    public boolean requestEditMsg(Conversation conversation, Message message, String content) {
+        System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
+                + "] and messageID [" + message.getId() + "] with content [" + content + "]");
+
+        // ****************************** REMOVE later! ******************************
+        // server won't need username, client handler will know sender
+        return server.receivedEditMsg(conversation.getConversationId(), message.getId(), username, content);
+
+        // return sendServer("editMsg " + conversation.getConversationId() + " " +
+        // message.getId() + " " + content);
     }
 
     public void receivedAddConvo(String details) {
@@ -81,6 +93,8 @@ public class Client {
             }
         }
         String name = participants.size() > 2 ? "GC" : "DM";
+
+        System.out.println("CLIENT - Received createConvo for [" + participantsString + "]");
 
         Conversation conversation;
         try {
@@ -109,6 +123,9 @@ public class Client {
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
         String content = placeholder;
 
+        System.out.println("CLIENT - Received addMsg for conversationID [" + conversationID + "] and messageID ["
+                + messageID + "] with content [" + content + "]");
+
         Message message;
         try {
             message = db.getMessageById(messageID);
@@ -125,6 +142,33 @@ public class Client {
             } catch (ConversationNotFoundException e2) {
                 System.out.println("ConversationID " + conversationID + " does not exist!");
             }
+        }
+    }
+
+    public void receivedEditMsg(String details) {
+        // Parse message details
+        String placeholder = details;
+
+        int conversationID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int messageID = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String sender = placeholder.substring(0, placeholder.indexOf(" "));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        LocalDateTime timestamp = LocalDateTime.parse(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        String content = placeholder;
+
+        System.out.println("CLIENT - Received editMsg for conversationID [" + conversationID + "] and messageID ["
+                + messageID + "] with content [" + content + "]");
+
+        Message message;
+        try {
+            message = db.getMessageById(messageID);
+            message.editMessage(content); // update timestamp as well?
+            mw.updateMsgEntry(message);
+        } catch (MessageNotFoundException e1) {
+            System.out.println("MessageID " + conversationID + " does not exist!");
         }
     }
 
