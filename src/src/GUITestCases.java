@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Test {
+public class GUITestCases {
 
     private static Random random = new Random();
     private static Database db;
