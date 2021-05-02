@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class ServerProcess extends Thread {
 
@@ -15,6 +16,9 @@ public class ServerProcess extends Thread {
     private Account currentAccount;
     private Database database;
     private PrintWriter writer;
+
+    private Scanner in;
+    private PrintWriter out;
 
     public ServerProcess(Socket clientSocket, Database database) {
         this.clientSocket = clientSocket;
@@ -105,6 +109,7 @@ public class ServerProcess extends Thread {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
             PrintWriter pw = new PrintWriter(clientSocket.getOutputStream());
             String commandString = (bfr.readLine());
+            System.out.println(commandString);
             String[] token = commandString.split(" ");
             String cmd = token[0];
             ArrayList<ServerProcess> serverProcessList = Server.getServerList();
@@ -115,6 +120,7 @@ public class ServerProcess extends Thread {
                     currentAccount.changePassword(editPassword);
                     break;
                 case ("createConvo"):
+                    send("succeeded",this.clientSocket);
                     String participantsString = token[1];
                     String[] participantsUsernameList = participantsString.split(",");
                     // create conversation
@@ -126,8 +132,10 @@ public class ServerProcess extends Thread {
                     String initialMsg = placeHolder.substring(placeHolder.indexOf(" ") + 1);
                     Conversation newConvo = new Conversation(null, newConvoAccountList,
                             true, database);
+                    Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
+                    newConvo.addMessage(newMessage);
+                  //  System.out.println(database.getConversationById(0).getMessages().get(0).getContent());
                     int newConvoID = newConvo.getConversationId();
-                    database.addToDatabase(newConvo);
                     // send intialMsg to users in newConvo
                     //ArrayList<ServerProcess> serverProcessList = Server.getServerList();
                     for (int i = 0; i < newConvoAccountList.size(); i++) {
@@ -138,28 +146,49 @@ public class ServerProcess extends Thread {
                                             newConvoAccountList.get(i).getUsername())) {
                                         send(String.format("addConvo %d %s", newConvoID, participantsString),
                                                 serverProcessList.get(k).getClientSocket());
-                                        send(String.format("addMsg %d %s", newConvoID, initialMsg),
+                                        send(("addMsg " + newConvoID + " " + newMessage.getId() + " " + this.currentAccount.getUsername() + " "
+                                                        + newMessage.getTimestamp() + " " + initialMsg),
                                                 serverProcessList.get(k).getClientSocket());
                                     }
                                 }
+
                             }
                         }
                     }
+                    System.out.println("SERVER - Received createConvo for [" + participantsString + "] with initialMsg [" + initialMsg
+                            + "] from [" + currentAccount.getUsername() + "]");
                     break;
                 case ("leaveConvo"):
                     try {
                         int leaveConversationID = Integer.parseInt(token[1]);
-                        database.getConversationById(leaveConversationID).removeParticipant(
-                                this.currentAccount.getUsername());
+                        Conversation conversation = database.getConversationById(leaveConversationID);
+                        for (int i = 0; i < conversation.getParticipants().size(); i++) {
+                            for (int j = 0; j < activeUsersList.size(); j++) {
+                                if (conversation.getParticipants().get(i).getUsername().equals(activeUsersList.get(j).getUsername())) {
+                                    for (int k = 0; k < serverProcessList.size(); k++) {
+                                        if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(
+                                                conversation.getParticipants().get(i).getUsername())) {
+                                            send("removeUser " + conversation.getConversationId() + " "
+                                                    + this.currentAccount.getUsername(),
+                                                    serverProcessList.get(k).getClientSocket());
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                        conversation.removeParticipant(this.currentAccount.getUsername());
+
                         break;
                     } catch (ConversationNotFoundException e) {
                         e.printStackTrace();
                     }
-                case ("sendMsg"):
+                case ("createMsg"):
+                    //Changed "sendMsg" to "createMsg"
                     int convoID = Integer.parseInt(token[1]);
                     String placeholder = commandString.substring(commandString.indexOf(" ") + 1);
                     String newMessageContent = placeholder.substring(placeholder.indexOf(" ") + 1);
-                    Message tempMessage = new Message(this.userID, newMessageContent, database);
+                    Message tempMessage = new Message(this.currentAccount.getUsername(), newMessageContent, database);
                     database.getConversationById(convoID).addMessage(tempMessage);
                     for (int i = 0; i < database.getConversationById(convoID).getParticipants().size(); i++) {
                         for (int j = 0; j < activeUsersList.size(); j++) {
@@ -169,7 +198,7 @@ public class ServerProcess extends Thread {
                                     if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoID).getParticipants().get(i).getUsername())) {
                                         send("addMsg " + convoID + " " + tempMessage.getId() + " " +
-                                                this.userID + " " + tempMessage.getTimestamp() + " " +
+                                                this.currentAccount.getUsername() + " " + tempMessage.getTimestamp() + " " +
                                                 newMessageContent, serverProcessList.get(k).getClientSocket());
                                         }
                                     }
@@ -179,13 +208,14 @@ public class ServerProcess extends Thread {
 
                     break;
                 case ("editMsg"):
+                    //SERVER HAS TO VALIDATE THAT USER HAS THE AUTHORITY (CLIENT ALREADY DOES THIS BUT WE MAY NEED SERVER TO DO IT)
                     int convoIdentifier = Integer.parseInt(token[1]);
                     int initialID = Integer.parseInt(token[2]);
                     String placeH = commandString.substring(commandString.indexOf(" ") + 1);
                     String placeHo = placeH.substring(placeH.indexOf(" ") + 1);
                     String newMessageEdit = placeHo.substring(placeHo.indexOf(" ") + 1);
-                    LocalDateTime dateTime = LocalDateTime.now();
-                    database.getMessageById(initialID).editMessage(newMessageEdit);
+                    Message messageToEdit = database.getMessageById(initialID);
+                    messageToEdit.editMessage(newMessageEdit);
                     for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants().size(); i++) {
                         for (int j = 0; j < activeUsersList.size(); j++) {
                             if (database.getConversationById(convoIdentifier).getParticipants().get(i).getUsername()
@@ -195,7 +225,7 @@ public class ServerProcess extends Thread {
                                             .getConversationById(convoIdentifier).getParticipants().get(i)
                                             .getUsername()))
                                         send("editMsg " + convoIdentifier + " " + initialID + " " + this.userID
-                                                        + " " + dateTime + " " + newMessageEdit,
+                                                        + " " + messageToEdit.getTimestamp() + " " + newMessageEdit,
                                                 serverProcessList.get(k).getClientSocket());
 
                                 }

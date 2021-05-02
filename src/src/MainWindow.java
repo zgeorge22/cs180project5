@@ -51,7 +51,14 @@ public class MainWindow extends JFrame {
         setSize(650, 500);
         setResizable(false);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                client.requestLogoutAccount();
+            }
+        });
         setVisible(true);
 
         participantsField.requestFocusInWindow();
@@ -153,8 +160,7 @@ public class MainWindow extends JFrame {
         signOutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // UPDATE later! call client quit
-                dispose();
+                client.requestLogoutAccount();
             }
         });
 

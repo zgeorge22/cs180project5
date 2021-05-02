@@ -491,7 +491,7 @@ public class Database implements Serializable {
 
     }
 
-    public int removeMessagById(int messageID) {
+    public int removeMessageById(int messageID) {
         int conversationID = -1;
 
         for (Conversation conversation : this.conversations) {
@@ -515,7 +515,7 @@ public class Database implements Serializable {
 
     public void deleteMessageFromConversationFile(int messageID) {
 
-        int conversationID = removeMessagById(messageID);
+        int conversationID = removeMessageById(messageID);
 
         ArrayList<String> conversationFile = new ArrayList<>();
 

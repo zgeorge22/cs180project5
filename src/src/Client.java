@@ -1,48 +1,146 @@
 package src;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.time.LocalDateTime;
-import javax.swing.JOptionPane;
+import java.util.ArrayList;
+import java.util.Scanner;
+
 
 public class Client {
     private MainWindow mw;
     private Database db;
     private String username;
 
-    TestServer server; // TEMPORARY
+    private Scanner in;
+    private PrintWriter out;
+
 
     public Client() {
-        mw = new MainWindow(this);
         db = new Database(false);
 
-        // start socket
-
         // Login stuff
+    }
 
-        // ----- REMOVE later! once server socket established -----
-        username = "Zach";
-        server = new TestServer(this);
-        // --------------------------------------------------------
+    public static void main(String[] args) {
+       Client client = new Client();
+
+       client.username = "jim";
+
+        try {
+            client.run();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void run() throws IOException {
+        Socket socket = new Socket("localhost", 4242);
+        in = new Scanner(socket.getInputStream());
+        out = new PrintWriter(socket.getOutputStream(), true);
+
+        login();
+        mw = new MainWindow(this);
+
+        clientMessageLoop: while (in.hasNextLine()) {
+            String fullCommand = in.nextLine();
+            System.out.println(fullCommand);
+            String[] token = fullCommand.split(" ");
+            String inputcmd = token[0];
+            String details = "";
+            if (token.length > 1) {
+                details = fullCommand.substring(fullCommand.indexOf(" ") + 1);
+            }
+
+            if (username != null) {
+                switch (inputcmd) {
+                    case ("addConvo"):
+                        receivedAddConvo(details);
+                        break;
+                    case ("addMsg"):
+                        receivedAddMsg(details);
+                        break;
+                    case ("removeUser"):
+                        receivedRemoveUser(details);
+                        break;
+                    case ("editMsg"):
+                        receivedEditMsg(details);
+                        break;
+                    case ("removeMsg"):
+                        receivedRemoveMsg(details);
+                        break;
+                    case ("logoutTrue"):
+                        mw.dispose();
+                        username = null;
+                        break clientMessageLoop;
+                    case ("succeeded"):
+                        System.out.println("succeeded");
+                        break;
+                    case ("failed"):
+                        System.out.println("failed");
+                        break;
+                }
+            }
+        }
+    }
+
+    private void login() {
+        String confirm;
+        do {
+            System.out.println("Enter loginAccount (0) or createAccount (1)"); //Testing Input
+            Scanner scanner = new Scanner(System.in);
+            String loginChoice = scanner.nextLine();
+            String choice = null;
+            if (loginChoice.equals("0"))
+                choice = "loginAccount";
+            else if (loginChoice.equals("1"))
+                choice = "createAccount";
+            System.out.println("Username: ");
+            username = scanner.nextLine();
+            System.out.println("Password: ");
+            String password = scanner.nextLine();
+
+            String login = getLogin(choice, username, password); //GUI connection
+            out.write(login);
+            out.println();
+            out.flush();
+
+            confirm = in.nextLine();
+
+        } while(confirm.equals("false"));
+
+    }
+
+    private static String getLogin(String choice, String username, String password) {
+        String loginInformation = choice + " " + username + " " + password;
+        return loginInformation;
     }
 
     public boolean sendServer(String command) {
-        boolean status = false;
+        out.write(command);
+        out.println();
+        out.flush();
 
-        // SEND SERVER: command + " " details
-        // if recieve back "succeeded" return true
-        // else if receive back "failed" return false
-        // else throw unknown server message error
+//        String response = "RESPONSE";
+//        System.out.println(response);
+//        if (in.hasNextLine()) {
+//            response = in.nextLine();
+//            System.out.println(response);
+//            if (response.equals("succeeded")) {
+                return true;
+//            }
+//        }
 
-        return status;
+//        return false;
     }
 
     public boolean requestEditPassword(String password) {
         System.out.println("CLIENT - Requested editPassword to [" + password + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedEditPassword(password, username);
-
-        // return sendServer("editPassword " + password);
+        return sendServer("editPassword " + password);
     }
 
     public boolean requestCreateConvo(String participantsString, String initialMsg) {
@@ -53,59 +151,40 @@ public class Client {
         System.out.println(
                 "CLIENT - Requested createConvo for [" + participantsString + "] with initialMsg [" + initialMsg + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedCreateConvo(participantsString, username, initialMsg);
-
-        // return sendServer("createConvo " + participantsString + " " + initialMsg);
+        return sendServer("createConvo " + participantsString + " " + initialMsg);
     }
 
     public boolean requestLeaveConvo(Conversation conversation) {
-        System.out
-                .println("CLIENT - Requested leaveConvo for conversationID [" + conversation.getConversationId() + "]");
+        System.out.println("CLIENT - Requested leaveConvo for conversationID ["
+                + conversation.getConversationId() + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedLeaveConvo(conversation.getConversationId(), username);
-
-        // return sendServer("leaveConvo " + conversation.getConversationId() + " " +
-        // username);
+        return sendServer("leaveConvo " + conversation.getConversationId() + " " + username);
     }
 
     public boolean requestCreateMsg(Conversation conversation, String content) {
         System.out.println("CLIENT - Requested createMsg for conversationID [" + conversation.getConversationId()
                 + "] with content [" + content + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedCreateMessage(conversation.getConversationId(), username, content);
-
-        // return sendServer("createMsg " + conversation.getConversationId() + " " +
-        // content);
+        return sendServer("createMsg " + conversation.getConversationId() + " " + content);
     }
 
     public boolean requestEditMsg(Conversation conversation, Message message, String content) {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedEditMsg(conversation.getConversationId(), message.getId(), username, content);
-
-        // return sendServer("editMsg " + conversation.getConversationId() + " " +
-        // message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " "
+                + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
         System.out.println("CLIENT - Requested deleteMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "]");
 
-        // ****************************** REMOVE later! ******************************
-        // server won't need username, client handler will know sender
-        return server.receivedDeleteMsg(conversation.getConversationId(), message.getId(), username);
+        return sendServer("deleteMsg " + conversation.getConversationId() + " " + message.getId());
+    }
 
-        // return sendServer("deleteMsg " + conversation.getConversationId() + " " +
-        // message.getId());
+    public boolean requestLogoutAccount() {
+        return sendServer("logoutAccount");
     }
 
     public void receivedAddConvo(String details) {
@@ -246,7 +325,7 @@ public class Client {
 
         try {
             Message message = db.getMessageById(messageID);
-            db.removeMessagById(messageID);
+            db.removeMessageById(messageID);
             mw.removeMsgEntry(message);
 
             Conversation conversation = db.getConversationById(conversationID);
