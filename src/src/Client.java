@@ -25,7 +25,7 @@ public class Client {
     public static void main(String[] args) {
        Client client = new Client();
 
-       client.username = "jim";
+       client.username = "jim"; //Do we need this?
 
         try {
             client.run();
@@ -51,12 +51,7 @@ public class Client {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        try {
-            System.out.println(db.getConversationById(0).getMessages().get(1));
-            System.out.println(db.getConversationById(1).getMessages().get(1));
-        } catch (ConversationNotFoundException e) {
-            e.printStackTrace();
-        }
+
         System.out.println("Database Received Successfully");
         sendServer("Database Received Successfully");
 

@@ -6,30 +6,41 @@ import java.util.ArrayList;
 
 public class Database implements Serializable {
 
-    private ArrayList<Account> accounts;
-    private ArrayList<Conversation> conversations;
-    private ArrayList<Message> messages;
-    private final boolean isServer;
+    private ArrayList<Account> accounts;  // ArrayList which stores Accounts
+    private ArrayList<Conversation> conversations; //ArrayList which stores Conversations
+    private ArrayList<Message> messages; //ArrayList which stores Messages
+    private final boolean isServer;  // Boolean which reflects whether the database is the server or not.
 
+
+    //Constructor for the database - takes in 1 parameter. Creates a database depending on whether the database is the
+    //server database or the client database.
     public Database(boolean isServer) {
         ArrayList<Account> accountList = new ArrayList<>();
         ArrayList<Conversation> conversationList = new ArrayList<>();
         ArrayList<Message> messageList = new ArrayList<>();
 
+
         this.accounts = accountList;
         this.conversations = conversationList;
         this.messages = messageList;
         this.isServer = isServer;
+        // Instantiates the arraylists which store all of the data in the database.
 
+        // Starts up the database by loading in accounts/conversations/messages from their respective .txt files.
         if (isServer) {
             this.startup();
         }
+
     }
 
+    // This is the getter for the isServer parameter of the database.
     public boolean isServer() {
         return isServer;
     }
 
+    // This method occurs on the startup of a database if it is the server database.
+    // This method reads in all of the data from the accounts file and any and all conversation files.
+    // The appropriate accounts, conversations and messages are loaded into the database.
     public void startup() {
 
         File accountsFile;
@@ -118,6 +129,8 @@ public class Database implements Serializable {
         Message.setNextMessageId(messagesCreated);
     }
 
+    // Getter for getting Account objects by inputting the username. Throws the AccountNotExistException if the
+    // account being sought does not exist.
     public Account getAccountByUsername(String username) throws AccountNotExistException {
         for (Account account : accounts) {
             if (username.equals(account.getUsername())) {
@@ -127,6 +140,8 @@ public class Database implements Serializable {
         throw new AccountNotExistException();
     }
 
+    // Getter for getting Account objects by inputting the Conversation ID. Throws the ConversationNotFoundException
+    // if the conversation being sought does not exist.
     public Conversation getConversationById(int id) throws ConversationNotFoundException {
         for (Conversation conversation : conversations) {
             if (id == conversation.getConversationId()) {
@@ -136,6 +151,8 @@ public class Database implements Serializable {
         throw new ConversationNotFoundException();
     }
 
+    // Getter for getting Message objects by inputting the Message ID. Throws the MessageNotFoundException if the
+    // message being sought does not exist.
     public Message getMessageById(int id) throws MessageNotFoundException {
         for (Message message : messages) {
             if (id == message.getId()) {
@@ -145,6 +162,7 @@ public class Database implements Serializable {
         throw new MessageNotFoundException();
     }
 
+    // This method creates an account file, if one does not already exist.
     public void createAccountFile() {
 
         try {
@@ -154,6 +172,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method adds an account to the database.
     public void addToDatabase(Account account) {
         accounts.add(account);
         if (this.isServer && account.isAddToFile()) {
@@ -161,6 +180,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method adds a conversation to the database.
     public void addToDatabase(Conversation conversation) {
         conversations.add(conversation);
 
@@ -169,10 +189,12 @@ public class Database implements Serializable {
         }
     }
 
+    // This method adds a message to the database.
     public void addToDatabase(Message message) {
         messages.add(message);
     }
 
+    // This method adds an account to the accounts.txt file and stores it in the text file.
     public void addAccountToFile(Account account) {
         FileOutputStream fileOutputStream;
         try {
@@ -186,6 +208,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method is used to change the username and password of an account, and updates the text file.
     public void changeAccountDetailsInFile(String oldUsername, String oldPassword, String newUsername,
             String newPassword) {
 
@@ -300,6 +323,8 @@ public class Database implements Serializable {
         }
     }
 
+    // This method creates the conversation text file to save details of the conversation to, when a conversation
+    // is created.
     public void createConversationFile(Conversation conversation) {
 
         FileOutputStream fileOutputStream;
@@ -324,6 +349,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method adds messages into the conversation text file when the methods is called.
     public void writeMessageToConversationFile(Conversation conversation, Message message)
             throws FileNotFoundException {
 
@@ -334,6 +360,7 @@ public class Database implements Serializable {
         conversationWriter.close();
     }
 
+    // This method adds a new user into a conversation and into the conversation text file when it is called.
     public void addParticipantToConversationFile(int conversationID, String username) {
 
         ArrayList<String> conversationFile = new ArrayList<>();
@@ -377,6 +404,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method removes a user from a conversation in the text file, and from the database.
     public void removeParticipantFromConversationFile(int conversationID, String username) {
 
         String[] participantsList = null;
@@ -431,6 +459,7 @@ public class Database implements Serializable {
         }
     }
 
+    // This method edits the content of a message in the conversation text file.
     public void editMessageInConversationFile(int messageID, String newMessage) {
 
         int conversationID = -1;
@@ -491,6 +520,7 @@ public class Database implements Serializable {
 
     }
 
+    // This method is used to delete a message from the database, and from the text file.
     public int removeMessageById(int messageID) {
         int conversationID = -1;
 
@@ -513,6 +543,7 @@ public class Database implements Serializable {
         return conversationID;
     }
 
+    // This method is used to delete a message from the conversation text file, and from the database.
     public void deleteMessageFromConversationFile(int messageID) {
 
         int conversationID = removeMessageById(messageID);
@@ -557,7 +588,7 @@ public class Database implements Serializable {
         }
     }
 
-    // DO NOT USE THIS TO EXPORT TO CSV - USE EQUIVALENT IN CONVERSATION FILE
+    // This method creates a CSV file from a conversation, and exports it to the folder of the client.
     public void createCSV(int conversationID) {
 
         ArrayList<String> conversationFile = new ArrayList<>();
@@ -611,10 +642,12 @@ public class Database implements Serializable {
         }
     }
 
+    // This is the getter for the entire ArrayList of conversations stored in the database.
     public ArrayList<Conversation> getConversations() {
         return conversations;
     }
 
+    // This is the getter for the entire ArrayList of accounts stored in the database.
     public ArrayList<Account> getAccounts() {
         return accounts;
     }

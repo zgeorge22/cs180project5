@@ -7,15 +7,19 @@ public class Account implements Serializable {
 
     private String username;
     private String password;
-    private ArrayList<Conversation> conversations;
-    private Database database;
+    private ArrayList<Conversation> conversations;  // The conversations that the user is part of.
+    private Database database;  // The database that the account should be added to.
     private boolean addToFile;
+    // Fields required for the Account.
 
-    // When you create a new Account, make sure addToFile is true, or else it will not add it to the file.
+
+    // This constructor is called when creating new Account objects. It gives them a username, password and the
+    // database that they should be added to.
+    // If a new Account is created,  addToFile is true, ensuring that it is added to the text file.
     // Accounts retrieved from an existing file will have addToFile = false, ensuring that they will not get
     // re-added when the database initialises it into the accounts.
-
-    public Account(String username, String password, Database database, boolean addToFile) throws UsernameAlreadyExistsException {
+    public Account(String username, String password, Database database, boolean addToFile)
+            throws UsernameAlreadyExistsException {
         try {
             database.getAccountByUsername(username).getUsername();
         } catch (AccountNotExistException a) {
@@ -34,14 +38,17 @@ public class Account implements Serializable {
         }
     }
 
+    //Getter for whether the account needed to be added to the text file or now.
     public boolean isAddToFile() {
         return addToFile;
     }
 
+    //Getter for the username for the account.
     public String getUsername() {
         return username;
     }
 
+    // This method allows the username of an account to be changed, changing it in the database and in the text file.
     public void changeUsername(String newUsername) throws UsernameAlreadyExistsException {
         try {
             this.database.getAccountByUsername(newUsername);
@@ -57,32 +64,34 @@ public class Account implements Serializable {
         }
     }
 
+    // Getter for the password of the account
     public String getPassword() {
         return password;
     }
 
+    // This method allows the password of the account to be changed, reflecting in the database and the text file.
     public void changePassword(String newPassword) {
         this.database.changeAccountDetailsInFile(this.getUsername(), this.getPassword(), null, newPassword);
         this.password = newPassword;
     }
 
+    // This is the getter for the conversations ArrayList that any account is part of.
     public ArrayList<Conversation> getConversations() {
         return conversations;
     }
 
-//    public void setConversations(ArrayList<Conversation> conversations) {
-//        this.conversations = conversations;
-//    }
-
+    // This is a method that simply adds an account into a conversation only in the database.
     public void addToConversation(Conversation conversation) {
         conversations.add(conversation);
     }
 
+    // This is a method that simple removes an account from a conversation only in the database.
     public void removeConversation(Conversation conversation) {
         conversations.remove(conversation);
     }
 
-    // Use these id based adding or removing conversations in order to sync.
+    // This method adds an account into a conversation and syncs the conversation, account and database objects
+    // while also writing the changes into the file.
     public void addToConversation(int id) throws ConversationNotFoundException {
         Conversation conversation = this.database.getConversationById(id);
         conversations.add(conversation);
@@ -90,6 +99,8 @@ public class Account implements Serializable {
         this.database.addParticipantToConversationFile(id, this.getUsername());
     }
 
+    // This method removes an account into a conversation and syncs the conversation, account and database objects
+    // while also writing the changes into the file.
     public void removeConversation(int id) throws ConversationNotFoundException {
         Conversation conversation = this.database.getConversationById(id);
         conversations.remove(conversation);
@@ -97,6 +108,7 @@ public class Account implements Serializable {
         this.database.removeParticipantFromConversationFile(id, this.getUsername());
     }
 
+    // This method gets an ArrayList containing the conversationIDs of all conversations that the user is a part of.
     public ArrayList<Integer> getConversationIds() {
 
         ArrayList<Integer> conversationIds = new ArrayList<>();
@@ -107,6 +119,7 @@ public class Account implements Serializable {
         return conversationIds;
     }
 
+    // This is the toString method for Account objects, when they need to be converted to Strings.
     public String toString() {
         return this.getUsername() + "," + this.getPassword();
     }

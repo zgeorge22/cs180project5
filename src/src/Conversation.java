@@ -6,21 +6,18 @@ import java.util.ArrayList;
 
 public class Conversation implements Serializable {
 
-    private static int nextConversationId;
-    private final int conversationId;
-    private ArrayList<Account> participants;
-    private ArrayList<Message> messages;
-    private String conversationName;
-    boolean addToFile;
-    Database database;
+    private static int nextConversationId;  // Static integer that the conversation uses to generate conversationIDs
+    private final int conversationId;  // The conversation ID of a particular conversation
+    private ArrayList<Account> participants; // The list of participants in the conversation.
+    private ArrayList<Message> messages; // The messages which are part of this conversation.
+    private String conversationName; // The unused conversationName field.
+    boolean addToFile; // The boolean which represents if it should be added to file or not.
+    Database database; // The database that the conversation is stored in.
 
-    // When you create a new Conversation, make sure addToFile is true, or else it
-    // will not add it to the file.
-    // Accounts retrieved from an existing file will have addToFile = false,
-    // ensuring that they will not get
-    // re-added when the database initialises it into the accounts.
 
-    // Use this constructor in the server to create new messages.
+    // When Conversations are created, addToFile is set to true, in order to add it to the text file.
+    // Conversations retrieved from an existing file will have addToFile = false, ensuring they are not duplicated in
+    // the text files.
     public Conversation(String conversationName, ArrayList<Account> participants, boolean addToFile,
             Database database) {
         this.conversationId = getNextConversationId();
@@ -42,7 +39,8 @@ public class Conversation implements Serializable {
         this.database.addToDatabase(this);
     }
 
-    // Do not call this constructor for creating new messages in the server.
+    // This constructor generates conversation objects given the parameters. This is only used when reading in
+    // conversations from text files.
     public Conversation(int id, String conversationName, ArrayList<Account> participants, Database database) {
         this.conversationId = id;
         this.conversationName = conversationName;
@@ -58,34 +56,30 @@ public class Conversation implements Serializable {
                 e.printStackTrace();
             }
         }
-
         this.database.addToDatabase(this);
     }
 
+    // Getter for the next conversation ID, used to store the ID of the next conversation
     public static int getNextConversationId() {
         return nextConversationId;
     }
 
+    // Setter for the conversation ID incremented whenever a conversation is created.
     public static void setNextConversationId(int nextConversationId) {
         Conversation.nextConversationId = nextConversationId;
     }
 
-    public String getConversationName() {
-        return conversationName;
-    }
-
-    // public void setConversationName(String conversationName) {
-    // this.conversationName = conversationName;
-    // }
-
+    // Getter for the conversation ID of a conversation object.
     public int getConversationId() {
         return conversationId;
     }
 
+    // Getter for the ArrayList of participants in a conversation.
     public ArrayList<Account> getParticipants() {
         return participants;
     }
 
+    // Getter for a String containing the list of all the participants in the conversation.
     public String getParticipantsString() {
         String s = "";
 
@@ -96,31 +90,32 @@ public class Conversation implements Serializable {
         return s.substring(0, s.length() - 2);
     }
 
-    public void setParticipants(ArrayList<Account> participants) {
-        this.participants = participants;
-    }
-
+    // Getter for an ArrayList containing all of the messages in a conversation.
     public ArrayList<Message> getMessages() {
         return messages;
     }
 
+    // Sets the messages contained within the conversation.
     public void setMessages(ArrayList<Message> messages) {
         this.messages = messages;
     }
 
+    // Getter for the AddToFile boolean
     public boolean isAddToFile() {
         return addToFile;
     }
 
+    // This is a method that simply adds an account into a conversation only in the database.
     public void addParticipant(Account account) {
         participants.add(account);
     }
 
+    // This is a method that simply removes an account from a conversation only in the database.
     public void removeParticipant(Account account) {
         participants.remove(account);
     }
 
-    // Use these the username based add/remove accounts in order to sync.
+    // The username based addParticipant method adds participants and syncs the database and the text file.
     public void addParticipant(String username) throws AccountNotExistException {
         Account account = this.database.getAccountByUsername(username);
         participants.add(account);
@@ -130,6 +125,7 @@ public class Conversation implements Serializable {
         }
     }
 
+    // The username based removeParticipant method removes participants and syncs the database and the text file.
     public void removeParticipant(String username) throws AccountNotExistException {
         Account account = this.database.getAccountByUsername(username);
         participants.remove(account);
@@ -139,6 +135,7 @@ public class Conversation implements Serializable {
         }
     }
 
+    // This method adds a message to the conversation, when the message is sent to the conversation.
     public void addMessage(Message message) {
 
         messages.add(message);
@@ -152,6 +149,7 @@ public class Conversation implements Serializable {
         }
     }
 
+    // This method is called in order to export the details of a particular conversation to CSV
     public void exportToCSV() {
         this.database.createCSV(this.getConversationId());
     }
