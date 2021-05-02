@@ -5,15 +5,18 @@ import java.time.LocalDateTime;
 
 public class Message implements Serializable {
 
-    private static int nextMessageId;
-    private final int id;
-    private final LocalDateTime timestamp;
-    private final String sender;
-    private String content;
-    private boolean addToFile;
-    private Database database;
+    private static int nextMessageId; //Static integer that is used to generate messageIDs
+    private final int id; // The messageID of the message object.
+    private final LocalDateTime timestamp;  // The time the message was initially sent.
+    private final String sender; // The username of the sender.
+    private String content; // The contents of the message.
+    private boolean addToFile; // The boolean that decides if the message is added to the file or not.
+    private Database database; // The database that the message is stored in.
 
-    // Call this constructor for creating new messages when users send.
+
+    // When Messages are created, addToFile is set to true, in order to add it to the text file.
+    // Messages retrieved from an existing file will have addToFile = false, ensuring they are not duplicated in the
+    // text files.
     public Message(String senderUsername, String content, Database database) {
 
         this.timestamp = LocalDateTime.now();
@@ -28,7 +31,8 @@ public class Message implements Serializable {
         this.database.addToDatabase(this);
     }
 
-    // Do not call this constructor for creating new messages in the server.
+    // This constructor generates message objects given the parameters. This is only used when reading in
+    // messages from text files.
     public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile,
             Database database) {
 
@@ -42,30 +46,37 @@ public class Message implements Serializable {
         this.database.addToDatabase(this);
     }
 
+    // Getter for the nextMessageID which is used to set the Message ID
     public static int getNextMessageId() {
         return nextMessageId;
     }
 
+    // Setter for the nextMessageID which is called when messages are created to increment the messageID.
     public static void setNextMessageId(int nextMessageId) {
         Message.nextMessageId = nextMessageId;
     }
 
+    // Getter for the MessageID
     public int getId() {
         return id;
     }
 
+    // Getter for the sender of the message.
     public String getSender() {
         return sender;
     }
 
+    //Getter for the timestamp of the message.
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
+    //Getter for the content of the message.
     public String getContent() {
         return content;
     }
 
+    //Method that is used to edit the content of a message, and requests the database to edit the file.
     public void editMessage(String content) {
         this.content = content;
 
@@ -74,16 +85,19 @@ public class Message implements Serializable {
         }
     }
 
+    // Method that deletes a Message
     public void deleteMessage() {
         if (this.database.isServer()) {
             this.database.deleteMessageFromConversationFile(this.getId());
         }
     }
 
+    // Getter for the AddToFile parameter.
     public boolean isAddToFile() {
         return addToFile;
     }
 
+    // Converts the Message object into a String.
     public String toString() {
         return this.getId() + "," + this.getTimestamp().toString() + "," + this.getSender() + "," + this.getContent();
     }
