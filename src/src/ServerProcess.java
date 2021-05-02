@@ -74,20 +74,6 @@ public class ServerProcess extends Thread {
             }
         }while (!loggedIn);
 
-        Database clientData = new Database(false);
-        for (int i = 0; i < database.getConversations().size(); i++) {
-            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
-                clientData.addToDatabase(database.getConversations().get(i));
-        }
-
-        /*
-        ObjectOutputStream outputObjectStream = new ObjectOutputStream(clientSocket.getOutputStream());
-        outputObjectStream.flush();
-        outputObjectStream.writeObject(clientData);
-        outputObjectStream.flush();
-        outputObjectStream.close(); TODO - Make object transfer work
-
-         */
 
 
         if (loggedIn) {
@@ -101,9 +87,21 @@ public class ServerProcess extends Thread {
 
     public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, AccountNotExistException,
             UsernameAlreadyExistsException, ConversationNotFoundException, MessageNotFoundException {
+
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
         boolean exit = false;
+
+        Database clientData = new Database(false);
+        for (int i = 0; i < database.getConversations().size(); i++) {
+            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
+                clientData.addToDatabase(database.getConversations().get(i));
+        }
+
+        ObjectOutputStream outputObjectStream = new ObjectOutputStream(this.outputStream);
+        outputObjectStream.flush();
+        outputObjectStream.writeObject(clientData);
+        outputObjectStream.flush();
 
         do {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
@@ -257,6 +255,12 @@ public class ServerProcess extends Thread {
                     pw.println();
                     pw.flush();
                     exit = true;
+                    break;
+                case ("Database Received Successfully"):
+                    System.out.println("Database Sent SuccessFully");
+                    pw.write("");
+                    pw.println();
+                    pw.flush();
                     break;
             }
         }while(!exit);

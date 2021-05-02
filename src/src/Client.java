@@ -1,7 +1,6 @@
 package src;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +42,24 @@ public class Client {
         out = new PrintWriter(socket.getOutputStream(), true);
 
         login();
+
+        ObjectInputStream ois = null;
+        ois = new ObjectInputStream(socket.getInputStream());
+        try {
+            db = (Database) ois.readObject();
+            //ois.close();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            System.out.println(db.getConversationById(0).getMessages().get(1));
+            System.out.println(db.getConversationById(1).getMessages().get(1));
+        } catch (ConversationNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Database Received Successfully");
+        sendServer("Database Received Successfully");
+
         mw = new MainWindow(this);
 
         clientMessageLoop: while (in.hasNextLine()) {
