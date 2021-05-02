@@ -29,8 +29,8 @@ public class Message implements Serializable {
     }
 
     // Do not call this constructor for creating new messages in the server.
-    public Message(int id, LocalDateTime timestamp, String senderUsername, String content,
-                   boolean addToFile, Database database) {
+    public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile,
+            Database database) {
 
         this.timestamp = timestamp;
         this.sender = senderUsername;
@@ -68,11 +68,16 @@ public class Message implements Serializable {
 
     public void editMessage(String content) {
         this.content = content;
-        this.database.editMessageInConversationFile(this.getId(), content);
+
+        if (this.database.isServer()) {
+            this.database.editMessageInConversationFile(this.getId(), content);
+        }
     }
 
     public void deleteMessage() {
-        this.database.deleteMessageFromConversationFile(this.getId());
+        if (this.database.isServer()) {
+            this.database.deleteMessageFromConversationFile(this.getId());
+        }
     }
 
     public boolean isAddToFile() {
@@ -80,7 +85,6 @@ public class Message implements Serializable {
     }
 
     public String toString() {
-        return this.getId() + "," + this.getTimestamp().toString() + ","
-                + this.getSender() + "," + this.getContent();
+        return this.getId() + "," + this.getTimestamp().toString() + "," + this.getSender() + "," + this.getContent();
     }
 }

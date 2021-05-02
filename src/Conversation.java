@@ -51,6 +51,14 @@ public class Conversation implements Serializable {
         this.addToFile = false;
         this.database = database;
 
+        for (Account account : participants) {
+            try {
+                this.database.getAccountByUsername(account.getUsername()).addToConversation(this);
+            } catch (AccountNotExistException e) {
+                e.printStackTrace();
+            }
+        }
+
         this.database.addToDatabase(this);
     }
 
@@ -126,7 +134,9 @@ public class Conversation implements Serializable {
         Account account = this.database.getAccountByUsername(username);
         participants.remove(account);
         account.removeConversation(this);
-        this.database.removeParticipantFromConversationFile(this.getConversationId(), username);
+        if (this.database.isServer()) {
+            this.database.removeParticipantFromConversationFile(this.getConversationId(), username);
+        }
     }
 
     public void addMessage(Message message) {

@@ -74,12 +74,10 @@ public class Test {
                     chatMedium.setMessages(messagesListMedium);
                     chatLarge.setMessages(messagesListLarge);
 
-                    mw.sortChatEntries();
-
                     // TEST NEW MESSAGE TO CLIENT
                     Message.setNextMessageId(Message.getNextMessageId() + 1);
-                    client.receivedMessage(chatLarge.getConversationId(), Message.getNextMessageId(), "Jack",
-                            LocalDateTime.now(), "Hello World!");
+                    client.receivedAddMsg(chatLarge.getConversationId() + " " + Message.getNextMessageId() + " "
+                            + "Jack" + " " + LocalDateTime.now() + " " + "Hello World!");
 
                     // will be used for participant changes (leaving chats)
                     try {

@@ -2,14 +2,10 @@ package src;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.text.*;
-import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 import java.util.Collections;
 
 public class MainWindow extends JFrame {
@@ -18,38 +14,37 @@ public class MainWindow extends JFrame {
 
     private Container content;
     private JPanel sidePanel;
-    private JButton createChatSideButton;
+    private JPanel sideHeader;
+    private JButton createChatButton;
+    private JButton leaveChatButton;
     private JList<ChatEntry> chatList;
     private JScrollPane chatListScrollPane;
+    private JButton importChatButton;
+    private JButton exportChatButton;
+    private JButton accountButton;
+    private JButton signOutButton;
     private JPanel botPanel;
     private JPanel chatPanel;
     private JPanel convoHeader;
     private JTextField participantsField;
-    private JTextPane convoDisplay;
-    private JScrollPane convoDisplayScrollPane;
+    private JList<MsgEntry> msgList;
+    private JScrollPane msgListScrollPane;
     private JPanel composeBar;
     private JScrollPane composeScrollPane;
     private JTextArea composeMessage;
-    private JButton sendButton;
+    private JComboBox<String> messageActions;
+    private JSplitPane splitPane;
+    private final String SEND_ACTION = "SEND";
+    private final String EDIT_ACTION = "EDIT";
+    private final String DELETE_ACTION = "DELETE";
 
-    private Conversation currentChat;
-
-    private static final String STYLE_SHEET = ".chat-box { margin: 2px; }"
-            + ".chat-box p { display: block; word-wrap: break-word; justify-items: end; }"
-            + ".chat-msg1 { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }"
-            + ".chat-msg2 { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 2px; }";
-
-    private static final String HTML_FORMAT = "<style>" + STYLE_SHEET + "</style>"
-            + "<div id=content class=chat-box></div>";
-
-    private static final String OTHER_CHAT_FORMAT = "<p class=chat-msg1>%s</p>";
-    private static final String MY_CHAT_FORMAT = "<p class=chat-msg2>%s</p>";
+    private ChatEntry currentChat;
+    private MsgEntry currentMsg;
 
     public MainWindow(Client client) {
         super("Chat");
 
         this.client = client;
-        this.currentChat = null;
 
         initializeComponents();
 
@@ -58,6 +53,8 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        participantsField.requestFocusInWindow();
     }
 
     protected void initializeComponents() {
@@ -65,34 +62,39 @@ public class MainWindow extends JFrame {
         content.setLayout(new BorderLayout());
 
         // SIDE PANEL LAYOUT
-        createChatSideButton = new JButton("Create New Chat");
-        createChatSideButton.addActionListener(new ActionListener() {
+        createChatButton = new JButton("Create Chat");
+        createChatButton.setForeground(Color.decode("#35A437"));
+
+        createChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                clearConvoDisplay();
-                clearComposeMessage();
-
-                // =====================================================================
-                // -------------------------------- TEMP -------------------------------
-                try {
-                    Account z = client.getDatabase().getAccountByUsername("Zach");
-                    Account n = client.getDatabase().getAccountByUsername("Natalie");
-
-                    ArrayList<Account> accountsList = new ArrayList<Account>();
-                    accountsList.add(z);
-                    accountsList.add(n);
-
-                    Conversation chat = new Conversation("new", accountsList, false, client.getDatabase());
-
-                    addNewChat(chat);
-                } catch (AccountNotExistException error) {
-                    error.printStackTrace();
-                }
-                // ---------------------------------------------------------------------
-                // =====================================================================
-
+                hideMsgList();
             }
         });
+
+        leaveChatButton = new JButton("Leave Chat");
+        leaveChatButton.setForeground(Color.decode("#FF3E31"));
+        leaveChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentChat != null) {
+                    if (client.requestLeaveConvo(currentChat.getConversation())) {
+                        hideMsgList();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Unable to leave chat!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No chat selected to leave!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+
+        sideHeader = new JPanel();
+        sideHeader.setLayout(new GridLayout(1, 2));
+        sideHeader.add(createChatButton);
+        sideHeader.add(leaveChatButton);
 
         chatList = new JList<ChatEntry>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -102,10 +104,12 @@ public class MainWindow extends JFrame {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    currentChat = chatList.getSelectedValue().getConversation();
-                    if (currentChat != null) {
-                        fillConvoDisplay();
-                        clearComposeMessage();
+                    if (chatList.getSelectedValue() != null) {
+                        currentChat = chatList.getSelectedValue();
+                        showMsgList();
+                        splitPane.resetToPreferredSizes();
+                        composeMessage.setText("");
+                        composeMessage.requestFocusInWindow();
                     }
                 }
             }
@@ -114,13 +118,56 @@ public class MainWindow extends JFrame {
         chatListScrollPane = new JScrollPane(chatList);
         chatListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+        importChatButton = new JButton("Import Chat(s)");
+        importChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Import selected chats!
+            }
+        });
+
+        exportChatButton = new JButton("Export Chat(s)");
+        exportChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Export selected chats!
+            }
+        });
+
+        accountButton = new JButton("Account");
+        accountButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String password = JOptionPane.showInputDialog("Enter new password: ");
+
+                if (validPassword(password)) {
+                    client.requestEditPassword(password);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid password!", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+
+            }
+        });
+
+        signOutButton = new JButton("Sign Out");
+        signOutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // UPDATE later! call client quit
+                dispose();
+            }
+        });
+
         botPanel = new JPanel();
-        botPanel.add(new JButton("Account"));
-        botPanel.add(new JButton("Sign Out"));
+        botPanel.setLayout(new GridLayout(2, 2));
+        botPanel.add(importChatButton);
+        botPanel.add(accountButton);
+        botPanel.add(exportChatButton);
+        botPanel.add(signOutButton);
 
         sidePanel = new JPanel();
         sidePanel.setLayout(new BorderLayout());
-        sidePanel.add(createChatSideButton, BorderLayout.NORTH);
+        sidePanel.add(sideHeader, BorderLayout.NORTH);
         sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
         sidePanel.add(botPanel, BorderLayout.SOUTH);
 
@@ -135,17 +182,14 @@ public class MainWindow extends JFrame {
         convoHeader.setLayout(new BorderLayout());
         convoHeader.add(new JLabel(" Participants: "), BorderLayout.WEST);
         convoHeader.add(participantsField, BorderLayout.CENTER);
-
         chatPanel.add(convoHeader, BorderLayout.NORTH);
 
-        convoDisplay = new JTextPane();
-        convoDisplay.setContentType("text/html");
-        convoDisplay.setEditable(false);
-        convoDisplay.setText(HTML_FORMAT);
+        msgList = new JList<MsgEntry>();
+        msgList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        msgList.setCellRenderer(new MsgListCellRenderer());
 
-        convoDisplayScrollPane = new JScrollPane(convoDisplay);
-        convoDisplayScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        chatPanel.add(convoDisplayScrollPane, BorderLayout.CENTER); // chatPanel.remove(convoDisplayScrollPane);
+        msgListScrollPane = new JScrollPane(msgList);
+        msgListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         composeBar = new JPanel();
         composeBar.setLayout(new BorderLayout());
@@ -154,51 +198,84 @@ public class MainWindow extends JFrame {
         composeMessage.setWrapStyleWord(true);
         composeScrollPane = new JScrollPane(composeMessage);
         composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        composeBar.add(composeScrollPane, BorderLayout.CENTER); // ADD ACTION LISTENER TO TEXTFIELD
+        composeBar.add(composeScrollPane, BorderLayout.CENTER);
 
-        composeMessage.getDocument().addDocumentListener(new DocumentListener() {
-
+        InputMap inputMap = composeMessage.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = composeMessage.getActionMap();
+        KeyStroke enterKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+        inputMap.put(enterKey, enterKey.toString());
+        actionMap.put(enterKey.toString(), new AbstractAction() {
             @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateLineCount();
+            public void actionPerformed(ActionEvent e) {
+                attemptMessageAction();
             }
+        });
 
+        messageActions = new JComboBox<String>();
+        messageActions.addItem(SEND_ACTION);
+        messageActions.addItem(EDIT_ACTION);
+        messageActions.addItem(DELETE_ACTION);
+        messageActions.addActionListener(new ActionListener() {
             @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateLineCount();
-            }
+            public void actionPerformed(ActionEvent e) {
+                String selectedAction = (String) messageActions.getSelectedItem();
 
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateLineCount();
-            }
-
-            private void updateLineCount() {
-                int lineCount = getWrappedLines(composeMessage);
-                if (lineCount <= 3) {
-                    composeMessage.setRows(lineCount);
-                    composeBar.revalidate();
-                    chatPanel.revalidate();
+                switch (selectedAction) {
+                    case SEND_ACTION:
+                        currentMsg = null;
+                        break;
+                    case EDIT_ACTION:
+                        chatListScrollPane.revalidate();
+                        break;
+                    case DELETE_ACTION:
+                        break;
+                    default:
+                        System.out.println("ERROR: invalid action attempted!"); // should never happen!
                 }
             }
         });
 
-        sendButton = new JButton("Send");
-        composeBar.add(sendButton, BorderLayout.EAST);
-        sendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        composeBar.add(messageActions, BorderLayout.EAST);
+
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgListScrollPane, composeBar);
+        splitPane.setResizeWeight(1);
+        chatPanel.add(splitPane, BorderLayout.CENTER);
+
+        content.add(sidePanel, BorderLayout.WEST);
+        content.add(chatPanel, BorderLayout.CENTER);
+    }
+
+    public void attemptMessageAction() {
+        String selectedAction = (String) messageActions.getSelectedItem();
+
+        switch (selectedAction) {
+            case SEND_ACTION:
                 if (currentChat != null) {
+                    // Using chat...
                     if (!composeMessage.getText().equals("")) {
-                        client.requestCreateMsg(currentChat, composeMessage.getText());
+                        if (client.requestCreateMsg(currentChat.getConversation(), composeMessage.getText())) {
+                            composeMessage.setText("");
+                            composeMessage.requestFocusInWindow();
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                     } else {
                         JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
                                 JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
+                    // Creating chat...
                     if (!participantsField.getText().equals("")) {
                         if (!composeMessage.getText().equals("")) {
-                            client.requestNewChat(participantsField.getText(), composeMessage.getText());
+                            if (client.requestCreateConvo(participantsField.getText(), composeMessage.getText())) {
+                                participantsField.setText("");
+                                composeMessage.setText("");
+                                chatList.setSelectedIndex(0);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
                         } else {
                             JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
                                     JOptionPane.WARNING_MESSAGE);
@@ -208,46 +285,64 @@ public class MainWindow extends JFrame {
                                 JOptionPane.WARNING_MESSAGE);
                     }
                 }
-            }
-        });
-        chatPanel.add(composeBar, BorderLayout.SOUTH);
-
-        content.add(sidePanel, BorderLayout.WEST);
-        content.add(chatPanel, BorderLayout.CENTER);
-    }
-
-    public void clearComposeMessage() {
-        composeMessage.setText("");
-    }
-
-    public static int getWrappedLines(JTextComponent c) {
-        int len = c.getDocument().getLength();
-        int offset = 0;
-        // Increase 10% for extra newlines
-        StringBuffer buf = new StringBuffer((int) (len * 1.10));
-        try {
-            while (offset < len) {
-                int end = javax.swing.text.Utilities.getRowEnd(c, offset);
-                if (end < 0) {
-                    break;
+                break;
+            case EDIT_ACTION:
+                if (currentMsg != null) {
+                    if (currentMsg.getMessage().getSender().equals(client.getUsername())) {
+                        if (!composeMessage.getText().equals("")) {
+                            if (client.requestEditMsg(currentChat.getConversation(), currentMsg.getMessage(),
+                                    composeMessage.getText())) {
+                                currentMsg = null;
+                                msgList.setSelectedValue(null, false);
+                                composeMessage.setText("");
+                                composeMessage.requestFocusInWindow();
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Unable to edit message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "You can only edit messages that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No message selected to edit!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
-                // Include the last character on the line
-                end = Math.min(end + 1, len);
-                String s = c.getDocument().getText(offset, end - offset);
-                buf.append(s);
-                // Add a newline if s does not have one
-                if (!s.endsWith("\n")) {
-                    buf.append('\n');
+                break;
+            case DELETE_ACTION:
+                if (currentMsg != null) {
+                    if (currentMsg.getMessage().getSender().equals(client.getUsername())) {
+                        if (client.requestDeleteMsg(currentChat.getConversation(), currentMsg.getMessage())) {
+                            currentMsg = null;
+                            msgList.setSelectedValue(null, false);
+                            composeMessage.setText("");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unable to delete message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "You can only delete messages that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No message selected to delete!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
-                offset = end;
-            }
-        } catch (BadLocationException e) {
+                break;
+            default:
+                System.out.println("ERROR: invalid action attempted!"); // should never happen!
         }
-        StringTokenizer token = new StringTokenizer(buf.toString(), "\n");
-        int linesOfText = token.countTokens();
-        if (linesOfText == 0)
-            linesOfText = 1;
-        return linesOfText;
+    }
+
+    private boolean validPassword(String password) {
+        // UPDATE LATER
+        System.out.println(password);
+
+        return true;
     }
 
     private DefaultListModel<ChatEntry> getChatEntities() {
@@ -260,36 +355,54 @@ public class MainWindow extends JFrame {
         return (DefaultListModel<ChatEntry>) chatEntities;
     }
 
-    public void setChatList(ArrayList<Conversation> conversationList) {
+    public void setChatList(ArrayList<Conversation> conversations) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
-        for (Conversation convo : conversationList) {
+        for (Conversation convo : conversations) {
             chatEntities.addElement(new ChatEntry(convo, false));
         }
     }
 
     public void addNewChat(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
-        chatEntities.addElement(new ChatEntry(convo, true));
+        ChatEntry newChat = new ChatEntry(convo, true);
+        chatEntities.add(0, newChat);
     }
 
-    public void updateChatEntry(Conversation conversation) {
+    // UPDATE LATER, probably shouldnt update a conversation, sort the list, and
+    // redisplay the messages all in one function
+    public void updateChatEntry(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (int i = 0; i < chatEntities.size(); i++) {
             ChatEntry chatEntry = chatEntities.getElementAt(i);
-            if (chatEntry.getConversation().getConversationId() == conversation.getConversationId()) {
-                chatEntities.setElementAt(new ChatEntry(conversation, true), i);
+            if (chatEntry.getConversation().getConversationId() == convo.getConversationId()) {
+                chatEntities.setElementAt(new ChatEntry(convo, true), i);
                 break;
             }
         }
 
+        sortChatEntries();
+
         if (currentChat != null) {
-            if (chatList.getSelectedValue().getConversation().getConversationId() == conversation.getConversationId()) {
-                fillConvoDisplay();
+            if (currentChat.getConversation().getConversationId() == convo.getConversationId()) {
+                showMsgList();
+            }
+        }
+    }
+
+    public void removeChatEntry(Conversation convo) {
+        DefaultListModel<ChatEntry> chatEntities = getChatEntities();
+        for (int i = 0; i < chatEntities.size(); i++) {
+            ChatEntry chatEntry = chatEntities.getElementAt(i);
+            if (chatEntry.getConversation().getConversationId() == convo.getConversationId()) {
+                chatEntities.remove(i);
+                break;
             }
         }
     }
 
     public void sortChatEntries() {
+        ChatEntry oldSelection = chatList.getSelectedValue();
+
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         ArrayList<ChatEntry> list = new ArrayList<ChatEntry>();
         for (int i = 0; i < chatEntities.size(); i++) {
@@ -300,6 +413,8 @@ public class MainWindow extends JFrame {
         for (ChatEntry c : list) {
             chatEntities.addElement(c);
         }
+
+        chatList.setSelectedValue(oldSelection, false);
     }
 
     class ChatEntry implements Comparable<ChatEntry> {
@@ -336,7 +451,6 @@ public class MainWindow extends JFrame {
                 boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            // UPDATE string parsing to proper conversation parsing
             ChatEntry chatEntry = (ChatEntry) value;
             Conversation conversation = chatEntry.getConversation();
             String name = conversation.getConversationName();
@@ -350,77 +464,179 @@ public class MainWindow extends JFrame {
 
             if (isSelected) {
                 chatEntry.setUnread(false);
+                setForeground(Color.decode("#ffffff"));
+                setBackground(Color.decode("#149dff"));
+            } else {
+                setBackground(Color.decode("#dedede"));
             }
 
             if (chatEntry.getUnread()) {
-                setForeground(Color.BLUE);
+                setForeground(Color.decode("#1466ff"));
             }
 
-            setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+            setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
 
             return this;
         }
     }
 
-    // public void appendFriendMessage(String message) {
-    // fillConvoDisplay(String.format(OTHER_CHAT_FORMAT, message));
-    // }
+    private DefaultListModel<MsgEntry> getMessageEntities() {
+        ListModel<MsgEntry> msgEntities = msgList.getModel();
+        if (!(msgEntities instanceof DefaultListModel)) {
+            DefaultListModel<MsgEntry> defaultMsgEntries = new DefaultListModel<MsgEntry>();
+            msgList.setModel(defaultMsgEntries);
+            return defaultMsgEntries;
+        }
+        return (DefaultListModel<MsgEntry>) msgEntities;
+    }
 
-    // public void appendMeMyMessage(String message) {
-    // fillConvoDisplay(String.format(MY_CHAT_FORMAT, message));
-    // }
+    public void clearMsgList() {
+        msgList.setModel(new DefaultListModel<MsgEntry>());
+    }
 
-    public void appendMessageToConvoDisplay(String message) {
-        HTMLDocument document = (HTMLDocument) convoDisplay.getDocument();
-        Element contentElement = document.getElement("content");
-        try {
-            if (contentElement.getElementCount() > 0) {
-                Element lastElement = contentElement.getElement(contentElement.getElementCount() - 1);
-                document = (HTMLDocument) contentElement.getDocument();
-                document.insertAfterEnd(lastElement, message);
-            } else {
-                document.insertBeforeEnd(contentElement, message);
-            }
-        } catch (BadLocationException | IOException e) {
-            e.printStackTrace();
+    public void setMsgList(ArrayList<Message> messages) {
+        DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
+        for (Message msg : messages) {
+            boolean mine = client.getUsername().equals(msg.getSender());
+            msgEntities.addElement(new MsgEntry(msg, mine, false));
         }
     }
 
-    private String formatHTMLMessage(Message message) {
-        DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd/yy, hh:mm a");
-        String timestamp = message.getTimestamp().format(f);
-        String sender = message.getSender();
-        String content = message.getContent();
-
-        return "<b>" + sender + "</b>" + " - " + "<i>" + timestamp + "</i>" + "<br>" + content;
+    public void addNewMsgEntry(Message msg) {
+        DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
+        boolean mine = client.getUsername().equals(msg.getSender());
+        MsgEntry newMsg = new MsgEntry(msg, mine, false);
+        msgEntities.addElement(newMsg);
     }
 
-    public void fillConvoDisplay() {
-        participantsField.setText(currentChat.getParticipantsString());
+    public void updateMsgEntry(Message msg) {
+        DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
+        for (int i = 0; i < msgEntities.size(); i++) {
+            MsgEntry msgEntry = msgEntities.getElementAt(i);
+            if (msgEntry.getMessage().getId() == msg.getId()) {
+                boolean mine = client.getUsername().equals(msg.getSender());
+                MsgEntry newMsg = new MsgEntry(msg, mine, true);
+                msgEntities.setElementAt(newMsg, i);
+                break;
+            }
+        }
+    }
+
+    public void removeMsgEntry(Message msg) {
+        DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
+        for (int i = 0; i < msgEntities.size(); i++) {
+            MsgEntry msgEntry = msgEntities.getElementAt(i);
+            if (msgEntry.getMessage().getId() == msg.getId()) {
+                msgEntities.remove(i);
+                break;
+            }
+        }
+    }
+
+    class MsgEntry extends JPanel implements Comparable<MsgEntry> {
+        private static final String STYLE_SHEET = "<style>" + ".msg-box { margin: 2px; }"
+                + ".msg-box p { display: block; justify-items: end; }"
+                + ".other-msg { color: #000000; background-color: #dedede; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 1px; }"
+                + ".my-msg { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px; margin-top: 2px; margin-bottom: 1px; }"
+                + "</style>";
+
+        Message message;
+        boolean mine;
+        boolean edited;
+
+        public MsgEntry(Message message, boolean mine, boolean edited) {
+            this.message = message;
+            this.mine = mine;
+            this.edited = edited;
+        }
+
+        public Message getMessage() {
+            return message;
+        }
+
+        public boolean getMine() {
+            return mine;
+        }
+
+        @Override
+        public int compareTo(MsgEntry o) {
+            return message.getTimestamp().compareTo(o.message.getTimestamp());
+        }
+
+        public String getFormattedHTML() {
+            DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd/yy, hh:mm a");
+            String timestamp = message.getTimestamp().format(f);
+            String sender = message.getSender();
+            String content = message.getContent();
+            String editTag = edited ? " (Edited)" : "";
+            String style = mine ? "my-msg" : "other-msg";
+
+            return "<html>" + STYLE_SHEET + "<div style='width: 275px' class=msg-box><p class=" + style + "><b>"
+                    + sender + "</b>" + " - " + "<i>" + timestamp + editTag + "</i>" + "<br>" + content + "</p></div>";
+        }
+    }
+
+    class MsgListCellRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            MsgEntry msgEntry = (MsgEntry) value;
+            setText(msgEntry.getFormattedHTML());
+            setBackground(Color.decode(msgEntry.getMine() ? "#149dff" : "#dedede"));
+
+            String selectedAction = (String) messageActions.getSelectedItem();
+
+            if (isSelected) {
+                if (!selectedAction.equals(SEND_ACTION)) {
+                    currentMsg = msgEntry;
+
+                    composeMessage.requestFocusInWindow();
+                    composeMessage.setText("");
+
+                    if (msgEntry.getMine()) {
+                        if (selectedAction.equals(EDIT_ACTION)) {
+                            composeMessage.setText(msgEntry.getMessage().getContent());
+                            setBackground(Color.decode("#35A437"));
+                        } else if (selectedAction.equals(DELETE_ACTION)) {
+                            composeMessage.setText("Press ENTER to confirm delete...");
+                            setBackground(Color.decode("#FF3E31"));
+                        }
+                    }
+                } else {
+                    currentMsg = null;
+                }
+            }
+
+            return this;
+        }
+    }
+
+    public void showMsgList() {
+        // In "using chat" mode...
+        participantsField.setText(currentChat.getConversation().getParticipantsString());
         participantsField.setEditable(false);
-        convoDisplay.setText(HTML_FORMAT);
+        clearMsgList();
 
-        for (Message m : currentChat.getMessages()) {
-            // UPDATE LATER
-            if (m.getSender().equals("Zach")) {
-                appendMessageToConvoDisplay(String.format(MY_CHAT_FORMAT, formatHTMLMessage(m)));
-            } else {
-                appendMessageToConvoDisplay(String.format(OTHER_CHAT_FORMAT, formatHTMLMessage(m)));
-            }
-        }
+        setMsgList(currentChat.getConversation().getMessages());
 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                JScrollBar scrollBar = convoDisplayScrollPane.getVerticalScrollBar();
+                JScrollBar scrollBar = msgListScrollPane.getVerticalScrollBar();
                 scrollBar.setValue(scrollBar.getMaximum());
             }
         });
     }
 
-    public void clearConvoDisplay() {
+    public void hideMsgList() {
+        // In "creating chat" mode...
         currentChat = null;
+        chatList.setSelectedValue(null, false);
         participantsField.setText("");
         participantsField.setEditable(true);
-        convoDisplay.setText("");
+        participantsField.requestFocusInWindow();
+        messageActions.setSelectedItem(SEND_ACTION);
+        clearMsgList();
     }
 }
