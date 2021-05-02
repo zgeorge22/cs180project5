@@ -2,7 +2,7 @@ package src;
 
 import java.util.ArrayList;
 
-public class MainTesting {
+public class DatabaseAccountConversationMessageTestCases {
     public static void main(String[] args) throws AccountNotExistException, InterruptedException,
             ConversationNotFoundException, MessageNotFoundException {
 
