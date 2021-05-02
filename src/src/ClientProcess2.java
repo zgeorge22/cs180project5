@@ -6,7 +6,9 @@ import java.util.Scanner;
 
 public class ClientProcess2 {
 
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+
         Socket socket = new Socket("localhost", 4242);
         Database database = new Database(false); //TODO remove if database is being sent from server
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -31,12 +33,10 @@ public class ClientProcess2 {
             writer.println();
             writer.flush();
 
-            System.out.println("Check");
 
             confirm = reader.readLine();
-            System.out.println(confirm);
 
-        }while(confirm.equals("false"));
+        } while(confirm.equals("false"));
 
 /*
         InputStream inputStream = socket.getInputStream();
@@ -46,8 +46,10 @@ public class ClientProcess2 {
 
  */
 
+
         String exit = "false";
         do {
+            // SENDING
             System.out.println("Enter Command: ");
 
             String GUIcmd = scan.nextLine(); //Placeholder GUI command
@@ -56,6 +58,7 @@ public class ClientProcess2 {
             writer.println();
             writer.flush();
 
+            // RECEIVING
             String commandString = (reader.readLine());
             String[] token = commandString.split(" ");
             String inputcmd = token[0];
