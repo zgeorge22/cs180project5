@@ -1,9 +1,10 @@
 package src;
 
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Conversation {
+public class Conversation implements Serializable {
 
     private static int nextConversationId;
     private final int conversationId;
@@ -144,4 +145,6 @@ public class Conversation {
     public void exportToCSV() {
         this.database.createCSV(this.getConversationId());
     }
+
+
 }

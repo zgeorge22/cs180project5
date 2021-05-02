@@ -1,3 +1,6 @@
+//package com.company;
+package src;
+
 import java.util.ArrayList;
 
 public class ServerBackground {
@@ -10,5 +13,9 @@ public class ServerBackground {
 
     public static void removeUser(Account user) {
         ServerBackground.activeUsers.remove(user);
+    }
+
+    public static ArrayList<Account> getActiveUsers() {
+        return activeUsers;
     }
 }

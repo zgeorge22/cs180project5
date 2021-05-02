@@ -4,7 +4,7 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class Database {
+public class Database implements Serializable {
 
     private ArrayList<Account> accounts;
     private ArrayList<Conversation> conversations;
@@ -602,5 +602,13 @@ public class Database {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<Conversation> getConversations() {
+        return conversations;
+    }
+
+    public ArrayList<Account> getAccounts() {
+        return accounts;
     }
 }
