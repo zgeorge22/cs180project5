@@ -1,4 +1,3 @@
-//package com.company;
 package src;
 
 import java.io.IOException;

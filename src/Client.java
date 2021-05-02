@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
 public class Client {
     private MainWindow mw;
     private Database db;
@@ -15,7 +14,6 @@ public class Client {
     private Scanner in;
     private PrintWriter out;
 
-
     public Client() {
         db = new Database(false);
 
@@ -23,16 +21,15 @@ public class Client {
     }
 
     public static void main(String[] args) {
-       Client client = new Client();
+        Client client = new Client();
 
-       client.username = "jim"; //Do we need this?
+        client.username = "jim"; // Do we need this?
 
         try {
             client.run();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
     }
 
@@ -47,7 +44,7 @@ public class Client {
         ois = new ObjectInputStream(socket.getInputStream());
         try {
             db = (Database) ois.readObject();
-            //ois.close();
+            // ois.close();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -102,7 +99,7 @@ public class Client {
     private void login() {
         String confirm;
         do {
-            System.out.println("Enter loginAccount (0) or createAccount (1)"); //Testing Input
+            System.out.println("Enter loginAccount (0) or createAccount (1)"); // Testing Input
             Scanner scanner = new Scanner(System.in);
             String loginChoice = scanner.nextLine();
             String choice = null;
@@ -115,14 +112,14 @@ public class Client {
             System.out.println("Password: ");
             String password = scanner.nextLine();
 
-            String login = getLogin(choice, username, password); //GUI connection
+            String login = getLogin(choice, username, password); // GUI connection
             out.write(login);
             out.println();
             out.flush();
 
             confirm = in.nextLine();
 
-        } while(confirm.equals("false"));
+        } while (confirm.equals("false"));
 
     }
 
@@ -136,17 +133,17 @@ public class Client {
         out.println();
         out.flush();
 
-//        String response = "RESPONSE";
-//        System.out.println(response);
-//        if (in.hasNextLine()) {
-//            response = in.nextLine();
-//            System.out.println(response);
-//            if (response.equals("succeeded")) {
-                return true;
-//            }
-//        }
+        // String response = "RESPONSE";
+        // System.out.println(response);
+        // if (in.hasNextLine()) {
+        // response = in.nextLine();
+        // System.out.println(response);
+        // if (response.equals("succeeded")) {
+        return true;
+        // }
+        // }
 
-//        return false;
+        // return false;
     }
 
     public boolean requestEditPassword(String password) {
@@ -167,8 +164,8 @@ public class Client {
     }
 
     public boolean requestLeaveConvo(Conversation conversation) {
-        System.out.println("CLIENT - Requested leaveConvo for conversationID ["
-                + conversation.getConversationId() + "]");
+        System.out
+                .println("CLIENT - Requested leaveConvo for conversationID [" + conversation.getConversationId() + "]");
 
         return sendServer("leaveConvo " + conversation.getConversationId() + " " + username);
     }
@@ -184,8 +181,7 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " "
-                + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
