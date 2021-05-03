@@ -1,0 +1,15 @@
+0
+GC
+Rishi,Natalie,Jack,Ben,Zach
+0,2021-05-03T17:20:50.835239100,Rishi,Lets use this chat to work on CS 180!
+1,2021-05-03T17:21:34.288248200,Zach,How much experience do you guys have with CS?
+2,2021-05-03T17:22:26.972673900,Rishi,I didn't know a lot about Java, but I think that I know a lot more because of Professor Dunsmore, and this class.
+3,2021-05-03T17:22:55.959045100,Jack,I've learnt a lot from this class as well
+4,2021-05-03T17:23:30.234294,Ben,I look forward to working with you guys
+5,2021-05-03T17:24:02.748913100,Zach,Let's make the text chatting option, which number is it?
+11,2021-05-03T18:06:27.724600300,Natalie,I agree, I like that option best
+12,2021-05-03T18:07:31.592319400,Rishi,Me too!
+13,2021-05-03T18:12:06.139400900,Zach,Who wants to work on the Database?
+13,2021-05-03T18:34:51.048620400,Rishi,I can do it!
+17,2021-05-03T18:40:42.290057400,Zach,Thanks
+18,2021-05-03T18:41:43.204583300,Rishi,Your Welcome

@@ -1,0 +1,7 @@
+1
+GC
+Zach,Jack
+7,2021-05-03T17:24:56.840352500,Rishi,Lets use this chat to talk about the GUI.
+8,2021-05-03T17:26:01.177208300,Zach,I thought it was just Jack and I in the GUI team?
+9,2021-05-03T17:26:43.552071400,Rishi,Ah, you are correct, I think I will leave then.
+10,2021-05-03T17:26:51.297118300,Jack,Bye!
