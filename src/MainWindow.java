@@ -379,7 +379,8 @@ public class MainWindow extends JFrame {
                                     JOptionPane.ERROR_MESSAGE);
                         }
                     } else {
-                        JOptionPane.showMessageDialog(null, "You can only delete messages " + "that you have created!",
+                        JOptionPane.showMessageDialog(null, "You can only delete messages "
+                                                      + "that you have created!",
                                 "Warning", JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
