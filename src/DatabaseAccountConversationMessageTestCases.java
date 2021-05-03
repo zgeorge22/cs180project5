@@ -18,7 +18,7 @@ public class DatabaseAccountConversationMessageTestCases {
         Database database = new Database(true);
         System.out.println(database.getAccountByUsername("jim").toString() + " "
                 + database.getAccountByUsername("bean"));
-        // "jim,jim bean,dumb" should be printed indicating that the accounts have been
+        // "jim,jim bean,bean" should be printed indicating that the accounts have been
         // imported from text
         System.out.println(database.getConversationById(0).getMessages().get(0));
         // "0,2021-04-23T17:00:42.870743,guest,Hi, I am a guest user" should be printed
