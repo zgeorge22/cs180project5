@@ -1,9 +1,19 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+/**
+ * LoginGUI is a class designed to present a simple login system for
+ * a user that wants to access our messaging program. This GUI offers
+ * the user the ability to log in with an existing account or create a
+ * new one, and will present an error message if the potential credentials
+ * do not meet the required criteria/
+ * 
+ * Author (Jack Dorkin)
+ */
 public class LoginGUI implements ActionListener
 {
+    //All of the labels, text boxes, and buttons that will be used in the
+    //GUI for logging in and the one for account creation
     private static JLabel usernameLabel;
     private static JTextField userText;
     private static JLabel passwordLabel;
@@ -11,6 +21,10 @@ public class LoginGUI implements ActionListener
     private static JButton loginButton;
     private static JButton signUpButton;
     private static JButton createAccountButton;
+    
+    /** Main method, defines majority of fields, sets up frame and panel
+    * that will be used for the initial login popup
+    */
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         JPanel panel = new JPanel();
@@ -49,6 +63,12 @@ public class LoginGUI implements ActionListener
         frame.setVisible(true);
     }
     
+    /** Override of the actionPerformed method from the ActionListener interface
+    * Provides action descriptions for all available buttons in the code
+    * Creates a new GUI upon being prompted with the "Sign Up" button
+    * on the initial login GUI. Prompts error popups if user uses incorrect
+    * criteria for username and/or password.
+    */
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == loginButton) {
@@ -87,6 +107,12 @@ public class LoginGUI implements ActionListener
             
             frame.setVisible(true);
         } else if(e.getSource() == createAccountButton) {
+            JFrame frame = new JFrame();
+            JPanel panel = new JPanel();
+            frame.setSize(350,200);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.add(panel);
+            panel.setLayout(null);
             int count = 0;
             for(int i = 0; i < userText.getText().length(); i++) {
                 if(!Character.isLetterOrDigit(userText.getText().charAt(i))) {
@@ -103,9 +129,9 @@ public class LoginGUI implements ActionListener
                 }
             }
             if(count != 0) {
-                System.out.println("Error: Non-alphanumeric character used in username or password.");
+                JOptionPane.showMessageDialog(panel, "Error: Non-alphanumeric character used in username or password.", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                System.out.println("Account created with username " + userText.getText() + " and password " + passwordText.getText());
+                JOptionPane.showMessageDialog(panel, "Account created with username " + userText.getText() + " and password " + passwordText.getText(), "Account Created", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
