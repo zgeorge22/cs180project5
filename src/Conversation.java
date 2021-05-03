@@ -2,11 +2,15 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 /**
- * This is the conversation class which creates conversation objects which allow users to interact with each other.
+ * This is the conversation class which creates conversation objects which allow
+ * users to interact with each other.
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -26,7 +30,7 @@ public class Conversation {
     // ensuring they are not duplicated in
     // the text files.
     public Conversation(String conversationName, ArrayList<Account> participants, boolean addToFile,
-                        Database database) {
+            Database database) {
         this.conversationId = getNextConversationId();
         this.participants = participants;
         this.conversationName = conversationName;
@@ -99,11 +103,14 @@ public class Conversation {
     public String getParticipantsString() {
         String s = "";
 
-        for (Account participant : participants) {
-            s += participant.getUsername() + ", ";
+        if (participants.size() > 0) {
+            for (Account participant : participants) {
+                s += participant.getUsername() + ", ";
+            }
+            s = s.substring(0, s.length() - 2);
         }
 
-        return s.substring(0, s.length() - 2);
+        return s;
     }
 
     // Getter for an ArrayList containing all of the messages in a conversation.

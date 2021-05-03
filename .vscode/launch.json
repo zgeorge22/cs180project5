@@ -5,6 +5,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch GUITestCases",
+            "request": "launch",
+            "mainClass": "GUITestCases",
+            "projectName": "cs180project5_6cb378e1"
+        },
+        {
+            "type": "java",
             "name": "Launch Client",
             "request": "launch",
             "mainClass": "Client",
