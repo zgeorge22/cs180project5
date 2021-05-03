@@ -1,0 +1,21 @@
+{
+    "java.project.sourcePaths": [
+        "src"
+    ],
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Client",
+            "request": "launch",
+            "mainClass": "Client",
+            "projectName": "cs180project5_6cb378e1"
+        },
+        {
+            "type": "java",
+            "name": "Launch Server",
+            "request": "launch",
+            "mainClass": "Server",
+            "projectName": "cs180project5_6cb378e1"
+        }
+    ]
+}

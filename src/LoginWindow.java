@@ -4,9 +4,12 @@ import java.awt.event.*;
 /**
  * This class contains the GUI for the Login Window.
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -33,13 +36,13 @@ public class LoginWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // addWindowListener(new WindowAdapter() {
-        // @Override
-        // public void windowClosing(WindowEvent e) {
-        // super.windowClosing(e);
-        // client.requestLogoutAccount();
-        // }
-        // });
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                client.requestCancelLogin();
+            }
+        });
         setVisible(true);
     }
 
@@ -67,7 +70,9 @@ public class LoginWindow extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                client.requestLoginAccount(usernameText.getText(), passwordText.getText());
+                if (Client.validUsername(usernameText.getText()) && Client.validPassword(passwordText.getText())) {
+                    client.requestLoginAccount(usernameText.getText(), passwordText.getText());
+                }
             }
         });
         loginButton.setBounds(80, 95, 80, 25);
@@ -77,7 +82,9 @@ public class LoginWindow extends JFrame {
         signUpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                client.requestCreateAccount(usernameText.getText(), passwordText.getText());
+                if (Client.validUsername(usernameText.getText()) && Client.validPassword(passwordText.getText())) {
+                    client.requestCreateAccount(usernameText.getText(), passwordText.getText());
+                }
             }
         });
         signUpButton.setBounds(180, 95, 80, 25);

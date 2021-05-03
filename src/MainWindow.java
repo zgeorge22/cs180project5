@@ -7,12 +7,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * This is the main GUI of the chat application where the user is able to chat with other users.
- * //TODO Maybe add more things?
+ * This is the main GUI of the chat application where the user is able to chat
+ * with other users. //TODO Maybe add more things?
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -96,12 +99,12 @@ public class MainWindow extends JFrame {
                     if (client.requestLeaveConvo(currentChat.getConversation())) {
                         hideMsgList();
                     } else {
-                        JOptionPane.showMessageDialog(null, "Unable to leave chat!",
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Unable to leave chat!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "No chat selected to leave!",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "No chat selected to leave!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -157,13 +160,9 @@ public class MainWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String password = JOptionPane.showInputDialog("Enter new password: ");
 
-                if (validPassword(password)) {
+                if (Client.validPassword(password)) {
                     client.requestEditPassword(password);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid password!",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
                 }
-
             }
         });
 
@@ -274,12 +273,12 @@ public class MainWindow extends JFrame {
                             composeMessage.setText("");
                             composeMessage.requestFocusInWindow();
                         } else {
-                            JOptionPane.showMessageDialog(null, "Unable to send message!",
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
                         }
                     } else {
-                        JOptionPane.showMessageDialog(null, "No message to send!",
-                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
                     // Creating chat...
@@ -290,16 +289,16 @@ public class MainWindow extends JFrame {
                                 composeMessage.setText("");
                                 chatList.setSelectedIndex(0);
                             } else {
-                                JOptionPane.showMessageDialog(null, "Unable to send message!",
-                                        "Error", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(null, "Unable to send message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
                             }
                         } else {
-                            JOptionPane.showMessageDialog(null, "No message to send!",
-                                    "Warning", JOptionPane.WARNING_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
                         }
                     } else {
-                        JOptionPane.showMessageDialog(null, "No participants entered!",
-                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "No participants entered!", "Warning",
+                                JOptionPane.WARNING_MESSAGE);
                     }
                 }
                 break;
@@ -314,20 +313,20 @@ public class MainWindow extends JFrame {
                                 composeMessage.setText("");
                                 composeMessage.requestFocusInWindow();
                             } else {
-                                JOptionPane.showMessageDialog(null, "Unable to edit message!",
-                                        "Error", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(null, "Unable to edit message!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
                             }
                         } else {
-                            JOptionPane.showMessageDialog(null, "No message to send!",
-                                    "Warning", JOptionPane.WARNING_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "No message to send!", "Warning",
+                                    JOptionPane.WARNING_MESSAGE);
                         }
                     } else {
-                        JOptionPane.showMessageDialog(null, "You can only edit messages" +
-                                        " that you have created!", "Warning", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "You can only edit messages" + " that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "No message selected to edit!",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "No message selected to edit!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
                 break;
             case DELETE_ACTION:
@@ -338,28 +337,21 @@ public class MainWindow extends JFrame {
                             msgList.setSelectedValue(null, false);
                             composeMessage.setText("");
                         } else {
-                            JOptionPane.showMessageDialog(null, "Unable to delete message!",
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Unable to delete message!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
                         }
                     } else {
-                        JOptionPane.showMessageDialog(null, "You can only delete messages " +
-                                        "that you have created!", "Warning", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "You can only delete messages " + "that you have created!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "No message selected to delete!",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "No message selected to delete!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
                 break;
             default:
                 System.out.println("ERROR: invalid action attempted!"); // should never happen!
         }
-    }
-
-    private boolean validPassword(String password) {
-        // UPDATE LATER
-        System.out.println(password);
-
-        return true;
     }
 
     private DefaultListModel<ChatEntry> getChatEntities() {
@@ -392,7 +384,12 @@ public class MainWindow extends JFrame {
         for (int i = 0; i < chatEntities.size(); i++) {
             ChatEntry chatEntry = chatEntities.getElementAt(i);
             if (chatEntry.getConversation().getConversationId() == convo.getConversationId()) {
-                chatEntities.setElementAt(new ChatEntry(convo, true), i);
+                final int index = i;
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        chatEntities.setElementAt(new ChatEntry(convo, true), index);
+                    }
+                });
                 break;
             }
         }
@@ -415,7 +412,12 @@ public class MainWindow extends JFrame {
         for (int i = 0; i < chatEntities.size(); i++) {
             ChatEntry chatEntry = chatEntities.getElementAt(i);
             if (chatEntry.getConversation().getConversationId() == convo.getConversationId()) {
-                chatEntities.remove(i);
+                final int index = i;
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        chatEntities.remove(index);
+                    }
+                });
                 break;
             }
         }
@@ -469,7 +471,7 @@ public class MainWindow extends JFrame {
     class ChatListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
-                                                      boolean cellHasFocus) {
+                boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
             ChatEntry chatEntry = (ChatEntry) value;
@@ -557,11 +559,10 @@ public class MainWindow extends JFrame {
     class MsgEntry extends JPanel implements Comparable<MsgEntry> {
         private static final String STYLE_SHEET = "<style>" + ".msg-box { margin: 2px; }"
                 + ".msg-box p { display: block; justify-items: end; }"
-                + ".other-msg { color: #000000; background-color: #dedede; text-align: left; padding: 7px;" +
-                " margin-top: 2px; margin-bottom: 1px; }"
-                + ".my-msg { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px;" +
-                " margin-top: 2px; margin-bottom: 1px; }"
-                + "</style>";
+                + ".other-msg { color: #000000; background-color: #dedede; text-align: left; padding: 7px;"
+                + " margin-top: 2px; margin-bottom: 1px; }"
+                + ".my-msg { color: #ffffff; background-color: #149dff; text-align: left; padding: 7px;"
+                + " margin-top: 2px; margin-bottom: 1px; }" + "</style>";
 
         Message message;
         boolean mine;
@@ -595,15 +596,14 @@ public class MainWindow extends JFrame {
             String style = mine ? "my-msg" : "other-msg";
 
             return "<html>" + STYLE_SHEET + "<div style='width: 275px' class=msg-box><p class=" + style + "><b>"
-                    + sender + "</b>" + " - " + "<i>" + timestamp + editTag + "</i>" + "<br>"
-                    + content + "</p></div>";
+                    + sender + "</b>" + " - " + "<i>" + timestamp + editTag + "</i>" + "<br>" + content + "</p></div>";
         }
     }
 
     class MsgListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
-                                                      boolean cellHasFocus) {
+                boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
             MsgEntry msgEntry = (MsgEntry) value;

@@ -3,14 +3,19 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.JOptionPane;
 
 /**
- * This class is the client class which the client will run to launch the program. This client will connect with the
- * server and allow users to chat with each other, from their own clients.
+ * This class is the client class which the client will run to launch the
+ * program. This client will connect with the server and allow users to chat
+ * with each other, from their own clients.
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -46,8 +51,7 @@ public class Client {
 
         lw = new LoginWindow(this);
 
-        serverMessageLoop:
-        while (in.hasNextLine()) {
+        serverMessageLoop: while (in.hasNextLine()) {
             String serverInput = in.nextLine();
 
             String command = serverInput;
@@ -64,13 +68,17 @@ public class Client {
                         receivedSuccessfulLogin(details);
                         break;
                     case ("createAccountFailed"):
-                        // reprompt user on login window
+                        System.out.println("CLIENT - Received createAccountFailed");
+                        JOptionPane.showMessageDialog(null, "Create account failed. Please try again!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         break;
                     case ("loginAccountSuccessful"):
                         receivedSuccessfulLogin(details);
                         break;
                     case ("loginFailed"):
-                        // reprompt user on login window
+                        System.out.println("CLIENT - Received loginFailed");
+                        JOptionPane.showMessageDialog(null, "Login failed. Please try again!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         break;
                     default:
                         System.out.println("ERROR - Not Logged In - Unknown command: " + command);
@@ -97,16 +105,14 @@ public class Client {
                     case ("removeMsg"):
                         receivedRemoveMsg(details);
                         break;
+                    case ("failedCreateConvo"):
+                        JOptionPane.showMessageDialog(null, "Unable to create conversation!", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        break;
                     case ("logoutTrue"):
                         mw.dispose();
                         username = null;
                         break serverMessageLoop;
-                    case ("succeeded"):
-                        System.out.println("succeeded"); // REMOVE?
-                        break;
-                    case ("failedCreateConvo"):
-                        System.out.println("ERROR - Invalid Conversation Participant"); // REMOVE?
-                        break;
                     default:
                         System.out.println("ERROR - Logged In - Unknown command: " + command);
                         break;
@@ -178,8 +184,7 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " "
-                + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
@@ -187,6 +192,10 @@ public class Client {
                 + "] and messageID [" + message.getId() + "]");
 
         return sendServer("deleteMsg " + conversation.getConversationId() + " " + message.getId());
+    }
+
+    public boolean requestCancelLogin() {
+        return sendServer("cancelLogin");
     }
 
     public boolean requestLogoutAccount() {
@@ -197,16 +206,24 @@ public class Client {
     // ---------------------- Recieved commands FROM server ----------------------
     // ===========================================================================
 
+    public void receivedSuccessfulLogin(String details) {
+        username = details;
+        lw.dispose();
+
+        System.out.println("CLIENT - Received successfulLogin for username [" + username + "]");
+    }
+
     public void receivedPrepareForDataDump(String details) {
 
-        System.out.println("CLIENT - Received prepareForDataDump");
         String placeholder = details;
-        System.out.println(details);
         int numAccsSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
         int numConvosSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
         int numMsgsSent = Integer.parseInt(placeholder);
+
+        System.out.println(
+                "CLIENT - Received prepareForDataDump " + numAccsSent + " " + numConvosSent + " " + numMsgsSent);
 
         db = new Database(false);
 
@@ -249,13 +266,6 @@ public class Client {
         // Start main window GUI
         mw = new MainWindow(this);
         mw.setChatList(db.getConversations());
-    }
-
-    public void receivedSuccessfulLogin(String details) {
-        username = details;
-        lw.dispose();
-
-        System.out.println("CLIENT - Received successfulLogin for username [" + username + "]");
     }
 
     public void receivedAddConvo(String details) {
@@ -308,7 +318,12 @@ public class Client {
         try {
             Conversation conversation = db.getConversationById(conversationID);
             conversation.removeParticipant(user);
-            mw.updateChatEntry(conversation);
+
+            if (user.equals(username)) {
+                mw.removeChatEntry(conversation);
+            } else {
+                mw.updateChatEntry(conversation);
+            }
         } catch (ConversationNotFoundException e) {
             System.out.println("ConversationID " + conversationID + " does not exist!");
         } catch (AccountNotExistException e) {
@@ -371,7 +386,7 @@ public class Client {
 
         try {
             Message message = db.getMessageById(messageID);
-            message.editMessage(content); // update timestamp as well?
+            message.editMessage(content);
             // mw.updateMsgEntry(message);
 
             Conversation conversation = db.getConversationById(conversationID);
@@ -426,5 +441,47 @@ public class Client {
 
     public String getUsername() {
         return username;
+    }
+
+    public static boolean validUsername(String username) {
+        if (username == null) {
+            return false;
+        }
+        if (username.equals("")) {
+            JOptionPane.showMessageDialog(null, "No username entered!", "Warning", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (username.contains(" ")) {
+            JOptionPane.showMessageDialog(null, "Username must not contain spaces!", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (!username.matches("^[a-zA-Z0-9]*$")) {
+            JOptionPane.showMessageDialog(null, "Username must only contain alphanumeric characters!", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean validPassword(String password) {
+        if (password == null) {
+            return false;
+        }
+        if (password.equals("")) {
+            JOptionPane.showMessageDialog(null, "No password entered!", "Warning", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (password.contains(" ")) {
+            JOptionPane.showMessageDialog(null, "Password must not contain spaces!", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (!password.matches("^[a-zA-Z0-9]*$")) {
+            JOptionPane.showMessageDialog(null, "Password must only contain alphanumeric characters!", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
     }
 }

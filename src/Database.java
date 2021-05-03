@@ -3,12 +3,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
- * This is the class that allows creation of database objects which stores Accounts, Conversations, and Messages,
- * and handles input and output to text files if it is a server database.
+ * This is the class that allows creation of database objects which stores
+ * Accounts, Conversations, and Messages, and handles input and output to text
+ * files if it is a server database.
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -118,15 +122,14 @@ public class Database {
                     }
                 }
 
-                Conversation conversation = new Conversation(conversationData.get(1),
-                        conversationParticipants, false, this);
+                Conversation conversation = new Conversation(conversationData.get(1), conversationParticipants, false,
+                        this);
 
                 for (int i = 3; i < conversationData.size(); i++) {
                     String[] thisMessage = conversationData.get(i).split(",", 4);
 
-                    Message message = new Message(Integer.parseInt(thisMessage[0]),
-                            LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3],
-                            false, this);
+                    Message message = new Message(Integer.parseInt(thisMessage[0]), LocalDateTime.parse(thisMessage[1]),
+                            thisMessage[2], thisMessage[3], false, this);
 
                     conversation.addMessage(message);
                 }
@@ -169,7 +172,6 @@ public class Database {
     // message being sought does not exist.
     public Message getMessageById(int id) throws MessageNotFoundException {
         for (Message message : messages) {
-            System.out.println(message.getId());
             if (id == message.getId()) {
                 return message;
             }
@@ -227,7 +229,7 @@ public class Database {
     // This method is used to change the username and password of an account, and
     // updates the text file.
     public void changeAccountDetailsInFile(String oldUsername, String oldPassword, String newUsername,
-                                           String newPassword) {
+            String newPassword) {
 
         if (newUsername == null) {
             newUsername = oldUsername;
@@ -372,8 +374,7 @@ public class Database {
     public void writeMessageToConversationFile(Conversation conversation, Message message)
             throws FileNotFoundException {
 
-        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId()
-                + ".txt", true);
+        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", true);
         PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
         conversationWriter.println(message.toString());
