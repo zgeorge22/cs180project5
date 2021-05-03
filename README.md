@@ -1,10 +1,16 @@
 # CS 180 Project 5 README
+Authors:
+- Rishi Banerjee
+- Zach George
+- Benjamin Davenport
+- Jack Dorkin
+- Natalie Wu
 ___
 **Submission**
 ---
-- Report -
-- Vocareum - 
-- Video Presentation - 
+- Report - Submitted by Natalie Wu
+- Vocareum - Submitted by Zach George
+- Video Presentation - Submitted by Benjamin Davenport
 ___
 **Usage**
 ---
@@ -18,6 +24,11 @@ that may exist due the test cases creating them. The given text files as a part 
 text files which are used only for testing purposes, and should be removed before starting the server.
 
 Once all .txt files are removed, the server can be started, by running the "main" method within *server.java*
+
+If you wish to change the port from the default port (*4242*), then edit the code for *server.java* by changing the 
+number in this line at the top:  
+`private static final int port = 4242;`  
+
 
 
 ***client.java***
@@ -34,48 +45,64 @@ Each client must have the following classes:
 - Message
 - UsernameAlreadyExistsException
 
-Mention something about Ports? hostnames? etc.
-
 To run the client, the main method within *client.java* should be run to start the program.
 The next section will detail documentation about how to run the program.
 
+If the server is not running on localhost, then edit the code for *client.java* by changing the following
+String in this line at the top, and changing it to the ip address of the server:  
+`private static final String ip = "localhost";`
+
+If the server has a different port number from the default port (*4242*), then edit the code for *client.java* 
+by changing the number in this line at the top:  
+`private static final int port = 4242;`
+
 - Login/Create Account
   - Users must enter a valid and existing username and password (i.e. no non-alphanumeric characters) to login
-  - To create an account, the username must not already exist within the file of usernames, username must follow the guidelines shown before. Errors are thrown otherwise.
+  - To create an account, the username must not already exist within the file of usernames, username must follow 
+    the guidelines shown before. Errors are thrown otherwise.
 - Main GUI
   - Change Password
-    - To change their password, a user must first login to their account. Once they are logged in, they can select the “Account” button in the bottom left. This will prompt them with a change password GUI. They can enter the new password that they want (it must adhere to the same standards as the account creation) and press “Ok” to change their password. They can also press cancel to stop the changing process.
+    - To change their password, a user must first login to their account. Once they are logged in, they can select 
+      the “Account” button in the bottom left. This will prompt them with a change password GUI. They can enter the
+      new password that they want (it must adhere to the same standards as the account creation) and press “Ok” to change their password. They can also press cancel to stop the changing process.
   - Create Conversation with participants
-    - User must first click the “Create chat” button. Then, they add usernames of other users that they wish to add to a chat separated by a comma into the “participants” text box. If the user attempts to send a message to a nonexistent user or improperly formats the participants list, errors will be thrown. User can type the first message of a new chat into the message box, then either press enter or the send arrow to begin a conversation.
+    - User must first click the “Create chat” button. Then, they add usernames of other users that they wish to 
+      add to a chat separated by a comma into the “participants” text box. If the user attempts to send a message to a
+      nonexistent user or improperly formats the participants list, errors will be thrown. User can type the first 
+      message of a new chat into the message box, then either press enter or the send arrow to begin a conversation.
   - Send Message
-    - User can select from their list of created conversations by clicking on them at the left. From there, they must make sure that their drop down box on the bottom right is on “Send”. Then they can simply type their message and either press enter or press the send arrow on the right side of the text box.
+    - User can select from their list of created conversations by clicking on them at the left. From there, they
+      must make sure that their drop down box on the bottom right is on “Send”. Then they can simply type their 
+      message and either press enter or press the send arrow on the right side of the text box.
   - Edit Message
-    - To edit a message (users can only edit their own messages) users can change the drop down box to the “edit” function, and then select the message they want to edit. They then can modify the message in the text box, and press enter as if they are sending the message. The message will be changed for both the user and those they are in a conversation with.
+    - To edit a message (users can only edit their own messages) users can change the drop down box to the “edit”
+      function, and then select the message they want to edit. They then can modify the message in the text box, 
+      and press enter as if they are sending the message. The message will be changed for both the user and those 
+      they are in a conversation with.
   - Delete Message
-    - To delete a message (users can only delete their own messages) users can change the drop down box to the “delete” function. They then can select the message that they want to delete by clicking on it, then follow it up by pressing Enter. The message will be deleted on all ends.
+    - To delete a message (users can only delete their own messages) users can change the drop down box to the
+      “delete” function. They then can select the message that they want to delete by clicking on it, then follow 
+      it up by pressing Enter. The message will be deleted on all ends.
   - Leave Conversation
-    - To leave a conversation, users can select a conversation from the list of chats and press the “Leave Conversation” button. It will be removed from their list and they will be removed from the chat.
+    - To leave a conversation, users can select a conversation from the list of chats and press the 
+      “Leave Conversation” button. It will be removed from their list and they will be removed from the chat.
   - Log Out
     - While logged in, the user can either press the “Sign Out” button or close the window in any fashion that they would like, and they will be signed out of the program and it will close.
   - Export CSV
     - To export a conversation to a CSV file, a user must first make or select a chat that they would like to export. Once they have selected the conversation, they can click the “Export Chat” button.
-
-
   
 ___
 **Testing/Test Cases**
 ---
-- *DatabaseAccountConversationMessageTestCases.java*
-- *GUITestCases.java*
 
 ***DatabaseAccountConversationMessageTestCases.java***
 
 Testing for the Database classes (Database, Account, Conversation and Message) was done using this class.
 
 
-In order to run the test cases, ensure that accounts.txt, 0.txt, and 1.txt exist in the source folder. NO OTHER
-.txt files should exist in the source folder. If they do, delete them. These 3 text files should contain exactly
-the following lines.
+In order to run the test cases, create 3 text files: *accounts.txt*, *0.txt*, and *1.txt* in the source folder.
+NO OTHER .txt files should exist in the source folder. If they do, delete them. 
+These 3 text files should contain exactly the following lines. Ensure that there are no extra spaces or lines.
 
 *accounts.txt* should have 4 lines of text.  
 `guest,guest`  
@@ -99,15 +126,15 @@ The code within the .java should then be run, once these three files exist.
 Comments within the .java file describe the intended output, and the terminal will throw exceptions
 and print statements as described in those comments.
 
+---
+***GUI/Server/Client Testing***
 
-***GUI Testing***
-Testing of the GUI on its own was
+The GUI was integrated very closely with the Client. For this reason, the GUI can only be tested by running the client. 
+In order to do this, the server and client need to be functioning. By this point, the entire application is running,
+and therefore we felt that including GUI Test cases and/or Server/Client related test cases was not prudent. 
 
-
-***Server/Client Testing***
-
-Testing of the server and client was done by running the server and ensuring that messages were sent and received 
-correctly. For this reason, there is not a separate class to denote Test Cases for the Server and client.
+In order to test these, the application should be run, and if the functions of the application correctly execute, 
+the GUI, as well as the server and client should be running successfully.
 
 ___
 **Class Descriptions**
@@ -120,7 +147,7 @@ ___
 - AccountNotExistException
   - This exception is thrown when Accounts are queried, but do not exist in the database.
   - Thrown when user tries to login with invalid login details, or tries to create conversations with users who do 
-    not exist in the databse.
+    not exist in the database.
     
 - Client
   - This is the class which the client should run to access the program. It creates the GUI and displays it to the user.
@@ -149,13 +176,10 @@ ___
     - If the server crashes and starts over, it reads in the .txt files and recreates the database, ensuring that data
       is never lost, and all Accounts/Conversations/Messages persist.
       
-- DatabaseAccuontConversationMessageTestCases
+- DatabaseAccountConversationMessageTestCases
   - This class contains test cases for all methods in the Database, Account, Conversation and Message Test Cases.
   - When it is run, the default .txt files which are provided as part of the submission will be changed to ensure 
     that all methods are functional.
-    
-- GUITestCases
-  
   
 - LoginWindow
   - Contains the code for displaying the GUI for the Login Window.
@@ -196,8 +220,3 @@ ___
   - This exception is thrown when a user attempts to create an account with a username that already exists.
 
 ___
-* Instructions on how to compile and run your project.
-* A list of who submitted which parts of the assignment on Brightspace and Vocareum. 
-  * For example: Student 1 - Submitted Report on Brightspace. Student 2 - Submitted Vocareum workspace.
-* A detailed description of each class. This should include the functionality included in the class, the testing done to verify it works properly, and its relationship to other classes in the project. 
-* Descriptions of the testing done on each class. For GUI testing, provide step-by-step guidance on the tests performed.
