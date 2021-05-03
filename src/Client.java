@@ -21,8 +21,8 @@ import javax.swing.JOptionPane;
 
 public class Client {
 
-    private static final String ip = "localhost";
-    private static final int port = 4242;
+    private static final String IP = "localhost";
+    private static final int PORT = 4242;
 
     private Socket socket;
 
@@ -47,7 +47,7 @@ public class Client {
     }
 
     private void run() throws IOException {
-        socket = new Socket(ip, port);
+        socket = new Socket(IP, PORT);
         System.out.println("Client - Connected to server");
 
         in = new Scanner(socket.getInputStream());
@@ -144,21 +144,21 @@ public class Client {
     // Send "loginAccount [username] [password]" to server
     // Used when attempting to log in
     // - called by MainWindow GUI (login button)
-    public boolean requestLoginAccount(String username, String password) {
-        System.out.println(
-                "CLIENT - Requested loginAccount with username [" + username + "] and passowrd [" + password + "]");
+    public boolean requestLoginAccount(String usernameTxt, String passwordTxt) {
+        System.out.println("CLIENT - Requested loginAccount with username [" + usernameTxt + "] and passowrd ["
+                + passwordTxt + "]");
 
-        return sendServer("loginAccount " + username + " " + password);
+        return sendServer("loginAccount " + usernameTxt + " " + passwordTxt);
     }
 
     // Send "createAccount [username] [password]" to server
     // Used when attempting to create an account
     // - called by MainWindow GUI (create account button)
-    public boolean requestCreateAccount(String username, String password) {
-        System.out.println(
-                "CLIENT - Requested createAccount with username [" + username + "] and passowrd [" + password + "]");
+    public boolean requestCreateAccount(String usernameTxt, String passwordTxt) {
+        System.out.println("CLIENT - Requested createAccount with username [" + usernameTxt + "] and passowrd ["
+                + passwordTxt + "]");
 
-        return sendServer("createAccount " + username + " " + password);
+        return sendServer("createAccount " + usernameTxt + " " + passwordTxt);
     }
 
     // Send "editPassword [password]" to server
@@ -319,12 +319,12 @@ public class Client {
         String participantsString = placeholder;
 
         ArrayList<Account> participants = new ArrayList<>();
-        for (String username : participantsString.split(",")) {
+        for (String usernameTxt : participantsString.split(",")) {
             try {
-                participants.add(db.getAccountByUsername(username));
+                participants.add(db.getAccountByUsername(usernameTxt));
             } catch (AccountNotExistException e1) {
                 try {
-                    participants.add(new Account(username, "", db, false));
+                    participants.add(new Account(usernameTxt, "", db, false));
                 } catch (UsernameAlreadyExistsException e2) {
                     e2.printStackTrace(); // should never happen!
                 }
@@ -487,8 +487,8 @@ public class Client {
     }
 
     // Setter for main window
-    public void setMainWindow(MainWindow mw) {
-        this.mw = mw;
+    public void setMainWindow(MainWindow mainWindow) {
+        this.mw = mainWindow;
     }
 
     // Getter for database
@@ -497,8 +497,8 @@ public class Client {
     }
 
     // Setter for database
-    public void setDatabase(Database db) {
-        this.db = db;
+    public void setDatabase(Database database) {
+        this.db = database;
     }
 
     // Getter for username

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class Server extends Thread {
 
-    private static final int port = 4242;
+    private static final int PORT = 4242;
 
     private static ArrayList<ServerProcess> serverList = new ArrayList<>();
 
@@ -33,7 +33,7 @@ public class Server extends Thread {
         // client, and adds that ServerProcess
         // to the active processes in serverList for later retrieval.
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            ServerSocket serverSocket = new ServerSocket(PORT);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("SERVER - Client Connected: " + clientSocket.getPort());

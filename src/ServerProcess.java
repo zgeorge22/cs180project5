@@ -479,9 +479,9 @@ public class ServerProcess extends Thread {
 
     // sendOtherClient sends a message to users connected to other threads of
     // ServerProcess.
-    public void sendOtherClient(String message, Socket clientSocket) {
+    public void sendOtherClient(String message, Socket socket) {
         try {
-            OutputStream outputStreamSend = clientSocket.getOutputStream();
+            OutputStream outputStreamSend = socket.getOutputStream();
             PrintWriter sendWriter = new PrintWriter(outputStreamSend);
 
             sendWriter.write(message);

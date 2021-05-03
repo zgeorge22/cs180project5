@@ -27,7 +27,7 @@ Once all .txt files are removed, the server can be started, by running the "main
 
 If you wish to change the port from the default port (*4242*), then edit the code for *server.java* by changing the 
 number in this line at the top:  
-`private static final int port = 4242;`  
+`private static final int PORT = 4242;`  
 
 
 
@@ -50,11 +50,11 @@ The next section will detail documentation about how to run the program.
 
 If the server is not running on localhost, then edit the code for *client.java* by changing the following
 String in this line at the top, and changing it to the ip address of the server:  
-`private static final String ip = "localhost";`
+`private static final String IP = "localhost";`
 
 If the server has a different port number from the default port (*4242*), then edit the code for *client.java* 
 by changing the number in this line at the top:  
-`private static final int port = 4242;`
+`private static final int PORT = 4242;`
 
 - Login/Create Account
   - Users must enter a valid and existing username and password (i.e. no non-alphanumeric characters) to login
