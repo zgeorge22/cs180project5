@@ -104,8 +104,8 @@ public class Client {
                     case ("succeeded"):
                         System.out.println("succeeded"); // REMOVE?
                         break;
-                    case ("failed"):
-                        System.out.println("failed"); // REMOVE?
+                    case ("failedCreateConvo"):
+                        System.out.println("ERROR - Invalid Conversation Participant"); // REMOVE?
                         break;
                     default:
                         System.out.println("ERROR - Logged In - Unknown command: " + command);
@@ -227,7 +227,6 @@ public class Client {
                 String name = convoParticipants.size() > 2 ? "GC" : "DM";
                 Conversation thisConversation = new Conversation(convoId, name, convoParticipants, db);
             }
-
 
             for (int i = 0; i < numMsgsSent; i++) {
                 String msgDetails = in.nextLine();
