@@ -5,7 +5,6 @@ import java.util.Random;
 
 /**
  * This is class that contains test cases for the GUI
- * //TODO add more things here AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
  *
  * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
  *

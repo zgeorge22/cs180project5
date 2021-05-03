@@ -1,32 +1,20 @@
-//package com.company;
-package src;
-
 import java.util.ArrayList;
 
 /**
- * ServerBackground
+ * This class keeps track of the number of users which are online or active at a given point in time.
  *
- * The ServerBackground class creates an ArrayList of users who are active on the server.
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
  *
- * Past homework assignments
- *
- * @author Natalie Wu, Benjamin Davenport
- * @version Due 05/03/2021
- *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
  */
 
 public class ServerBackground {
 
+    // activeUsers ArrayList keeps track of which users are online to know who can receive live messages.
     public static ArrayList<Account> activeUsers = new ArrayList<>();
 
-    public static void addUser(Account user) {
-        ServerBackground.activeUsers.add(user);
-    }
-
-    public static void removeUser(Account user) {
-        ServerBackground.activeUsers.remove(user);
-    }
-
+    // getActiveUsers returns all users who are active on the server.
     public static ArrayList<Account> getActiveUsers() {
         return activeUsers;
     }

@@ -9,8 +9,7 @@ import java.util.ArrayList;
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
  * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
- *         Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
  * @version May 3rd, 2021
  */
 
@@ -30,7 +29,7 @@ public class Conversation {
     // ensuring they are not duplicated in
     // the text files.
     public Conversation(String conversationName, ArrayList<Account> participants, boolean addToFile,
-            Database database) {
+                        Database database) {
         this.conversationId = getNextConversationId();
         this.participants = participants;
         this.conversationName = conversationName;
