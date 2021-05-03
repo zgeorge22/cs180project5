@@ -14,8 +14,7 @@ import javax.swing.JOptionPane;
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
  * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
- *         Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
  * @version May 3rd, 2021
  */
 
@@ -51,8 +50,10 @@ public class Client {
 
         lw = new LoginWindow(this);
 
+
         // Waits for messages from the server
-        serverMessageLoop: while (in.hasNextLine()) {
+        serverMessageLoop:
+        while (in.hasNextLine()) {
             String serverInput = in.nextLine();
 
             String command = serverInput;
@@ -70,16 +71,16 @@ public class Client {
                         break;
                     case ("createAccountFailed"):
                         System.out.println("CLIENT - Received createAccountFailed");
-                        JOptionPane.showMessageDialog(null, "Create account failed. Please try again!", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Create account failed. " +
+                                "Please try again!", "Error", JOptionPane.ERROR_MESSAGE);
                         break;
                     case ("loginAccountSuccessful"):
                         receivedSuccessfulLogin(details);
                         break;
                     case ("loginFailed"):
                         System.out.println("CLIENT - Received loginFailed");
-                        JOptionPane.showMessageDialog(null, "Login failed. Please try again!", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Login failed. Please try again!",
+                                "Error", JOptionPane.ERROR_MESSAGE);
                         break;
                     default:
                         System.out.println("ERROR - Not Logged In - Unknown command: " + command);
@@ -107,8 +108,8 @@ public class Client {
                         receivedRemoveMsg(details);
                         break;
                     case ("failedCreateConvo"):
-                        JOptionPane.showMessageDialog(null, "Unable to create conversation!", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Unable to create conversation!",
+                                "Error", JOptionPane.ERROR_MESSAGE);
                         break;
                     case ("logoutTrue"):
                         mw.dispose();
@@ -207,7 +208,8 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " +
+                content);
     }
 
     // Send "deleteMsg [conversationID] [messageID]" to server

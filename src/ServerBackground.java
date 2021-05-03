@@ -11,17 +11,11 @@ import java.util.ArrayList;
 
 public class ServerBackground {
 
+    // activeUsers ArrayList keeps track of which users are online to know who can receive live messages.
     public static ArrayList<Account> activeUsers = new ArrayList<>();
 
-    //TODO do we need these methods which are never called? Does this class need to exist?
-    public static void addUser(Account user) {
-        ServerBackground.activeUsers.add(user);
-    }
 
-    public static void removeUser(Account user) {
-        ServerBackground.activeUsers.remove(user);
-    }
-
+    // getActiveUsers returns all users who are active on the server.
     public static ArrayList<Account> getActiveUsers() {
         return activeUsers;
     }

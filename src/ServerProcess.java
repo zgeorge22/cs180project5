@@ -11,8 +11,7 @@ import java.util.ArrayList;
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
  * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
- *         Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
  * @version May 3rd, 2021
  */
 
@@ -29,6 +28,9 @@ public class ServerProcess extends Thread {
         this.database = database;
     }
 
+
+    // Runs clientProcess to handle all client requests. Closes the clientSocket and notifies the terminal when a user
+    // disconnects.
     public void run() {
         try {
             clientProcess();
@@ -39,6 +41,8 @@ public class ServerProcess extends Thread {
         }
     }
 
+
+    // clientProcess allows the user to log in or create an account before starting the messagingProcess method.
     private void clientProcess() throws IOException, ConversationNotFoundException, MessageNotFoundException {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
@@ -48,12 +52,16 @@ public class ServerProcess extends Thread {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         ArrayList<Account> activeUsersList = ServerBackground.getActiveUsers();
 
-        loginLoop: do {
+        loginLoop:
+        do {
+            // Reads in a command from the client and splits it into tokens which provide all needed information.
             String commandString = (reader.readLine());
             String[] tokenLogin = commandString.split(" ");
             String cmdLogin = tokenLogin[0];
 
             switch (cmdLogin) {
+
+                // This case allows users to create a new account via new username and password.
                 case ("createAccount") -> {
                     String newUsername = tokenLogin[1];
                     String newPassword = tokenLogin[2];
@@ -70,6 +78,9 @@ public class ServerProcess extends Thread {
                         sendClient("createAccountFailed");
                     }
                 }
+
+                // This case allows users to login to a pre-existing account by providing the proper username and
+                // password associated with the account.
                 case ("loginAccount") -> {
                     String existingUsername = tokenLogin[1];
                     String existingPassword = tokenLogin[2];
@@ -88,10 +99,14 @@ public class ServerProcess extends Thread {
                         sendClient("loginFailed");
                     }
                 }
+
+                // This case allows the user to cancel the login process and exit the program.
                 case ("cancelLogin") -> {
                     System.out.println("SERVER (" + clientSocket.getPort() + ") - Client cancelled login");
                     break loginLoop;
                 }
+
+                // The default case handles all unknown commands by sending an error message to the server terminal.
                 default -> {
                     System.out.println("ERROR - Unknown command: " + cmdLogin);
                 }
@@ -99,31 +114,43 @@ public class ServerProcess extends Thread {
 
         } while (!loggedIn);
 
+        // loggedIn will only become true if a user has either logged in or created an account successfully.
+        // Once this is true, messaging process is able to start.
         if (loggedIn) {
             messagingProcess(activeUsersList);
         }
 
+
+        // Closing the writer will occur only once messagingProcess has ended.
         writer.close();
     }
 
+    // messagingProcess handles all client processes after logging in. This includes sending messages, creating or
+    // leaving conversations, editing and deleting messages, editing each user's account, and logging off.
     public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, ConversationNotFoundException {
 
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
+        // Boolean exit will only become true when user selects the logoutAccount case. This exit boolean will then
+        // break the loop and exit the client.
         boolean exit = false;
 
+        // Sends the client all user data if the user has any existing conversations.
         if (this.currentAccount.getConversationIds().size() != 0) {
             dataDump();
         } else
             sendClient("prepareForDataDump 0 0 0");
 
         do {
+            // Creates a BufferedReader and PrintWriter to read in and send out all needed commands.
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
             PrintWriter pw = new PrintWriter(clientSocket.getOutputStream());
             String commandString = (bfr.readLine());
 
             System.out.println("SERVER (" + clientSocket.getPort() + ") - " + commandString);
 
+
+            // Collects command from the client and tokenizes it for proper functionality.
             String[] token = commandString.split(" ");
             String cmd = token[0];
             ArrayList<ServerProcess> serverProcessList = Server.getServerList();
@@ -132,6 +159,7 @@ public class ServerProcess extends Thread {
                 case ("editPassword"):
                     String editPassword = token[1];
                     currentAccount.changePassword(editPassword);
+
 
                     System.out.println("SERVER (" + clientSocket.getPort() + ") - Received editPassword to ["
                             + editPassword + "]");
@@ -169,7 +197,6 @@ public class ServerProcess extends Thread {
                                                     serverProcess.getClientSocket());
                                         }
                                     }
-
                                 }
                             }
                         }
@@ -196,7 +223,6 @@ public class ServerProcess extends Thread {
                                                     serverProcess.getClientSocket());
                                         }
                                     }
-
                                 }
                             }
                         }
@@ -206,11 +232,13 @@ public class ServerProcess extends Thread {
                                 + ") - Received leaveConvo from conversationID [" + leaveConversationID + "]");
 
                         break;
-                    } catch (ConversationNotFoundException e) {
+                    } catch (ConversationNotFoundException | AccountNotExistException e) {
                         e.printStackTrace();
                     } catch (AccountNotExistException e) {
                         e.printStackTrace();
                     }
+                
+                // case allows for a user to create and send a new message.
                 case ("createMsg"):
                     System.out.println("SERVER (" + clientSocket.getPort() + ") - Received createMsg...");
 
@@ -238,11 +266,10 @@ public class ServerProcess extends Thread {
                     }
 
                     break;
+
+                // case allows a user to edit a message that they sent
                 case ("editMsg"):
                     System.out.println("SERVER (" + clientSocket.getPort() + ") - Received editMsg...");
-
-                    // SERVER HAS TO VALIDATE THAT USER HAS THE AUTHORITY (CLIENT ALREADY DOES THIS
-                    // BUT WE MAY NEED SERVER TO DO IT)
                     int convoIdentifier = Integer.parseInt(token[1]);
                     int initialID = Integer.parseInt(token[2]);
                     String placeH = commandString.substring(commandString.indexOf(" ") + 1);
@@ -308,20 +335,26 @@ public class ServerProcess extends Thread {
                     pw.flush();
                     exit = true;
                     break;
+
+                // default case recognizes an unknown command and sends an error message to the server terminal.
                 default:
-                    System.out.println("ERROR - Unknow command: " + cmd);
+                    System.out.println("ERROR - Unknown command: " + cmd);
             }
         } while (!exit);
     }
 
+    //dataDump sends the current user all of their past information. This method will not activate for any new users.
     private void dataDump() {
 
+        // Creates a new database to add all of the clients data.
         Database clientData = new Database(false);
+        // Adds all conversations the client is a part of into the clientData database.
         for (int i = 0; i < database.getConversations().size(); i++) {
             if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
                 clientData.addToDatabase(database.getConversations().get(i));
         }
 
+        // Creates an ArrayList to collect all users the current client is associated with.
         ArrayList<String> accountUsernameStrings = new ArrayList<>();
         for (int i = 0; i < clientData.getConversations().size(); i++) {
             for (int j = 0; j < clientData.getConversations().get(i).getParticipants().size(); j++) {
@@ -366,12 +399,16 @@ public class ServerProcess extends Thread {
             }
         }
 
+        // Creates a count of accounts, conversations, and messages that are being sent over to the client.
         int numAccsToSend = finalAccountUsernameStrings.size();
         int numConvosToSend = conversationStrings.size();
         int numMsgsToSend = messageStrings.size();
 
+        // Sends the client the "prepareForDataDump" command and the number of accounts, conversations, and messages
+        // that will be sent.
         sendClient("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend);
 
+        // Sends the client all accounts, messages, and conversations
         for (String finalAccountUsernameString : finalAccountUsernameStrings) {
             sendClient(finalAccountUsernameString);
         }
@@ -383,6 +420,7 @@ public class ServerProcess extends Thread {
         }
     }
 
+    // checkUserLogin makes sure that a user's username and password are correct and correlate to a current user ID.
     public Account checkUserLogin(String username, String password) throws AccountNotExistException {
 
         ArrayList<Account> accounts = database.getAccounts();
@@ -397,16 +435,20 @@ public class ServerProcess extends Thread {
         throw new AccountNotExistException();
     }
 
+
+    // getAccount returns the account active with a given ServerProcess thread.
     public Account getAccount() {
         return currentAccount;
     }
 
+    // sendClient sends a message to the client who is connected to this thread
     public void sendClient(String message) {
         writer.write(message);
         writer.println();
         writer.flush();
     }
 
+    // sendOtherClient sends a message to users connected to other threads of ServerProcess.
     public void sendOtherClient(String message, Socket clientSocket) {
         try {
             OutputStream outputStreamSend = clientSocket.getOutputStream();
@@ -420,6 +462,8 @@ public class ServerProcess extends Thread {
         }
     }
 
+
+    // getClientSocket returns the client socket of a specific user.
     public Socket getClientSocket() {
         return clientSocket;
     }
