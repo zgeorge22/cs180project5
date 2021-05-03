@@ -1,7 +1,15 @@
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Message implements Serializable {
+/**
+ * This is the class that allows for the creation of message objects.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
+public class Message {
 
     private static int nextMessageId; //Static integer that is used to generate messageIDs
     private final int id; // The messageID of the message object.
@@ -32,7 +40,7 @@ public class Message implements Serializable {
     // This constructor generates message objects given the parameters. This is only used when reading in
     // messages from text files.
     public Message(int id, LocalDateTime timestamp, String senderUsername, String content, boolean addToFile,
-            Database database) {
+                   Database database) {
 
         this.timestamp = timestamp;
         this.sender = senderUsername;

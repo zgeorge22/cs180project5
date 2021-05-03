@@ -1,8 +1,16 @@
 import java.io.FileNotFoundException;
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Conversation implements Serializable {
+/**
+ * This is the conversation class which creates conversation objects which allow users to interact with each other.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
+public class Conversation {
 
     private static int nextConversationId; // Static integer that the conversation uses to generate conversationIDs
     private final int conversationId; // The conversation ID of a particular conversation
@@ -18,7 +26,7 @@ public class Conversation implements Serializable {
     // ensuring they are not duplicated in
     // the text files.
     public Conversation(String conversationName, ArrayList<Account> participants, boolean addToFile,
-            Database database) {
+                        Database database) {
         this.conversationId = getNextConversationId();
         this.participants = participants;
         this.conversationName = conversationName;

@@ -2,7 +2,17 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class Database implements Serializable {
+/**
+ * This is the class that allows creation of database objects which stores Accounts, Conversations, and Messages,
+ * and handles input and output to text files if it is a server database.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
+public class Database {
 
     private ArrayList<Account> accounts; // ArrayList which stores Accounts
     private ArrayList<Conversation> conversations; // ArrayList which stores Conversations
@@ -108,14 +118,15 @@ public class Database implements Serializable {
                     }
                 }
 
-                Conversation conversation = new Conversation(conversationData.get(1), conversationParticipants, false,
-                        this);
+                Conversation conversation = new Conversation(conversationData.get(1),
+                        conversationParticipants, false, this);
 
                 for (int i = 3; i < conversationData.size(); i++) {
                     String[] thisMessage = conversationData.get(i).split(",", 4);
 
-                    Message message = new Message(Integer.parseInt(thisMessage[0]), LocalDateTime.parse(thisMessage[1]),
-                            thisMessage[2], thisMessage[3], false, this);
+                    Message message = new Message(Integer.parseInt(thisMessage[0]),
+                            LocalDateTime.parse(thisMessage[1]), thisMessage[2], thisMessage[3],
+                            false, this);
 
                     conversation.addMessage(message);
                 }
@@ -215,7 +226,7 @@ public class Database implements Serializable {
     // This method is used to change the username and password of an account, and
     // updates the text file.
     public void changeAccountDetailsInFile(String oldUsername, String oldPassword, String newUsername,
-            String newPassword) {
+                                           String newPassword) {
 
         if (newUsername == null) {
             newUsername = oldUsername;
@@ -360,7 +371,8 @@ public class Database implements Serializable {
     public void writeMessageToConversationFile(Conversation conversation, Message message)
             throws FileNotFoundException {
 
-        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", true);
+        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId()
+                + ".txt", true);
         PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
         conversationWriter.println(message.toString());
@@ -637,7 +649,7 @@ public class Database implements Serializable {
         }
 
         FileWriter fileWriter;
-        File csvFile = new File(conversationName  + ".csv");
+        File csvFile = new File(conversationName + ".csv");
 
         try {
             fileWriter = new FileWriter(csvFile);

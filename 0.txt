@@ -15,3 +15,5 @@ jim,bob,guest
 20,2021-05-02T23:32:17.863705100,jim,Hi bob, can you hear me?
 21,2021-05-02T23:32:30.156606100,bob,Hey jim, I can hear you?
 22,2021-05-02T23:33:14.204589,jim,WE CAN TALK TO EACH OTHER
+23,2021-05-03T00:05:23.011331500,jim,it is working
+24,2021-05-03T00:05:24.085743,jim,yes
