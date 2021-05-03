@@ -55,7 +55,7 @@ public class MainWindow extends JFrame {
     private MsgEntry currentMsg;
 
     public MainWindow(Client client) {
-        super("Chat Window");
+        super("Chat Window - " + client.getUsername());
 
         this.client = client;
 
@@ -77,14 +77,17 @@ public class MainWindow extends JFrame {
         participantsField.requestFocusInWindow();
     }
 
+    // Sets up all GUI compoentns in the desired layout. Initializes any event
+    // listeners for buttons or key strokes.
     protected void initializeComponents() {
         content = getContentPane();
         content.setLayout(new BorderLayout());
 
-        // SIDE PANEL LAYOUT
+        // ====================== SIDE PANEL LAYOUT ======================
+
+        // Create chat button
         createChatButton = new JButton("Create Chat");
         createChatButton.setForeground(Color.decode("#35A437"));
-
         createChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -92,6 +95,7 @@ public class MainWindow extends JFrame {
             }
         });
 
+        // Leave chat button
         leaveChatButton = new JButton("Leave Chat");
         leaveChatButton.setForeground(Color.decode("#FF3E31"));
         leaveChatButton.addActionListener(new ActionListener() {
@@ -116,6 +120,7 @@ public class MainWindow extends JFrame {
         sideHeader.add(createChatButton);
         sideHeader.add(leaveChatButton);
 
+        // Chat list
         chatList = new JList<>();
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatList.setCellRenderer(new ChatListCellRenderer());
@@ -138,6 +143,7 @@ public class MainWindow extends JFrame {
         chatListScrollPane = new JScrollPane(chatList);
         chatListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+        // Import chat button
         importChatButton = new JButton("Import Chat(s)");
         importChatButton.addActionListener(new ActionListener() {
             @Override
@@ -147,6 +153,7 @@ public class MainWindow extends JFrame {
             }
         });
 
+        // Export chat button
         exportChatButton = new JButton("Export Chat(s)");
         exportChatButton.addActionListener(new ActionListener() {
             @Override
@@ -157,10 +164,14 @@ public class MainWindow extends JFrame {
                     String exportName = convo.getConversationName() + convo.getConversationId() + ".csv";
                     JOptionPane.showMessageDialog(null, "Exported conversation to " + exportName, "Warning",
                             JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, "No chat selected to export!", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
 
+        // Account button (change password)
         accountButton = new JButton("Account");
         accountButton.addActionListener(new ActionListener() {
             @Override
@@ -173,6 +184,7 @@ public class MainWindow extends JFrame {
             }
         });
 
+        // Sign out button
         signOutButton = new JButton("Sign Out");
         signOutButton.addActionListener(new ActionListener() {
             @Override
@@ -194,19 +206,17 @@ public class MainWindow extends JFrame {
         sidePanel.add(chatListScrollPane, BorderLayout.CENTER);
         sidePanel.add(botPanel, BorderLayout.SOUTH);
 
-        // CHAT PANEL LAYOUT
-        chatPanel = new JPanel();
-        chatPanel.setLayout(new BorderLayout());
-        chatPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        // ====================== CHAT PANEL LAYOUT ======================
 
+        // Conversation participants list
         participantsField = new JTextField();
 
         convoHeader = new JPanel();
         convoHeader.setLayout(new BorderLayout());
         convoHeader.add(new JLabel(" Participants: "), BorderLayout.WEST);
         convoHeader.add(participantsField, BorderLayout.CENTER);
-        chatPanel.add(convoHeader, BorderLayout.NORTH);
 
+        // Message list display for current chat
         msgList = new JList<MsgEntry>();
         msgList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         msgList.setCellRenderer(new MsgListCellRenderer());
@@ -214,14 +224,14 @@ public class MainWindow extends JFrame {
         msgListScrollPane = new JScrollPane(msgList);
         msgListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        composeBar = new JPanel();
-        composeBar.setLayout(new BorderLayout());
+        // Compose message
         composeMessage = new JTextArea();
         composeMessage.setLineWrap(true);
         composeMessage.setWrapStyleWord(true);
         composeScrollPane = new JScrollPane(composeMessage);
         composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+        // Check for ENTER button (submit action attempt)
         InputMap inputMap = composeMessage.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = composeMessage.getActionMap();
         KeyStroke enterKey = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
@@ -233,6 +243,7 @@ public class MainWindow extends JFrame {
             }
         });
 
+        // Message action mode dropdown
         messageActions = new JComboBox<>();
         messageActions.addItem(SEND_ACTION);
         messageActions.addItem(EDIT_ACTION);
@@ -257,6 +268,7 @@ public class MainWindow extends JFrame {
             }
         });
 
+        // Execute button (submit action attempt)
         BasicArrowButton execute = new BasicArrowButton(BasicArrowButton.EAST);
         execute.setPreferredSize(new Dimension(40, 40));
         execute.addActionListener(new ActionListener() {
@@ -266,18 +278,26 @@ public class MainWindow extends JFrame {
             }
         });
 
+        composeBar = new JPanel();
+        composeBar.setLayout(new BorderLayout());
         composeBar.add(messageActions, BorderLayout.WEST);
         composeBar.add(composeScrollPane, BorderLayout.CENTER);
         composeBar.add(execute, BorderLayout.EAST);
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgListScrollPane, composeBar);
         splitPane.setResizeWeight(1);
+
+        chatPanel = new JPanel();
+        chatPanel.setLayout(new BorderLayout());
+        chatPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        chatPanel.add(convoHeader, BorderLayout.NORTH);
         chatPanel.add(splitPane, BorderLayout.CENTER);
 
         content.add(sidePanel, BorderLayout.WEST);
         content.add(chatPanel, BorderLayout.CENTER);
     }
 
+    // Called by pressing ENTER or the execute arrow button
     public void attemptMessageAction() {
         String selectedAction = (String) messageActions.getSelectedItem();
 
@@ -371,6 +391,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Get the list model used to update the GUI chat list
     private DefaultListModel<ChatEntry> getChatEntities() {
         ListModel<ChatEntry> chatEntities = chatList.getModel();
         if (!(chatEntities instanceof DefaultListModel)) {
@@ -381,6 +402,8 @@ public class MainWindow extends JFrame {
         return (DefaultListModel<ChatEntry>) chatEntities;
     }
 
+    // Set (technically append) the chat list window with a list of conversations
+    // Used initially after data dump
     public void setChatList(ArrayList<Conversation> conversations) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (Conversation convo : conversations) {
@@ -388,14 +411,16 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Add a new conversation to the list of conversations
+    // Used upon being added to a new conversation
     public void addNewChat(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         ChatEntry newChat = new ChatEntry(convo, true);
         chatEntities.add(0, newChat);
     }
 
-    // UPDATE LATER, probably shouldnt update a conversation, sort the list, and
-    // redisplay the messages all in one function
+    // Update a chat list display item with new conversation data
+    // Used when chat members change or when a message is received/edited/deleted
     public void updateChatEntry(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (int i = 0; i < chatEntities.size(); i++) {
@@ -411,8 +436,10 @@ public class MainWindow extends JFrame {
             }
         }
 
+        // Refresh the chat order (the latest message timestamp may have changed)
         sortChatEntries();
 
+        // Refresh message list if the current chat was the one that was just updated
         if (currentChat != null) {
             if (currentChat.getConversation().getConversationId() == convo.getConversationId()) {
                 SwingUtilities.invokeLater(new Runnable() {
@@ -424,6 +451,8 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Remove a conversation from the chat list
+    // Used when we receive a confirmation that we can leave the chat
     public void removeChatEntry(Conversation convo) {
         DefaultListModel<ChatEntry> chatEntities = getChatEntities();
         for (int i = 0; i < chatEntities.size(); i++) {
@@ -440,6 +469,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Sort chat list items by timestamp (most recent at the top)
     public void sortChatEntries() {
         ChatEntry oldSelection = chatList.getSelectedValue();
 
@@ -457,6 +487,7 @@ public class MainWindow extends JFrame {
         chatList.setSelectedValue(oldSelection, false);
     }
 
+    // Wrapper class for extra conversation information relevant to GUI
     class ChatEntry implements Comparable<ChatEntry> {
         Conversation conversation;
         boolean unread;
@@ -478,6 +509,7 @@ public class MainWindow extends JFrame {
             this.unread = unread;
         }
 
+        // Used to sort chats by timestamp
         @Override
         public int compareTo(ChatEntry o) {
             return conversation.getMessages().get(conversation.getMessages().size() - 1).getTimestamp().compareTo(
@@ -485,6 +517,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Renderer for a chat list item
     class ChatListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
@@ -520,6 +553,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Get the list model used to update the GUI message list
     private DefaultListModel<MsgEntry> getMessageEntities() {
         ListModel<MsgEntry> msgEntities = msgList.getModel();
         if (!(msgEntities instanceof DefaultListModel)) {
@@ -530,10 +564,14 @@ public class MainWindow extends JFrame {
         return (DefaultListModel<MsgEntry>) msgEntities;
     }
 
+    // Clear message list in window
+    // Used before displaying a new selected chat or the create chat window
     public void clearMsgList() {
         msgList.setModel(new DefaultListModel<>());
     }
 
+    // Set (technically append) the message list window with a list of messages
+    // Used when a chat is selected to be displayed
     public void setMsgList(ArrayList<Message> messages) {
         DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
         for (Message msg : messages) {
@@ -542,6 +580,8 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Add a new message to the list of messages
+    // Used upon receiving a new message
     public void addNewMsgEntry(Message msg) {
         DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
         boolean mine = client.getUsername().equals(msg.getSender());
@@ -549,6 +589,8 @@ public class MainWindow extends JFrame {
         msgEntities.addElement(newMsg);
     }
 
+    // Update a message list display item with new message data
+    // Used when a message is edited
     public void updateMsgEntry(Message msg) {
         DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
         for (int i = 0; i < msgEntities.size(); i++) {
@@ -562,6 +604,8 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Remove a message from the message list
+    // Used when a message is deleted
     public void removeMsgEntry(Message msg) {
         DefaultListModel<MsgEntry> msgEntities = getMessageEntities();
         for (int i = 0; i < msgEntities.size(); i++) {
@@ -573,6 +617,38 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Switches the chat window to the current chat selected by filling in messages
+    // Used when a chat is selected in the chat list window
+    public void showMsgList() {
+        // In "using chat" mode...
+        participantsField.setText(currentChat.getConversation().getParticipantsString());
+        participantsField.setEditable(false);
+        clearMsgList();
+
+        setMsgList(currentChat.getConversation().getMessages());
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                JScrollBar scrollBar = msgListScrollPane.getVerticalScrollBar();
+                scrollBar.setValue(scrollBar.getMaximum());
+            }
+        });
+    }
+
+    // Blanks out the chat window
+    // Used when ready to create chat
+    public void hideMsgList() {
+        // In "creating chat" mode...
+        currentChat = null;
+        chatList.setSelectedValue(null, false);
+        participantsField.setText("");
+        participantsField.setEditable(true);
+        participantsField.requestFocusInWindow();
+        messageActions.setSelectedItem(SEND_ACTION);
+        clearMsgList();
+    }
+
+    // Wrapper class for extra message information relevant to GUI
     class MsgEntry extends JPanel implements Comparable<MsgEntry> {
         private static final String STYLE_SHEET = "<style>" + ".msg-box { margin: 2px; }"
                 + ".msg-box p { display: block; justify-items: end; }"
@@ -617,6 +693,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // Renderer for a message list item
     class MsgListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
@@ -652,32 +729,5 @@ public class MainWindow extends JFrame {
 
             return this;
         }
-    }
-
-    public void showMsgList() {
-        // In "using chat" mode...
-        participantsField.setText(currentChat.getConversation().getParticipantsString());
-        participantsField.setEditable(false);
-        clearMsgList();
-
-        setMsgList(currentChat.getConversation().getMessages());
-
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                JScrollBar scrollBar = msgListScrollPane.getVerticalScrollBar();
-                scrollBar.setValue(scrollBar.getMaximum());
-            }
-        });
-    }
-
-    public void hideMsgList() {
-        // In "creating chat" mode...
-        currentChat = null;
-        chatList.setSelectedValue(null, false);
-        participantsField.setText("");
-        participantsField.setEditable(true);
-        participantsField.requestFocusInWindow();
-        messageActions.setSelectedItem(SEND_ACTION);
-        clearMsgList();
     }
 }
