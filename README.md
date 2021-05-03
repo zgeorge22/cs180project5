@@ -2,9 +2,9 @@
 ___
 **Submission**
 ---
-- Report
-- Vocareum
-- Video Presentation
+- Report -
+- Vocareum - 
+- Video Presentation - 
 ___
 **Usage**
 ---
@@ -43,13 +43,20 @@ The next section will detail documentation about how to run the program.
   - //add stuff
 - Main GUI
   - Change Password
+    - // add stuff
   - Create Conversation with participants
+    - // add stuff
   - Send Message
+    - // add stuff
   - Edit Message
+    - // add stuff
   - Delete Message
+    - // add stuff
   - Leave Conversation
+    - // add stuff
   - Log Out
-  - **Anything else that I might have forgotten?**
+    - // add stuff
+  - **Anything else that I might have forgotten?**     - // add stuff
 
 
   
@@ -68,23 +75,23 @@ In order to run the test cases, ensure that accounts.txt, 0.txt, and 1.txt exist
 .txt files should exist in the source folder. If they do, delete them. These 3 text files should contain exactly
 the following lines.
 
-*accounts.txt* should have 4 lines of text.
-1. guest,guest
-2. jim,jim
-3. bob,bob
-4. bean,person
+*accounts.txt* should have 4 lines of text.  
+`guest,guest`  
+`jim,jim`  
+`bob,bob`  
+`bean,person`
 
-*0.txt* should have 5 lines of text:
-1. 0
-2. New Conversation  
-3. jim,bob 
-4. 0,2021-04-23T17:00:42.870743,guest,Hi, I am a guest user 
-5. 1,2021-04-23T17:00:42.870743,jim,Hi, I am jim
+*0.txt* should have 5 lines of text:  
+`0`  
+`New Conversation`  
+`jim,bob`  
+`0,2021-04-23T17:00:42.870743,guest,Hi, I am a guest user `  
+`1,2021-04-23T17:00:42.870743,jim,Hi, I am jim`
 
-*1.txt* should have 3 lines of code:
-1. 1
-2. Other Conversation
-3. guest,bob,bean
+*1.txt* should have 3 lines of text:  
+`1`  
+`Other Conversation`  
+`guest,bob,bean` 
 
 The code within the .java should then be run, once these three files exist.
 Comments within the .java file describe the intended output, and the terminal will throw exceptions
@@ -93,11 +100,12 @@ and print statements as described in those comments.
 
 ***GUITesting.java***
 
+// add stuff
 
 ***Server/Client Testing***
 
 Testing of the server and client was done by running the server and ensuring that messages were sent and received 
-correctly
+correctly. For this reason, there is not a separate class to denote Test Cases for the Server and client.
 
 ___
 **Class Descriptions**
