@@ -1,6 +1,14 @@
-package src;
-
 import java.util.ArrayList;
+
+/**
+ * This file contains test cases for the following classes: Database, Account, Conversation, Message
+ * It tests if each of the methods works.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
 
 public class DatabaseAccountConversationMessageTestCases {
     public static void main(String[] args) throws AccountNotExistException, InterruptedException,
@@ -8,8 +16,8 @@ public class DatabaseAccountConversationMessageTestCases {
 
         // DATABASE.JAVA TESTING
         Database database = new Database(true);
-        System.out
-                .println(database.getAccountByUsername("jim").toString() + " " + database.getAccountByUsername("bean"));
+        System.out.println(database.getAccountByUsername("jim").toString() + " "
+                + database.getAccountByUsername("bean"));
         // "jim,jim bean,dumb" should be printed indicating that the accounts have been
         // imported from text
         System.out.println(database.getConversationById(0).getMessages().get(0));
@@ -98,7 +106,8 @@ public class DatabaseAccountConversationMessageTestCases {
         thirdConversationAccounts.add(database.getAccountByUsername("goodUser"));
         thirdConversationAccounts.add(database.getAccountByUsername("bean"));
 
-        Conversation conversation = new Conversation("Third Conversation", thirdConversationAccounts, true, database);
+        Conversation conversation = new Conversation("Third Conversation",
+                thirdConversationAccounts, true, database);
         // A new text file called 2.txt should be created with the details for this
         // conversation - it should include
         // the users sheila, goodUser and bean (

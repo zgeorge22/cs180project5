@@ -1,9 +1,15 @@
-package src;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Account implements Serializable {
+/**
+ * This class allows for the creation of Account objects.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
+public class Account {
 
     private String username;
     private String password;

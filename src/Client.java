@@ -1,10 +1,18 @@
-package src;
-
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+/**
+ * This class is the client class which the client will run to launch the program. This client will connect with the
+ * server and allow users to chat with each other, from their own clients.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
 
 public class Client {
     private Socket socket;
@@ -38,12 +46,13 @@ public class Client {
 
         lw = new LoginWindow(this);
 
-        serverMessageLoop: while (in.hasNextLine()) {
+        serverMessageLoop:
+        while (in.hasNextLine()) {
             String serverInput = in.nextLine();
 
             String command = serverInput;
             String details = "";
-            if (serverInput.indexOf(" ") != -1) {
+            if (serverInput.contains(" ")) {
                 command = serverInput.substring(0, serverInput.indexOf(" "));
                 details = serverInput.substring(serverInput.indexOf(" ") + 1);
             }
@@ -71,7 +80,7 @@ public class Client {
                 // User logged in
                 switch (command) {
                     case ("prepareForDataDump"):
-                        receivedPrepareForDataDump();
+                        receivedPrepareForDataDump(details);
                         break;
                     case ("addConvo"):
                         receivedAddConvo(details);
@@ -169,7 +178,8 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " "
+                + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
@@ -187,16 +197,53 @@ public class Client {
     // ---------------------- Recieved commands FROM server ----------------------
     // ===========================================================================
 
-    public void receivedPrepareForDataDump() throws IOException {
+    public void receivedPrepareForDataDump(String details) {
 
         System.out.println("CLIENT - Received prepareForDataDump");
+        String placeholder = details;
+        System.out.println(details);
+        int numAccsSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int numConvosSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int numMsgsSent = Integer.parseInt(placeholder);
 
-        // Get database data dump from server
-        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+        db = new Database(false);
+
         try {
-            db = (Database) ois.readObject();
-            // ois.close();
-        } catch (ClassNotFoundException e) {
+            for (int i = 0; i < numAccsSent; i++) {
+                String accountDetails = in.nextLine();
+                Account account = new Account(accountDetails, "", db, false);
+            }
+            for (int i = 0; i < numConvosSent; i++) {
+                String convoDetails = in.nextLine();
+                int convoId = Integer.parseInt(convoDetails.substring(0, convoDetails.indexOf(" ")));
+                convoDetails = convoDetails.substring(convoDetails.indexOf(" ") + 1);
+                ArrayList<Account> convoParticipants = new ArrayList<>();
+                String[] accountsInConversation = convoDetails.split(",");
+                for (String s : accountsInConversation) {
+                    convoParticipants.add(db.getAccountByUsername(s));
+                }
+                String name = convoParticipants.size() > 2 ? "GC" : "DM";
+                Conversation thisConversation = new Conversation(convoId, name, convoParticipants, db);
+            }
+
+
+            for (int i = 0; i < numMsgsSent; i++) {
+                String msgDetails = in.nextLine();
+                int convoId = Integer.parseInt(msgDetails.substring(0, msgDetails.indexOf(",")));
+                msgDetails = msgDetails.substring(msgDetails.indexOf(",") + 1);
+                String[] thisMessage = msgDetails.split(",");
+
+                Message message = new Message(Integer.parseInt(thisMessage[0]), LocalDateTime.parse(thisMessage[1]),
+                        thisMessage[2], thisMessage[3], false, db);
+                db.getConversationById(convoId).addMessage(message);
+            }
+        } catch (UsernameAlreadyExistsException e) {
+            e.printStackTrace();
+        } catch (AccountNotExistException e) {
+            e.printStackTrace();
+        } catch (ConversationNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -219,7 +266,7 @@ public class Client {
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
         String participantsString = placeholder;
 
-        ArrayList<Account> participants = new ArrayList<Account>();
+        ArrayList<Account> participants = new ArrayList<>();
         for (String username : participantsString.split(",")) {
             try {
                 participants.add(db.getAccountByUsername(username));
