@@ -431,23 +431,22 @@ public class MainWindow extends JFrame {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         chatEntities.setElementAt(new ChatEntry(convo, true), index);
+                        // Refresh the chat order (the latest message timestamp may have changed)
+                        sortChatEntries();
+
+                        // Refresh message list if the current chat was the one that was just updated
+                        if (currentChat != null) {
+                            if (currentChat.getConversation().getConversationId() == convo.getConversationId()) {
+                                SwingUtilities.invokeLater(new Runnable() {
+                                    public void run() {
+                                        showMsgList();
+                                    }
+                                });
+                            }
+                        }
                     }
                 });
                 break;
-            }
-        }
-
-        // Refresh the chat order (the latest message timestamp may have changed)
-        sortChatEntries();
-
-        // Refresh message list if the current chat was the one that was just updated
-        if (currentChat != null) {
-            if (currentChat.getConversation().getConversationId() == convo.getConversationId()) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        showMsgList();
-                    }
-                });
             }
         }
     }
