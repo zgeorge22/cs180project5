@@ -145,7 +145,9 @@ public class MainWindow extends JFrame {
         exportChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Export selected chats!
+                if (currentChat != null) {
+                    currentChat.getConversation().exportToCSV();
+                }
             }
         });
 
@@ -399,7 +401,11 @@ public class MainWindow extends JFrame {
 
         if (currentChat != null) {
             if (currentChat.getConversation().getConversationId() == convo.getConversationId()) {
-                showMsgList();
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        showMsgList();
+                    }
+                });
             }
         }
     }

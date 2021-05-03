@@ -35,14 +35,14 @@ public class ServerProcess extends Thread {
             clientProcess();
             clientSocket.close();
             System.out.println("SERVER - Client Disconnected: " + clientSocket.getPort());
-        } catch (IOException | AccountNotExistException | UsernameAlreadyExistsException
-                | ConversationNotFoundException | MessageNotFoundException e) {
+        } catch (IOException | UsernameAlreadyExistsException | ConversationNotFoundException
+                | MessageNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private void clientProcess() throws IOException, AccountNotExistException, UsernameAlreadyExistsException,
-            ConversationNotFoundException, MessageNotFoundException {
+    private void clientProcess() throws IOException, UsernameAlreadyExistsException, ConversationNotFoundException,
+            MessageNotFoundException {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
         writer = new PrintWriter(outputStream);
@@ -51,7 +51,6 @@ public class ServerProcess extends Thread {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         ArrayList<Account> activeUsersList = ServerBackground.getActiveUsers();
 
-        clientLoginLoop:
         do {
             String commandString = (reader.readLine());
             String[] tokenLogin = commandString.split(" ");
@@ -65,22 +64,27 @@ public class ServerProcess extends Thread {
                     currentAccount = newAccount;
                     activeUsersList.add(newAccount);
                     loggedIn = true;
-                    writer.write("createAccountSuccessful " + newUsername);
-                    writer.println();
-                    writer.flush();
-                }
-                case ("loginAccount") -> {
+
+                    sendClient("createAccountSuccessful " + newUsername);
+                    break;
+                case ("loginAccount"):
                     String existingUsername = tokenLogin[1];
                     String existingPassword = tokenLogin[2];
-                    Account exitingAccount = checkUserLogin(existingUsername, existingPassword);
-                    currentAccount = exitingAccount;
-                    activeUsersList.add(exitingAccount);
-                    loggedIn = true;
-                    writer.write("loginAccountSuccessful " + existingUsername);
-                    writer.println();
-                    writer.flush();
-                }
-                default -> System.out.println("ERROR - Unknown command: " + cmdLogin);
+
+                    try {
+                        currentAccount = checkUserLogin(existingUsername, existingPassword);
+                        activeUsersList.add(currentAccount);
+
+                        loggedIn = true;
+
+                        sendClient("loginAccountSuccessful " + existingUsername);
+                    } catch (AccountNotExistException e) {
+
+                    }
+                    break;
+                default:
+                    System.out.println("ERROR - Unknown command: " + cmdLogin);
+                    break;
             }
         } while (!loggedIn);
 
@@ -91,8 +95,8 @@ public class ServerProcess extends Thread {
         writer.close();
     }
 
-    public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, AccountNotExistException,
-             ConversationNotFoundException, MessageNotFoundException {
+    public void messagingProcess(ArrayList<Account> activeUsersList)
+            throws IOException, UsernameAlreadyExistsException, ConversationNotFoundException {
 
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
@@ -117,11 +121,12 @@ public class ServerProcess extends Thread {
                     currentAccount.changePassword(editPassword);
                     break;
                 case ("createConvo"):
-                    send("succeeded", this.clientSocket);
+                    // sendClient("succeeded");
                     String participantsString = token[1];
                     String[] participantsUsernameList = participantsString.split(",");
                     // create conversation
                     ArrayList<Account> newConvoAccountList = new ArrayList<>();
+                
                     for (String s : participantsUsernameList) {
                         newConvoAccountList.add(database.getAccountByUsername(s));
                     }
@@ -132,17 +137,20 @@ public class ServerProcess extends Thread {
                     Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
                     newConvo.addMessage(newMessage);
                     int newConvoID = newConvo.getConversationId();
+                
                     for (Account account : newConvoAccountList) {
                         for (Account value : activeUsersList) {
                             if (account.getUsername().equals(value.getUsername())) {
                                 for (ServerProcess serverProcess : serverProcessList) {
                                     if (serverProcess.getCurrentAccount().getUsername()
                                             .equals(account.getUsername())) {
-                                        send(String.format("addConvo %d %s", newConvoID, participantsString),
-                                                serverProcess.getClientSocket());
-                                        send(("addMsg " + newConvoID + " " + newMessage.getId() + " "
-                                                + this.currentAccount.getUsername() + " " + newMessage.getTimestamp()
-                                                + " " + initialMsg), serverProcess.getClientSocket());
+                                        sendOtherClient(String.format("addConvo %d %s", newConvoID, participantsString),
+                                                serverProcessList.get(k).getClientSocket());
+                                        sendOtherClient(
+                                                ("addMsg " + newConvoID + " " + newMessage.getId() + " "
+                                                        + this.currentAccount.getUsername() + " "
+                                                        + newMessage.getTimestamp() + " " + initialMsg),
+                                                serverProcessList.get(k).getClientSocket());
                                     }
                                 }
 
@@ -163,9 +171,10 @@ public class ServerProcess extends Thread {
                                     for (ServerProcess serverProcess : serverProcessList) {
                                         if (serverProcess.getCurrentAccount().getUsername()
                                                 .equals(conversation.getParticipants().get(i).getUsername())) {
-                                            send("removeUser " + conversation.getConversationId() + " "
+                                            sendOtherClient(
+                                                    "removeUser " + conversation.getConversationId() + " "
                                                             + this.currentAccount.getUsername(),
-                                                    serverProcess.getClientSocket());
+                                                    serverProcessList.get(k).getClientSocket());
                                         }
                                     }
 
@@ -176,6 +185,8 @@ public class ServerProcess extends Thread {
 
                         break;
                     } catch (ConversationNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (AccountNotExistException e) {
                         e.printStackTrace();
                     }
                 case ("createMsg"):
@@ -192,9 +203,11 @@ public class ServerProcess extends Thread {
                                 for (ServerProcess serverProcess : serverProcessList) {
                                     if (serverProcess.getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoID).getParticipants().get(i).getUsername())) {
-                                        send("addMsg " + convoID + " " + tempMessage.getId() + " "
-                                                + this.currentAccount.getUsername() + " " + tempMessage.getTimestamp()
-                                                + " " + newMessageContent, serverProcess.getClientSocket());
+                                        sendOtherClient(
+                                                "addMsg " + convoID + " " + tempMessage.getId() + " "
+                                                        + this.currentAccount.getUsername() + " "
+                                                        + tempMessage.getTimestamp() + " " + newMessageContent,
+                                                serverProcessList.get(k).getClientSocket());
                                     }
                                 }
                             }
@@ -210,6 +223,7 @@ public class ServerProcess extends Thread {
                     String placeH = commandString.substring(commandString.indexOf(" ") + 1);
                     String placeHo = placeH.substring(placeH.indexOf(" ") + 1);
                     String newMessageEdit = placeHo.substring(placeHo.indexOf(" ") + 1);
+
                     Message messageToEdit = database.getMessageById(initialID);
                     messageToEdit.editMessage(newMessageEdit);
                     for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants().size(); i++) {
@@ -220,19 +234,23 @@ public class ServerProcess extends Thread {
                                     if (serverProcess.getCurrentAccount().getUsername()
                                             .equals(database.getConversationById(convoIdentifier).getParticipants()
                                                     .get(i).getUsername()))
-                                        send("editMsg " + convoIdentifier + " " + initialID + " "
-                                                        + this.userID + " " + messageToEdit.getTimestamp()
-                                                        + " " + newMessageEdit,
-                                                serverProcess.getClientSocket());
+                                        sendOtherClient(
+                                                    "editMsg " + convoIdentifier + " " + initialID + " " + this.userID
+                                                            + " " + messageToEdit.getTimestamp() + " " + newMessageEdit,
+                                                    serverProcessList.get(k).getClientSocket());
 
+                                    }
                                 }
                             }
                         }
+                    } catch (MessageNotFoundException e) {
+                        e.printStackTrace();
                     }
                     break;
                 case ("deleteMsg"):
                     int convoIdent = Integer.parseInt(token[1]);
                     int messageIdentifier = Integer.parseInt(token[2]);
+
                     database.getMessageById(messageIdentifier).deleteMessage();
                     for (int i = 0; i < database.getConversationById(convoIdent).getParticipants().size(); i++) {
                         for (Account account : activeUsersList) {
@@ -241,11 +259,13 @@ public class ServerProcess extends Thread {
                                 for (ServerProcess serverProcess : serverProcessList) {
                                     if (serverProcess.getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoIdent).getParticipants().get(i).getUsername()))
-                                        send("removeMsg " + convoIdent + " " + messageIdentifier,
-                                                serverProcess.getClientSocket());
+                                        sendOtherClient("removeMsg " + convoIdent + " " + messageIdentifier,
+                                                    serverProcessList.get(k).getClientSocket());
                                 }
                             }
                         }
+                    } catch (MessageNotFoundException e) {
+                        e.printStackTrace();
                     }
                     break;
                 case ("logoutAccount"):
@@ -320,56 +340,54 @@ public class ServerProcess extends Thread {
         int numConvosToSend = conversationStrings.size();
         int numMsgsToSend = messageStrings.size();
 
-        send("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend, clientSocket);
+        sendClient("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend);
 
         for (String finalAccountUsernameString : finalAccountUsernameStrings) {
-            send(finalAccountUsernameString, clientSocket);
+            sendClient(finalAccountUsernameString);
         }
         for (String conversationString : conversationStrings) {
-            send(conversationString, clientSocket);
+            sendClient(conversationString);
         }
         for (String messageString : messageStrings) {
-            send(messageString, clientSocket);
+            sendClient(messageString);
         }
     }
 
-    public Account checkUserLogin(String username, String password)
-            throws AccountNotExistException {
+    public Account checkUserLogin(String username, String password) throws AccountNotExistException {
 
-        ArrayList<Account> userList = database.getAccounts();
-        ArrayList<String> databaseUsernames = new ArrayList<>();
-        ArrayList<String> databasePasswords = new ArrayList<>();
+        ArrayList<Account> accounts = database.getAccounts();
 
-        for (int i = 0; i < database.getAccounts().size(); i++) {
-            databaseUsernames.add(database.getAccounts().get(i).getUsername());
-            databasePasswords.add(database.getAccounts().get(i).getPassword());
+        for (int i = 0; i < accounts.size(); i++) {
+            if (accounts.get(i).getUsername().equals(username)) {
+                if (accounts.get(i).getPassword().equals(password)) {
+                    return accounts.get(i);
+                }
+            }
         }
-
-        if (databaseUsernames.contains(username) && databasePasswords.contains(password) // Final login
-                && (databaseUsernames.indexOf(username) == databasePasswords.indexOf(password))) {
-            return (database.getAccountByUsername(username));
-        } else {
-            throw new AccountNotExistException();
-        }
-
+        throw new AccountNotExistException();
     }
 
     public Account getAccount() {
         return currentAccount;
     }
 
-    public void send(String message, Socket clientSocket) {
-        OutputStream ous = null;
-        try {
-            ous = clientSocket.getOutputStream();
+    public void sendClient(String message) {
+        writer.write(message);
+        writer.println();
+        writer.flush();
+    }
+
+    public void sendOtherClient(String message, Socket clientSocket) throws IOException {
+      try {
+            OutputStream outputStreamSend = clientSocket.getOutputStream();
+        PrintWriter sendWriter = new PrintWriter(outputStreamSend);
+
+        sendWriter.write(message);
+        sendWriter.println();
+        sendWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        PrintWriter pw = new PrintWriter(ous);
-        pw.write(message);
-        pw.println();
-        pw.flush();
-        // writer.close();
     }
 
     public Socket getClientSocket() {
