@@ -234,8 +234,6 @@ public class ServerProcess extends Thread {
                         break;
                     } catch (ConversationNotFoundException | AccountNotExistException e) {
                         e.printStackTrace();
-                    } catch (AccountNotExistException e) {
-                        e.printStackTrace();
                     }
                 
                 // case allows for a user to create and send a new message.
