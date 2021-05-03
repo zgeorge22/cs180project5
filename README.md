@@ -40,23 +40,25 @@ To run the client, the main method within *client.java* should be run to start t
 The next section will detail documentation about how to run the program.
 
 - Login/Create Account
-  - //add stuff
+  - Users must enter a valid and existing username and password (i.e. no non-alphanumeric characters) to login
+  - To create an account, the username must not already exist within the file of usernames, username must follow the guidelines shown before. Errors are thrown otherwise.
 - Main GUI
   - Change Password
-    - // add stuff
+    - To change their password, a user must first login to their account. Once they are logged in, they can select the “Account” button in the bottom left. This will prompt them with a change password GUI. They can enter the new password that they want (it must adhere to the same standards as the account creation) and press “Ok” to change their password. They can also press cancel to stop the changing process.
   - Create Conversation with participants
-    - // add stuff
+    - User must first click the “Create chat” button. Then, they add usernames of other users that they wish to add to a chat separated by a comma into the “participants” text box. If the user attempts to send a message to a nonexistent user or improperly formats the participants list, errors will be thrown. User can type the first message of a new chat into the message box, then either press enter or the send arrow to begin a conversation.
   - Send Message
-    - // add stuff
+    - User can select from their list of created conversations by clicking on them at the left. From there, they must make sure that their drop down box on the bottom right is on “Send”. Then they can simply type their message and either press enter or press the send arrow on the right side of the text box.
   - Edit Message
-    - // add stuff
+    - To edit a message (users can only edit their own messages) users can change the drop down box to the “edit” function, and then select the message they want to edit. They then can modify the message in the text box, and press enter as if they are sending the message. The message will be changed for both the user and those they are in a conversation with.
   - Delete Message
-    - // add stuff
+    - To delete a message (users can only delete their own messages) users can change the drop down box to the “delete” function. They then can select the message that they want to delete by clicking on it, then follow it up by pressing Enter. The message will be deleted on all ends.
   - Leave Conversation
-    - // add stuff
+    - To leave a conversation, users can select a conversation from the list of chats and press the “Leave Conversation” button. It will be removed from their list and they will be removed from the chat.
   - Log Out
-    - // add stuff
-  - **Anything else that I might have forgotten?**     - // add stuff
+    - While logged in, the user can either press the “Sign Out” button or close the window in any fashion that they would like, and they will be signed out of the program and it will close.
+  - Export CSV
+    - To export a conversation to a CSV file, a user must first make or select a chat that they would like to export. Once they have selected the conversation, they can click the “Export Chat” button.
 
 
   
