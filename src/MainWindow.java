@@ -42,7 +42,7 @@ public class MainWindow extends JFrame {
     private MsgEntry currentMsg;
 
     public MainWindow(Client client) {
-        super("Chat");
+        super("Chat Window");
 
         this.client = client;
 

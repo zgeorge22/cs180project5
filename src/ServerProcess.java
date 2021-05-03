@@ -27,6 +27,8 @@ public class ServerProcess extends Thread {
     public void run() {
         try {
             clientProcess();
+            clientSocket.close();
+            System.out.println("SERVER - Client Disconnected: " + clientSocket.getPort());
         } catch (IOException | AccountNotExistException | UsernameAlreadyExistsException | ConversationNotFoundException
                 | MessageNotFoundException e) {
             e.printStackTrace();
@@ -37,12 +39,13 @@ public class ServerProcess extends Thread {
             ConversationNotFoundException, MessageNotFoundException {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
+        writer = new PrintWriter(outputStream);
+
         Boolean loggedIn = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        PrintWriter print = new PrintWriter(clientSocket.getOutputStream());
         ArrayList<Account> activeUsersList = ServerBackground.getActiveUsers();
 
-        do {
+        clientLoginLoop: do {
             String commandString = (reader.readLine());
             String[] tokenLogin = commandString.split(" ");
             String cmdLogin = tokenLogin[0];
@@ -55,9 +58,9 @@ public class ServerProcess extends Thread {
                     currentAccount = newAccount;
                     activeUsersList.add(newAccount);
                     loggedIn = true;
-                    print.write("true");
-                    print.println();
-                    print.flush();
+                    writer.write("createAccountSuccessful " + newUsername);
+                    writer.println();
+                    writer.flush();
                     break;
                 case ("loginAccount"):
                     String existingUsername = tokenLogin[1];
@@ -66,10 +69,13 @@ public class ServerProcess extends Thread {
                     currentAccount = exitingAccount;
                     activeUsersList.add(exitingAccount);
                     loggedIn = true;
-                    print.write("true");
-                    print.println();
-                    print.flush();
+                    writer.write("loginAccountSuccessful " + existingUsername);
+                    writer.println();
+                    writer.flush();
                     break;
+                default:
+                    System.out.println("ERROR - Unknown command: " + cmdLogin);
+                    break clientLoginLoop;
             }
         } while (!loggedIn);
 
@@ -77,9 +83,7 @@ public class ServerProcess extends Thread {
             messagingProcess(activeUsersList);
         }
 
-        clientSocket.close();
         writer.close();
-
     }
 
     public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, AccountNotExistException,
@@ -88,6 +92,8 @@ public class ServerProcess extends Thread {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
         boolean exit = false;
+
+        send("prepareForDataDump ", clientSocket);
 
         Database clientData = new Database(false);
         for (int i = 0; i < database.getConversations().size(); i++) {
@@ -104,7 +110,9 @@ public class ServerProcess extends Thread {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
             PrintWriter pw = new PrintWriter(clientSocket.getOutputStream());
             String commandString = (bfr.readLine());
-            System.out.println(commandString);
+
+            System.out.println("SERVER (" + clientSocket.getPort() + ") - " + commandString);
+
             String[] token = commandString.split(" ");
             String cmd = token[0];
             ArrayList<ServerProcess> serverProcessList = Server.getServerList();
@@ -125,13 +133,11 @@ public class ServerProcess extends Thread {
                     }
                     String placeHolder = commandString.substring(commandString.indexOf(" ") + 1);
                     String initialMsg = placeHolder.substring(placeHolder.indexOf(" ") + 1);
-                    Conversation newConvo = new Conversation(null, newConvoAccountList, true, database);
+                    String name = newConvoAccountList.size() > 2 ? "GC" : "DM";
+                    Conversation newConvo = new Conversation(name, newConvoAccountList, true, database);
                     Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
                     newConvo.addMessage(newMessage);
-                    // System.out.println(database.getConversationById(0).getMessages().get(0).getContent());
                     int newConvoID = newConvo.getConversationId();
-                    // send intialMsg to users in newConvo
-                    // ArrayList<ServerProcess> serverProcessList = Server.getServerList();
                     for (int i = 0; i < newConvoAccountList.size(); i++) {
                         for (int j = 0; j < activeUsersList.size(); j++) {
                             if (newConvoAccountList.get(i).getUsername().equals(activeUsersList.get(j).getUsername())) {
@@ -254,12 +260,8 @@ public class ServerProcess extends Thread {
                     pw.flush();
                     exit = true;
                     break;
-                case ("Database Received Successfully"):
-                    System.out.println("Database Sent SuccessFully");
-                    pw.write("");
-                    pw.println();
-                    pw.flush();
-                    break;
+                default:
+                    System.out.println("ERROR - Unknow command: " + cmd);
             }
         } while (!exit);
     }
@@ -290,8 +292,6 @@ public class ServerProcess extends Thread {
     }
 
     public void send(String message, Socket clientSocket) throws IOException {
-        OutputStream outputStreamSend = clientSocket.getOutputStream();
-        writer = new PrintWriter(outputStreamSend);
         writer.write(message);
         writer.println();
         writer.flush();
