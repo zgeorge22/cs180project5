@@ -67,7 +67,8 @@ public class ServerProcess extends Thread {
                     String newUsername = tokenLogin[1];
                     String newPassword = tokenLogin[2];
                     System.out
-                            .println("SERVER (" + clientSocket.getPort() + ") - Requested createAccount with username ["
+                            .println("SERVER (" + clientSocket.getPort()
+                                    + ") - Requested createAccount with username ["
                                     + newUsername + "] and passowrd [" + newPassword + "]");
                     try {
                         currentAccount = new Account(newUsername, newPassword, database, true);
@@ -88,7 +89,8 @@ public class ServerProcess extends Thread {
                     String existingPassword = tokenLogin[2];
 
                     System.out
-                            .println("SERVER (" + clientSocket.getPort() + ") - Requested loginAccount with username ["
+                            .println("SERVER (" + clientSocket.getPort()
+                                    + ") - Requested loginAccount with username ["
                                     + existingUsername + "] and passowrd [" + existingPassword + "]");
                     try {
                         currentAccount = checkUserLogin(existingUsername, existingPassword);
@@ -230,7 +232,8 @@ public class ServerProcess extends Thread {
                                 + currentAccount.getUsername() + "]");
                     } catch (AccountNotExistException e) {
                         sendClient("failedCreateConvo" + errorMessage);
-                        System.out.println("SERVER (" + clientSocket.getPort() + ") - Failed to create conversation!");
+                        System.out.println("SERVER (" + clientSocket.getPort()
+                                           + ") - Failed to create conversation!");
                     }
                     break;
                 case ("leaveConvo"):
@@ -239,7 +242,8 @@ public class ServerProcess extends Thread {
                         Conversation conversation = database.getConversationById(leaveConversationID);
                         for (int i = 0; i < conversation.getParticipants().size(); i++) {
                             for (Account account : activeUsersList) {
-                                if (conversation.getParticipants().get(i).getUsername().equals(account.getUsername())) {
+                                if (conversation.getParticipants().get(i)
+                                    .getUsername().equals(account.getUsername())) {
                                     for (ServerProcess serverProcess : serverProcessList) {
                                         if (serverProcess.getCurrentAccount().getUsername()
                                                 .equals(conversation.getParticipants().get(i).getUsername())) {
@@ -305,12 +309,14 @@ public class ServerProcess extends Thread {
                         for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants()
                                 .size(); i++) {
                             for (Account account : activeUsersList) {
-                                if (database.getConversationById(convoIdentifier).getParticipants().get(i).getUsername()
+                                if (database.getConversationById(convoIdentifier)
+                                    .getParticipants().get(i).getUsername()
                                         .equals(account.getUsername())) {
                                     for (ServerProcess serverProcess : serverProcessList) {
                                         if (serverProcess.getCurrentAccount().getUsername()
-                                                .equals(database.getConversationById(convoIdentifier).getParticipants()
-                                                        .get(i).getUsername()))
+                                                .equals(database.getConversationById(convoIdentifier)
+                                                .getParticipants()
+                                                .get(i).getUsername()))
                                             sendOtherClient(
                                                     "editMsg " + convoIdentifier + " " + initialID + " "
                                                             + currentAccount.getUsername() + " "
