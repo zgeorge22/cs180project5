@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 public class LoginGUI implements ActionListener
 {
     private static JLabel usernameLabel;
@@ -86,7 +87,26 @@ public class LoginGUI implements ActionListener
             
             frame.setVisible(true);
         } else if(e.getSource() == createAccountButton) {
-            System.out.println("Account created with username " + userText.getText() + " and password " + passwordText.getText());
+            int count = 0;
+            for(int i = 0; i < userText.getText().length(); i++) {
+                if(!Character.isLetterOrDigit(userText.getText().charAt(i))) {
+                    count++;
+                    break;
+                }
+            }
+            if(count == 0) {
+                for(int i = 0; i < passwordText.getText().length(); i++) {
+                    if(!Character.isLetterOrDigit(passwordText.getText().charAt(i))) {
+                        count++;
+                        break;
+                    }
+                }
+            }
+            if(count != 0) {
+                System.out.println("Error: Non-alphanumeric character used in username or password.");
+            } else {
+                System.out.println("Account created with username " + userText.getText() + " and password " + passwordText.getText());
+            }
         }
     }
 }
