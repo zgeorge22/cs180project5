@@ -1,5 +1,7 @@
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.plaf.basic.BasicArrowButton;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.time.format.DateTimeFormatter;
@@ -140,7 +142,8 @@ public class MainWindow extends JFrame {
         importChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Import selected chats!
+                JOptionPane.showMessageDialog(null, "Importing conversations is not supported right now.", "Warning",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -149,7 +152,11 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (currentChat != null) {
-                    currentChat.getConversation().exportToCSV();
+                    Conversation convo = currentChat.getConversation();
+                    convo.exportToCSV();
+                    String exportName = convo.getConversationName() + convo.getConversationId() + ".csv";
+                    JOptionPane.showMessageDialog(null, "Exported conversation to " + exportName, "Warning",
+                            JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
@@ -214,7 +221,6 @@ public class MainWindow extends JFrame {
         composeMessage.setWrapStyleWord(true);
         composeScrollPane = new JScrollPane(composeMessage);
         composeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        composeBar.add(composeScrollPane, BorderLayout.CENTER);
 
         InputMap inputMap = composeMessage.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = composeMessage.getActionMap();
@@ -251,7 +257,18 @@ public class MainWindow extends JFrame {
             }
         });
 
-        composeBar.add(messageActions, BorderLayout.EAST);
+        BasicArrowButton execute = new BasicArrowButton(BasicArrowButton.EAST);
+        execute.setPreferredSize(new Dimension(40, 40));
+        execute.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                attemptMessageAction();
+            }
+        });
+
+        composeBar.add(messageActions, BorderLayout.WEST);
+        composeBar.add(composeScrollPane, BorderLayout.CENTER);
+        composeBar.add(execute, BorderLayout.EAST);
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgListScrollPane, composeBar);
         splitPane.setResizeWeight(1);
