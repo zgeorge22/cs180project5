@@ -1,8 +1,17 @@
 import javax.swing.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Random;
+
+/**
+ * This is class that contains test cases for the GUI
+ * //TODO add more things here AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
 
 public class GUITestCases {
 
@@ -41,11 +50,14 @@ public class GUITestCases {
                     accountsListLarge.add(b);
                     accountsListLarge.add(n);
 
-                    Conversation chatSmall = new Conversation("small", accountsListSmall, false, db);
-                    Conversation chatMedium = new Conversation("medium", accountsListMedium, false, db);
-                    Conversation chatLarge = new Conversation("large", accountsListLarge, false, db);
+                    Conversation chatSmall = new Conversation("small", accountsListSmall,
+                            false, db);
+                    Conversation chatMedium = new Conversation("medium", accountsListMedium,
+                            false, db);
+                    Conversation chatLarge = new Conversation("large", accountsListLarge,
+                            false, db);
 
-                    ArrayList<Conversation> conversationList = new ArrayList<Conversation>();
+                    ArrayList<Conversation> conversationList = new ArrayList<>();
                     conversationList.add(chatSmall);
                     conversationList.add(chatLarge);
 
@@ -94,7 +106,7 @@ public class GUITestCases {
 
     // ** TEST METHOD **
     private static ArrayList<Message> generateRandomMessages(ArrayList<Account> participants, int numMessages) {
-        ArrayList<Message> messages = new ArrayList<Message>();
+        ArrayList<Message> messages = new ArrayList<>();
 
         LocalDateTime now = LocalDateTime.now();
         final int messageDelay = 20; // min

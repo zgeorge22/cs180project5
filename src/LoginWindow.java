@@ -1,6 +1,14 @@
 import javax.swing.*;
-
 import java.awt.event.*;
+
+/**
+ * This class contains the GUI for the Login Window.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
 
 public class LoginWindow extends JFrame {
 
@@ -24,6 +32,7 @@ public class LoginWindow extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         // addWindowListener(new WindowAdapter() {
         // @Override
         // public void windowClosing(WindowEvent e) {

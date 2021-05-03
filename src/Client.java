@@ -4,6 +4,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * This class is the client class which the client will run to launch the program. This client will connect with the
+ * server and allow users to chat with each other, from their own clients.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
 public class Client {
     private Socket socket;
 
@@ -44,7 +54,7 @@ public class Client {
 
             String command = serverInput;
             String details = "";
-            if (serverInput.indexOf(" ") != -1) {
+            if (serverInput.contains(" ")) {
                 command = serverInput.substring(0, serverInput.indexOf(" "));
                 details = serverInput.substring(serverInput.indexOf(" ") + 1);
             }
@@ -170,7 +180,8 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " "
+                + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
@@ -212,8 +223,8 @@ public class Client {
                 convoDetails = convoDetails.substring(convoDetails.indexOf(" ") + 1);
                 ArrayList<Account> convoParticipants = new ArrayList<>();
                 String[] accountsInConversation = convoDetails.split(",");
-                for (int j = 0; j < accountsInConversation.length; j++) {
-                    convoParticipants.add(db.getAccountByUsername(accountsInConversation[j]));
+                for (String s : accountsInConversation) {
+                    convoParticipants.add(db.getAccountByUsername(s));
                 }
                 String name = convoParticipants.size() > 2 ? "GC" : "DM";
                 Conversation thisConversation = new Conversation(convoId, name, convoParticipants, db);
@@ -257,7 +268,7 @@ public class Client {
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
         String participantsString = placeholder;
 
-        ArrayList<Account> participants = new ArrayList<Account>();
+        ArrayList<Account> participants = new ArrayList<>();
         for (String username : participantsString.split(",")) {
             try {
                 participants.add(db.getAccountByUsername(username));

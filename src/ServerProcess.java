@@ -3,6 +3,16 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * This class is a processing class that spawns a thread each time a user logs in from their client. Then, this
+ * thread handles all server-side processing related to that client.
+ *
+ * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ *
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @version May 3rd, 2021
+ */
+
 public class ServerProcess extends Thread {
 
     private final Socket clientSocket;
@@ -25,8 +35,8 @@ public class ServerProcess extends Thread {
             clientProcess();
             clientSocket.close();
             System.out.println("SERVER - Client Disconnected: " + clientSocket.getPort());
-        } catch (IOException | AccountNotExistException | UsernameAlreadyExistsException | ConversationNotFoundException
-                | MessageNotFoundException e) {
+        } catch (IOException | AccountNotExistException | UsernameAlreadyExistsException
+                | ConversationNotFoundException | MessageNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -41,15 +51,16 @@ public class ServerProcess extends Thread {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         ArrayList<Account> activeUsersList = ServerBackground.getActiveUsers();
 
-        clientLoginLoop: do {
+        clientLoginLoop:
+        do {
             String commandString = (reader.readLine());
             String[] tokenLogin = commandString.split(" ");
             String cmdLogin = tokenLogin[0];
+            // TODO - fix if user already exists
             switch (cmdLogin) {
-                case ("createAccount"):
+                case ("createAccount") -> {
                     String newUsername = tokenLogin[1];
                     String newPassword = tokenLogin[2];
-                    // TODO - fix if user already exists
                     Account newAccount = new Account(newUsername, newPassword, database, true);
                     currentAccount = newAccount;
                     activeUsersList.add(newAccount);
@@ -57,8 +68,8 @@ public class ServerProcess extends Thread {
                     writer.write("createAccountSuccessful " + newUsername);
                     writer.println();
                     writer.flush();
-                    break;
-                case ("loginAccount"):
+                }
+                case ("loginAccount") -> {
                     String existingUsername = tokenLogin[1];
                     String existingPassword = tokenLogin[2];
                     Account exitingAccount = checkUserLogin(existingUsername, existingPassword);
@@ -68,10 +79,8 @@ public class ServerProcess extends Thread {
                     writer.write("loginAccountSuccessful " + existingUsername);
                     writer.println();
                     writer.flush();
-                    break;
-                default:
-                    System.out.println("ERROR - Unknown command: " + cmdLogin);
-                    break clientLoginLoop;
+                }
+                default -> System.out.println("ERROR - Unknown command: " + cmdLogin);
             }
         } while (!loggedIn);
 
@@ -83,7 +92,7 @@ public class ServerProcess extends Thread {
     }
 
     public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, AccountNotExistException,
-            UsernameAlreadyExistsException, ConversationNotFoundException, MessageNotFoundException {
+             ConversationNotFoundException, MessageNotFoundException {
 
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
@@ -113,8 +122,8 @@ public class ServerProcess extends Thread {
                     String[] participantsUsernameList = participantsString.split(",");
                     // create conversation
                     ArrayList<Account> newConvoAccountList = new ArrayList<>();
-                    for (int i = 0; i < participantsUsernameList.length; i++) {
-                        newConvoAccountList.add(database.getAccountByUsername(participantsUsernameList[i]));
+                    for (String s : participantsUsernameList) {
+                        newConvoAccountList.add(database.getAccountByUsername(s));
                     }
                     String placeHolder = commandString.substring(commandString.indexOf(" ") + 1);
                     String initialMsg = placeHolder.substring(placeHolder.indexOf(" ") + 1);
@@ -123,17 +132,17 @@ public class ServerProcess extends Thread {
                     Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
                     newConvo.addMessage(newMessage);
                     int newConvoID = newConvo.getConversationId();
-                    for (int i = 0; i < newConvoAccountList.size(); i++) {
-                        for (int j = 0; j < activeUsersList.size(); j++) {
-                            if (newConvoAccountList.get(i).getUsername().equals(activeUsersList.get(j).getUsername())) {
-                                for (int k = 0; k < serverProcessList.size(); k++) {
-                                    if (serverProcessList.get(k).getCurrentAccount().getUsername()
-                                            .equals(newConvoAccountList.get(i).getUsername())) {
+                    for (Account account : newConvoAccountList) {
+                        for (Account value : activeUsersList) {
+                            if (account.getUsername().equals(value.getUsername())) {
+                                for (ServerProcess serverProcess : serverProcessList) {
+                                    if (serverProcess.getCurrentAccount().getUsername()
+                                            .equals(account.getUsername())) {
                                         send(String.format("addConvo %d %s", newConvoID, participantsString),
-                                                serverProcessList.get(k).getClientSocket());
+                                                serverProcess.getClientSocket());
                                         send(("addMsg " + newConvoID + " " + newMessage.getId() + " "
                                                 + this.currentAccount.getUsername() + " " + newMessage.getTimestamp()
-                                                + " " + initialMsg), serverProcessList.get(k).getClientSocket());
+                                                + " " + initialMsg), serverProcess.getClientSocket());
                                     }
                                 }
 
@@ -148,15 +157,15 @@ public class ServerProcess extends Thread {
                         int leaveConversationID = Integer.parseInt(token[1]);
                         Conversation conversation = database.getConversationById(leaveConversationID);
                         for (int i = 0; i < conversation.getParticipants().size(); i++) {
-                            for (int j = 0; j < activeUsersList.size(); j++) {
+                            for (Account account : activeUsersList) {
                                 if (conversation.getParticipants().get(i).getUsername()
-                                        .equals(activeUsersList.get(j).getUsername())) {
-                                    for (int k = 0; k < serverProcessList.size(); k++) {
-                                        if (serverProcessList.get(k).getCurrentAccount().getUsername()
+                                        .equals(account.getUsername())) {
+                                    for (ServerProcess serverProcess : serverProcessList) {
+                                        if (serverProcess.getCurrentAccount().getUsername()
                                                 .equals(conversation.getParticipants().get(i).getUsername())) {
                                             send("removeUser " + conversation.getConversationId() + " "
-                                                    + this.currentAccount.getUsername(),
-                                                    serverProcessList.get(k).getClientSocket());
+                                                            + this.currentAccount.getUsername(),
+                                                    serverProcess.getClientSocket());
                                         }
                                     }
 
@@ -177,15 +186,15 @@ public class ServerProcess extends Thread {
                     Message tempMessage = new Message(this.currentAccount.getUsername(), newMessageContent, database);
                     database.getConversationById(convoID).addMessage(tempMessage);
                     for (int i = 0; i < database.getConversationById(convoID).getParticipants().size(); i++) {
-                        for (int j = 0; j < activeUsersList.size(); j++) {
+                        for (Account account : activeUsersList) {
                             if (database.getConversationById(convoID).getParticipants().get(i).getUsername()
-                                    .equals(activeUsersList.get(j).getUsername())) {
-                                for (int k = 0; k < serverProcessList.size(); k++) {
-                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
+                                    .equals(account.getUsername())) {
+                                for (ServerProcess serverProcess : serverProcessList) {
+                                    if (serverProcess.getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoID).getParticipants().get(i).getUsername())) {
                                         send("addMsg " + convoID + " " + tempMessage.getId() + " "
                                                 + this.currentAccount.getUsername() + " " + tempMessage.getTimestamp()
-                                                + " " + newMessageContent, serverProcessList.get(k).getClientSocket());
+                                                + " " + newMessageContent, serverProcess.getClientSocket());
                                     }
                                 }
                             }
@@ -204,16 +213,17 @@ public class ServerProcess extends Thread {
                     Message messageToEdit = database.getMessageById(initialID);
                     messageToEdit.editMessage(newMessageEdit);
                     for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants().size(); i++) {
-                        for (int j = 0; j < activeUsersList.size(); j++) {
+                        for (Account account : activeUsersList) {
                             if (database.getConversationById(convoIdentifier).getParticipants().get(i).getUsername()
-                                    .equals(activeUsersList.get(j).getUsername())) {
-                                for (int k = 0; k < serverProcessList.size(); k++) {
-                                    if (serverProcessList.get(k).getCurrentAccount().getUsername()
+                                    .equals(account.getUsername())) {
+                                for (ServerProcess serverProcess : serverProcessList) {
+                                    if (serverProcess.getCurrentAccount().getUsername()
                                             .equals(database.getConversationById(convoIdentifier).getParticipants()
                                                     .get(i).getUsername()))
-                                        send("editMsg " + convoIdentifier + " " + initialID + " " + this.userID + " "
-                                                + messageToEdit.getTimestamp() + " " + newMessageEdit,
-                                                serverProcessList.get(k).getClientSocket());
+                                        send("editMsg " + convoIdentifier + " " + initialID + " "
+                                                        + this.userID + " " + messageToEdit.getTimestamp()
+                                                        + " " + newMessageEdit,
+                                                serverProcess.getClientSocket());
 
                                 }
                             }
@@ -225,14 +235,14 @@ public class ServerProcess extends Thread {
                     int messageIdentifier = Integer.parseInt(token[2]);
                     database.getMessageById(messageIdentifier).deleteMessage();
                     for (int i = 0; i < database.getConversationById(convoIdent).getParticipants().size(); i++) {
-                        for (int j = 0; j < activeUsersList.size(); j++) {
+                        for (Account account : activeUsersList) {
                             if (database.getConversationById(convoIdent).getParticipants().get(i).getUsername()
-                                    .equals(activeUsersList.get(j).getUsername())) {
-                                for (int k = 0; k < serverProcessList.size(); k++) {
-                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
+                                    .equals(account.getUsername())) {
+                                for (ServerProcess serverProcess : serverProcessList) {
+                                    if (serverProcess.getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoIdent).getParticipants().get(i).getUsername()))
                                         send("removeMsg " + convoIdent + " " + messageIdentifier,
-                                                serverProcessList.get(k).getClientSocket());
+                                                serverProcess.getClientSocket());
                                 }
                             }
                         }
@@ -290,7 +300,7 @@ public class ServerProcess extends Thread {
                         clientData.getConversations().get(i).getParticipants().get(j).getUsername() + ",";
             }
             thisConversationParticipants = thisConversationParticipants.substring
-                    (0,thisConversationParticipants.length() - 1);
+                    (0, thisConversationParticipants.length() - 1);
 
             conversationString = conversationString + thisConversationParticipants;
 
@@ -298,8 +308,8 @@ public class ServerProcess extends Thread {
         }
 
         ArrayList<String> messageStrings = new ArrayList<>();
-        for (int i = 0; i < clientData.getConversations().size();i++) {
-            for (int j = 0; j < clientData.getConversations().get(i).getMessages().size();j++) {
+        for (int i = 0; i < clientData.getConversations().size(); i++) {
+            for (int j = 0; j < clientData.getConversations().get(i).getMessages().size(); j++) {
                 String messageString = clientData.getConversations().get(i).getConversationId() + ",";
                 messageString = messageString + clientData.getConversations().get(i).getMessages().get(j).toString();
                 messageStrings.add(messageString);
@@ -312,19 +322,19 @@ public class ServerProcess extends Thread {
 
         send("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend, clientSocket);
 
-        for (int i = 0; i < numAccsToSend;i++) {
-            send(finalAccountUsernameStrings.get(i), clientSocket);
+        for (String finalAccountUsernameString : finalAccountUsernameStrings) {
+            send(finalAccountUsernameString, clientSocket);
         }
-        for (int i = 0; i < numConvosToSend;i++) {
-            send(conversationStrings.get(i), clientSocket);
+        for (String conversationString : conversationStrings) {
+            send(conversationString, clientSocket);
         }
-        for (int  i = 0; i < numMsgsToSend; i++) {
-            send(messageStrings.get(i), clientSocket);
+        for (String messageString : messageStrings) {
+            send(messageString, clientSocket);
         }
     }
 
     public Account checkUserLogin(String username, String password)
-            throws AccountNotExistException, UsernameAlreadyExistsException {
+            throws AccountNotExistException {
 
         ArrayList<Account> userList = database.getAccounts();
         ArrayList<String> databaseUsernames = new ArrayList<>();
