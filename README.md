@@ -98,9 +98,9 @@ Comments within the .java file describe the intended output, and the terminal wi
 and print statements as described in those comments.
 
 
-***GUITesting.java***
+***GUI Testing***
+Testing of the GUI on its own was
 
-// add stuff
 
 ***Server/Client Testing***
 
