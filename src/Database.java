@@ -1,5 +1,3 @@
-package src;
-
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -639,7 +637,7 @@ public class Database implements Serializable {
         }
 
         FileWriter fileWriter;
-        File csvFile = new File(conversationName + ".csv");
+        File csvFile = new File(conversationName  + ".csv");
 
         try {
             fileWriter = new FileWriter(csvFile);

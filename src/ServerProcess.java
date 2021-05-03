@@ -1,10 +1,6 @@
-package src;
-
 import java.io.*;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class ServerProcess extends Thread {
@@ -93,18 +89,7 @@ public class ServerProcess extends Thread {
         this.outputStream = clientSocket.getOutputStream();
         boolean exit = false;
 
-        send("prepareForDataDump ", clientSocket);
-
-        Database clientData = new Database(false);
-        for (int i = 0; i < database.getConversations().size(); i++) {
-            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
-                clientData.addToDatabase(database.getConversations().get(i));
-        }
-
-        ObjectOutputStream outputObjectStream = new ObjectOutputStream(this.outputStream);
-        outputObjectStream.flush();
-        outputObjectStream.writeObject(clientData);
-        outputObjectStream.flush();
+        dataDump();
 
         do {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
@@ -266,6 +251,78 @@ public class ServerProcess extends Thread {
         } while (!exit);
     }
 
+    private void dataDump() {
+
+        Database clientData = new Database(false);
+        for (int i = 0; i < database.getConversations().size(); i++) {
+            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
+                clientData.addToDatabase(database.getConversations().get(i));
+        }
+
+        ArrayList<String> accountUsernameStrings = new ArrayList<>();
+        for (int i = 0; i < clientData.getConversations().size(); i++) {
+            for (int j = 0; j < clientData.getConversations().get(i).getParticipants().size(); j++) {
+                accountUsernameStrings.add(clientData.getConversations().get(i).getParticipants().get(j).getUsername());
+            }
+        }
+        ArrayList<String> finalAccountUsernameStrings = new ArrayList<>();
+        finalAccountUsernameStrings.add(accountUsernameStrings.get(0));
+
+        for (int i = 0; i < accountUsernameStrings.size(); i++) {
+            for (int j = 0; j < finalAccountUsernameStrings.size(); j++) {
+                if (!finalAccountUsernameStrings.contains(accountUsernameStrings.get(i))) {
+                    finalAccountUsernameStrings.add(accountUsernameStrings.get(i));
+                }
+            }
+        }
+        System.out.println(accountUsernameStrings.toString());
+        System.out.println(finalAccountUsernameStrings.toString());
+
+
+        ArrayList<String> conversationStrings = new ArrayList<>();
+        for (int i = 0; i < clientData.getConversations().size(); i++) {
+            String conversationString = Integer.toString(clientData.getConversations().get(i).getConversationId());
+            conversationString = conversationString + " ";
+
+            String thisConversationParticipants = "";
+            for (int j = 0; j < clientData.getConversations().get(i).getParticipants().size(); j++) {
+                thisConversationParticipants = thisConversationParticipants +
+                        clientData.getConversations().get(i).getParticipants().get(j).getUsername() + ",";
+            }
+            thisConversationParticipants = thisConversationParticipants.substring
+                    (0,thisConversationParticipants.length() - 1);
+
+            conversationString = conversationString + thisConversationParticipants;
+
+            conversationStrings.add(conversationString);
+        }
+
+        ArrayList<String> messageStrings = new ArrayList<>();
+        for (int i = 0; i < clientData.getConversations().size();i++) {
+            for (int j = 0; j < clientData.getConversations().get(i).getMessages().size();j++) {
+                String messageString = clientData.getConversations().get(i).getConversationId() + ",";
+                messageString = messageString + clientData.getConversations().get(i).getMessages().get(j).toString();
+                messageStrings.add(messageString);
+            }
+        }
+
+        int numAccsToSend = finalAccountUsernameStrings.size();
+        int numConvosToSend = conversationStrings.size();
+        int numMsgsToSend = messageStrings.size();
+
+        send("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend, clientSocket);
+
+        for (int i = 0; i < numAccsToSend;i++) {
+            send(finalAccountUsernameStrings.get(i), clientSocket);
+        }
+        for (int i = 0; i < numConvosToSend;i++) {
+            send(conversationStrings.get(i), clientSocket);
+        }
+        for (int  i = 0; i < numMsgsToSend; i++) {
+            send(messageStrings.get(i), clientSocket);
+        }
+    }
+
     public Account checkUserLogin(String username, String password)
             throws AccountNotExistException, UsernameAlreadyExistsException {
 
@@ -291,10 +348,17 @@ public class ServerProcess extends Thread {
         return currentAccount;
     }
 
-    public void send(String message, Socket clientSocket) throws IOException {
-        writer.write(message);
-        writer.println();
-        writer.flush();
+    public void send(String message, Socket clientSocket) {
+        OutputStream ous = null;
+        try {
+            ous = clientSocket.getOutputStream();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        PrintWriter pw = new PrintWriter(ous);
+        pw.write(message);
+        pw.println();
+        pw.flush();
         // writer.close();
     }
 

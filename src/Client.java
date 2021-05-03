@@ -1,5 +1,3 @@
-package src;
-
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
@@ -21,8 +19,6 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
 
-        client.username = "jim"; // Do we need this?
-
         try {
             client.run();
         } catch (IOException e) {
@@ -40,7 +36,8 @@ public class Client {
 
         lw = new LoginWindow(this);
 
-        serverMessageLoop: while (in.hasNextLine()) {
+        serverMessageLoop:
+        while (in.hasNextLine()) {
             String serverInput = in.nextLine();
 
             // System.out.println(fullCommand);
@@ -75,7 +72,7 @@ public class Client {
                 // User logged in
                 switch (command) {
                     case ("prepareForDataDump"):
-                        receivedPrepareForDataDump();
+                        receivedPrepareForDataDump(details);
                         break;
                     case ("addConvo"):
                         receivedAddConvo(details);
@@ -191,16 +188,53 @@ public class Client {
     // ---------------------- Recieved commands FROM server ----------------------
     // ===========================================================================
 
-    public void receivedPrepareForDataDump() throws IOException {
+    public void receivedPrepareForDataDump(String details) {
 
         System.out.println("CLIENT - Received prepareForDataDump");
+        String placeholder = details;
+        System.out.println(details);
+        int numAccsSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int numConvosSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
+        placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
+        int numMsgsSent = Integer.parseInt(placeholder);
 
-        // Get database data dump from server
-        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+        db = new Database(false);
+
         try {
-            db = (Database) ois.readObject();
-            // ois.close();
-        } catch (ClassNotFoundException e) {
+            for (int i = 0; i < numAccsSent; i++) {
+                String accountDetails = in.nextLine();
+                Account account = new Account(accountDetails, "", db, false);
+            }
+            for (int i = 0; i < numConvosSent; i++) {
+                String convoDetails = in.nextLine();
+                int convoId = Integer.parseInt(convoDetails.substring(0, convoDetails.indexOf(" ")));
+                convoDetails = convoDetails.substring(convoDetails.indexOf(" ") + 1);
+                ArrayList<Account> convoParticipants = new ArrayList<>();
+                String[] accountsInConversation = convoDetails.split(",");
+                for (int j = 0; j < accountsInConversation.length; j++) {
+                    convoParticipants.add(db.getAccountByUsername(accountsInConversation[j]));
+                }
+                String name = convoParticipants.size() > 2 ? "GC" : "DM";
+                Conversation thisConversation = new Conversation(convoId, name, convoParticipants, db);
+            }
+
+
+            for (int i = 0; i < numMsgsSent; i++) {
+                String msgDetails = in.nextLine();
+                int convoId = Integer.parseInt(msgDetails.substring(0, msgDetails.indexOf(",")));
+                msgDetails = msgDetails.substring(msgDetails.indexOf(",") + 1);
+                String[] thisMessage = msgDetails.split(",");
+
+                Message message = new Message(Integer.parseInt(thisMessage[0]), LocalDateTime.parse(thisMessage[1]),
+                        thisMessage[2], thisMessage[3], false, db);
+                db.getConversationById(convoId).addMessage(message);
+            }
+        } catch (UsernameAlreadyExistsException e) {
+            e.printStackTrace();
+        } catch (AccountNotExistException e) {
+            e.printStackTrace();
+        } catch (ConversationNotFoundException e) {
             e.printStackTrace();
         }
 
