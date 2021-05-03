@@ -18,6 +18,9 @@ import java.util.ArrayList;
  */
 
 public class Server extends Thread {
+
+    private static final int port = 4242;
+
     private static ArrayList<ServerProcess> serverList = new ArrayList<>();
 
     // This main class must be run to start the server.
@@ -26,10 +29,11 @@ public class Server extends Thread {
         // database reads in all stored Database information from past server runs.
         Database database = new Database(true);
         ArrayList<Account> activeUsers = new ArrayList<>();
-        // try method connects a new client, creates a new ServerProcess for that client, and adds that ServerProcess
+        // try method connects a new client, creates a new ServerProcess for that
+        // client, and adds that ServerProcess
         // to the active processes in serverList for later retrieval.
         try {
-            ServerSocket serverSocket = new ServerSocket(4242);
+            ServerSocket serverSocket = new ServerSocket(port);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("SERVER - Client Connected: " + clientSocket.getPort());

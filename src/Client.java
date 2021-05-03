@@ -20,6 +20,10 @@ import javax.swing.JOptionPane;
  */
 
 public class Client {
+
+    private static final String ip = "localhost";
+    private static final int port = 4242;
+
     private Socket socket;
 
     private Database db;
@@ -43,7 +47,7 @@ public class Client {
     }
 
     private void run() throws IOException {
-        socket = new Socket("localhost", 4242);
+        socket = new Socket(ip, port);
         System.out.println("Client - Connected to server");
 
         in = new Scanner(socket.getInputStream());

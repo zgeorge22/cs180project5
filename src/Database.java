@@ -11,7 +11,8 @@ import java.util.ArrayList;
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
  * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -121,8 +122,8 @@ public class Database {
                     }
                 }
 
-                Conversation conversation = new Conversation(conversationData.get(1), conversationParticipants,
-                        false, this);
+                Conversation conversation = new Conversation(conversationData.get(1), conversationParticipants, false,
+                        this);
 
                 for (int i = 3; i < conversationData.size(); i++) {
                     String[] thisMessage = conversationData.get(i).split(",", 4);
@@ -229,7 +230,7 @@ public class Database {
     // This method is used to change the username and password of an account, and
     // updates the text file.
     public void changeAccountDetailsInFile(String oldUsername, String oldPassword, String newUsername,
-                                           String newPassword) {
+            String newPassword) {
 
         if (newUsername == null) {
             newUsername = oldUsername;
@@ -374,8 +375,7 @@ public class Database {
     public void writeMessageToConversationFile(Conversation conversation, Message message)
             throws FileNotFoundException {
 
-        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt",
-                true);
+        FileOutputStream fileOutputStream = new FileOutputStream(conversation.getConversationId() + ".txt", true);
         PrintWriter conversationWriter = new PrintWriter(fileOutputStream);
 
         conversationWriter.println(message.toString());
@@ -462,7 +462,11 @@ public class Database {
             }
         }
 
-        toWrite = new StringBuilder(toWrite.substring(0, toWrite.length() - 1));
+        if (toWrite.length() > 0) {
+            toWrite = new StringBuilder(toWrite.substring(0, toWrite.length() - 1));
+        } else {
+            toWrite.append("null");
+        }
 
         FileOutputStream fileOutputStream;
 

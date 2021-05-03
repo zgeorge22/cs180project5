@@ -12,7 +12,8 @@ import java.awt.event.*;
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
  * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
@@ -39,7 +40,7 @@ public class LoginWindow extends JFrame {
 
         initializeComponents();
 
-        setSize(350, 300);
+        setSize(320, 180);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
