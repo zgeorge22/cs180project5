@@ -21,8 +21,6 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
 
-        client.username = "jim"; // Do we need this?
-
         try {
             client.run();
         } catch (IOException e) {
@@ -42,8 +40,6 @@ public class Client {
 
         serverMessageLoop: while (in.hasNextLine()) {
             String serverInput = in.nextLine();
-
-            // System.out.println(fullCommand);
 
             String command = serverInput;
             String details = "";
@@ -68,7 +64,7 @@ public class Client {
                         // reprompt user on login window
                         break;
                     default:
-                        System.out.println("ERROR - Unknown command: " + command);
+                        System.out.println("ERROR - Not Logged In - Unknown command: " + command);
                         break;
                 }
             } else {
@@ -103,7 +99,7 @@ public class Client {
                         System.out.println("failed"); // REMOVE?
                         break;
                     default:
-                        System.out.println("ERROR - Unknown command: " + command);
+                        System.out.println("ERROR - Logged In - Unknown command: " + command);
                         break;
                 }
             }
@@ -330,7 +326,7 @@ public class Client {
         try {
             Message message = db.getMessageById(messageID);
             message.editMessage(content); // update timestamp as well?
-            mw.updateMsgEntry(message);
+            // mw.updateMsgEntry(message);
 
             Conversation conversation = db.getConversationById(conversationID);
             mw.updateChatEntry(conversation);

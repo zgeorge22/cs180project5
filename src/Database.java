@@ -160,6 +160,7 @@ public class Database implements Serializable {
     // message being sought does not exist.
     public Message getMessageById(int id) throws MessageNotFoundException {
         for (Message message : messages) {
+            System.out.println(message.getId());
             if (id == message.getId()) {
                 return message;
             }
@@ -639,7 +640,7 @@ public class Database implements Serializable {
         }
 
         FileWriter fileWriter;
-        File csvFile = new File(conversationName + ".csv");
+        File csvFile = new File(conversationName + conversationID + ".csv");
 
         try {
             fileWriter = new FileWriter(csvFile);
