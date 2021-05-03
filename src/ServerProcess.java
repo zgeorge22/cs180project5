@@ -1,25 +1,30 @@
+package src;
+
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 
 /**
- * This class is a processing class that spawns a thread each time a user logs
- * in from their client. Then, this thread handles all server-side processing
- * related to that client.
+ * ServerProcess
  *
- * <p>
- * Purdue University -- CS18000 -- Spring 2021 -- Project 5
- * </p>
+ * The ServerProcess class handles all actions related to an individual client. Each ServerProcess corresponds to
+ * an individual user and ends once that user is logged off.
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
- *         Dorkin
- * @version May 3rd, 2021
+ * Past homework assignments
+ *
+ * @author Natalie Wu, Benjamin Davenport, Rishi Banerjee, Zach George
+ * @version Due 05/03/2021
+ *
  */
 
 public class ServerProcess extends Thread {
 
     private final Socket clientSocket;
     private OutputStream outputStream;
+    private String userID;
     private Account currentAccount;
     private Database database;
     private PrintWriter writer;
@@ -29,171 +34,168 @@ public class ServerProcess extends Thread {
         this.database = database;
     }
 
+    // Runs the needed commands to handle client requests
     public void run() {
         try {
             clientProcess();
-            clientSocket.close();
-            System.out.println("SERVER - Client Disconnected: " + clientSocket.getPort());
-        } catch (IOException | ConversationNotFoundException | MessageNotFoundException e) {
+        } catch (IOException | AccountNotExistException | UsernameAlreadyExistsException | ConversationNotFoundException
+                | MessageNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private void clientProcess() throws IOException, ConversationNotFoundException, MessageNotFoundException {
+    // clientProcess allows the user to log in or create an account before starting the messagingProcess method.
+    private void clientProcess() throws IOException, AccountNotExistException, UsernameAlreadyExistsException,
+            ConversationNotFoundException, MessageNotFoundException {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
-        writer = new PrintWriter(outputStream);
-
-        boolean loggedIn = false;
+        Boolean loggedIn = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        PrintWriter print = new PrintWriter(clientSocket.getOutputStream());
         ArrayList<Account> activeUsersList = ServerBackground.getActiveUsers();
 
-        loginLoop: do {
+        do {
             String commandString = (reader.readLine());
             String[] tokenLogin = commandString.split(" ");
             String cmdLogin = tokenLogin[0];
-
             switch (cmdLogin) {
-                case ("createAccount") -> {
+                case ("createAccount"):
                     String newUsername = tokenLogin[1];
                     String newPassword = tokenLogin[2];
-                    System.out
-                            .println("SERVER (" + clientSocket.getPort() + ") - Requested createAccount with username ["
-                                    + newUsername + "] and passowrd [" + newPassword + "]");
-                    try {
-                        currentAccount = new Account(newUsername, newPassword, database, true);
-                        activeUsersList.add(currentAccount);
-                        loggedIn = true;
-
-                        sendClient("createAccountSuccessful " + newUsername);
-                    } catch (UsernameAlreadyExistsException e) {
-                        sendClient("createAccountFailed");
-                    }
-                }
-                case ("loginAccount") -> {
+                    //TODO - fix if user already exists
+                    Account newAccount = new Account(newUsername, newPassword, database, true);
+                    currentAccount = newAccount;
+                    activeUsersList.add(newAccount);
+                    loggedIn = true;
+                    print.write("true");
+                    print.println();
+                    print.flush();
+                    break;
+                case ("loginAccount"):
                     String existingUsername = tokenLogin[1];
                     String existingPassword = tokenLogin[2];
-
-                    System.out
-                            .println("SERVER (" + clientSocket.getPort() + ") - Requested loginAccount with username ["
-                                    + existingUsername + "] and passowrd [" + existingPassword + "]");
-                    try {
-                        currentAccount = checkUserLogin(existingUsername, existingPassword);
-                        activeUsersList.add(currentAccount);
-
-                        loggedIn = true;
-
-                        sendClient("loginAccountSuccessful " + existingUsername);
-                    } catch (AccountNotExistException e) {
-                        sendClient("loginFailed");
-                    }
-                }
-                case ("cancelLogin") -> {
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Client cancelled login");
-                    break loginLoop;
-                }
-                default -> {
-                    System.out.println("ERROR - Unknown command: " + cmdLogin);
-                }
+                    Account exitingAccount = checkUserLogin(existingUsername, existingPassword);
+                    currentAccount = exitingAccount;
+                    activeUsersList.add(exitingAccount);
+                    loggedIn = true;
+                    print.write("true");
+                    print.println();
+                    print.flush();
+                    break;
             }
+        }while (!loggedIn);
 
-        } while (!loggedIn);
+
 
         if (loggedIn) {
             messagingProcess(activeUsersList);
         }
 
+        // Closing the clientSocket and writer will occur only once messagingProcess has ended.
+        clientSocket.close();
         writer.close();
+
     }
 
-    public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, ConversationNotFoundException {
+    // messagingProcess handles all client processes after logging in. This includes sending messages, creating or
+    // leaving conversations, editing and deleting messages, editing each user's account, and logging off.
+    public void messagingProcess(ArrayList<Account> activeUsersList) throws IOException, AccountNotExistException,
+            ConversationNotFoundException, MessageNotFoundException {
 
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
         boolean exit = false;
 
-        if (this.currentAccount.getConversationIds().size() != 0) {
-            dataDump();
-        } else
-            sendClient("prepareForDataDump 0 0 0");
+        // clientData database is a mini-Database that only contains the data associated with that user.
+        Database clientData = new Database(false);
+        for (int i = 0; i < database.getConversations().size(); i++) {
+            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
+                clientData.addToDatabase(database.getConversations().get(i));
+        }
 
+        // outputObjectStream sends the clientData Database to the client for their use.
+        ObjectOutputStream outputObjectStream = new ObjectOutputStream(this.outputStream);
+        outputObjectStream.flush();
+        outputObjectStream.writeObject(clientData);
+        outputObjectStream.flush();
+
+        // do-while loop will repeat until user logs off. This loop contains all needed commands and actions for
+        // interacting with the client.
         do {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream));
             PrintWriter pw = new PrintWriter(clientSocket.getOutputStream());
             String commandString = (bfr.readLine());
-
-            System.out.println("SERVER (" + clientSocket.getPort() + ") - " + commandString);
-
+            System.out.println(commandString);
             String[] token = commandString.split(" ");
             String cmd = token[0];
             ArrayList<ServerProcess> serverProcessList = Server.getServerList();
             switch (cmd) {
 
+                // case allows the user to change their password.
                 case ("editPassword"):
                     String editPassword = token[1];
                     currentAccount.changePassword(editPassword);
-
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received editPassword to ["
-                            + editPassword + "]");
                     break;
+
+                // case allows user to create a new conversation.
                 case ("createConvo"):
+                    send("succeeded",this.clientSocket);
                     String participantsString = token[1];
                     String[] participantsUsernameList = participantsString.split(",");
                     // create conversation
                     ArrayList<Account> newConvoAccountList = new ArrayList<>();
+                    for (int i = 0; i < participantsUsernameList.length; i++) {
+                        newConvoAccountList.add(database.getAccountByUsername(participantsUsernameList[i]));
+                    }
                     String placeHolder = commandString.substring(commandString.indexOf(" ") + 1);
                     String initialMsg = placeHolder.substring(placeHolder.indexOf(" ") + 1);
-                    try {
-                        for (String s : participantsUsernameList) {
-                            newConvoAccountList.add(database.getAccountByUsername(s));
-                        }
-                        String name = newConvoAccountList.size() > 2 ? "GC" : "DM";
-                        Conversation newConvo = new Conversation(name, newConvoAccountList, true, database);
-                        Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
-                        newConvo.addMessage(newMessage);
-                        int newConvoID = newConvo.getConversationId();
-
-                        for (Account account : newConvoAccountList) {
-                            for (Account value : activeUsersList) {
-                                if (account.getUsername().equals(value.getUsername())) {
-                                    for (ServerProcess serverProcess : serverProcessList) {
-                                        if (serverProcess.getCurrentAccount().getUsername()
-                                                .equals(account.getUsername())) {
-                                            sendOtherClient(
-                                                    String.format("addConvo %d %s", newConvoID, participantsString),
-                                                    serverProcess.getClientSocket());
-                                            sendOtherClient(
-                                                    ("addMsg " + newConvoID + " " + newMessage.getId() + " "
-                                                            + this.currentAccount.getUsername() + " "
-                                                            + newMessage.getTimestamp() + " " + initialMsg),
-                                                    serverProcess.getClientSocket());
-                                        }
+                    Conversation newConvo = new Conversation(null, newConvoAccountList,
+                            true, database);
+                    Message newMessage = new Message(this.currentAccount.getUsername(), initialMsg, database);
+                    newConvo.addMessage(newMessage);
+                  //  System.out.println(database.getConversationById(0).getMessages().get(0).getContent());
+                    int newConvoID = newConvo.getConversationId();
+                    // send intialMsg to users in newConvo
+                    //ArrayList<ServerProcess> serverProcessList = Server.getServerList();
+                    // for loops sends the new conversation and initial message to all online users included within the
+                    // conversation.
+                    for (int i = 0; i < newConvoAccountList.size(); i++) {
+                        for (int j = 0; j < activeUsersList.size(); j++) {
+                            if (newConvoAccountList.get(i).getUsername().equals(activeUsersList.get(j).getUsername())) {
+                                for (int k = 0; k < serverProcessList.size(); k++) {
+                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(
+                                            newConvoAccountList.get(i).getUsername())) {
+                                        send(String.format("addConvo %d %s", newConvoID, participantsString),
+                                                serverProcessList.get(k).getClientSocket());
+                                        send(("addMsg " + newConvoID + " " + newMessage.getId() + " " + this.currentAccount.getUsername() + " "
+                                                        + newMessage.getTimestamp() + " " + initialMsg),
+                                                serverProcessList.get(k).getClientSocket());
                                     }
-
                                 }
+
                             }
                         }
-                    } catch (AccountNotExistException e) {
-                        sendClient("failedCreateConvo");
                     }
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received createConvo for ["
-                            + participantsString + "] with initialMsg [" + initialMsg + "] from ["
-                            + currentAccount.getUsername() + "]");
+                    System.out.println("SERVER - Received createConvo for [" + participantsString + "] with initialMsg [" + initialMsg
+                            + "] from [" + currentAccount.getUsername() + "]");
                     break;
+
+                // case allows for users to leave a conversation that they are currently a part of.
                 case ("leaveConvo"):
                     try {
                         int leaveConversationID = Integer.parseInt(token[1]);
                         Conversation conversation = database.getConversationById(leaveConversationID);
+                        // for loops send all online users within the conversation information that the specific user
+                        // left the conversation.
                         for (int i = 0; i < conversation.getParticipants().size(); i++) {
-                            for (Account account : activeUsersList) {
-                                if (conversation.getParticipants().get(i).getUsername().equals(account.getUsername())) {
-                                    for (ServerProcess serverProcess : serverProcessList) {
-                                        if (serverProcess.getCurrentAccount().getUsername()
-                                                .equals(conversation.getParticipants().get(i).getUsername())) {
-                                            sendOtherClient(
-                                                    "removeUser " + conversation.getConversationId() + " "
-                                                            + this.currentAccount.getUsername(),
-                                                    serverProcess.getClientSocket());
+                            for (int j = 0; j < activeUsersList.size(); j++) {
+                                if (conversation.getParticipants().get(i).getUsername().equals(activeUsersList.get(j).getUsername())) {
+                                    for (int k = 0; k < serverProcessList.size(); k++) {
+                                        if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(
+                                                conversation.getParticipants().get(i).getUsername())) {
+                                            send("removeUser " + conversation.getConversationId() + " "
+                                                    + this.currentAccount.getUsername(),
+                                                    serverProcessList.get(k).getClientSocket());
                                         }
                                     }
 
@@ -202,228 +204,141 @@ public class ServerProcess extends Thread {
                         }
                         conversation.removeParticipant(this.currentAccount.getUsername());
 
-                        System.out.println("SERVER (" + clientSocket.getPort()
-                                + ") - Received leaveConvo from conversationID [" + leaveConversationID + "]");
-
                         break;
                     } catch (ConversationNotFoundException e) {
                         e.printStackTrace();
-                    } catch (AccountNotExistException e) {
-                        e.printStackTrace();
                     }
-                case ("createMsg"):
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received createMsg...");
 
+                // case allows for a user to create and send a new message.
+                case ("createMsg"):
+                    //Changed "sendMsg" to "createMsg"
                     int convoID = Integer.parseInt(token[1]);
                     String placeholder = commandString.substring(commandString.indexOf(" ") + 1);
                     String newMessageContent = placeholder.substring(placeholder.indexOf(" ") + 1);
                     Message tempMessage = new Message(this.currentAccount.getUsername(), newMessageContent, database);
                     database.getConversationById(convoID).addMessage(tempMessage);
+                    // for loops notify all online users within the conversation that a new message was sent.
                     for (int i = 0; i < database.getConversationById(convoID).getParticipants().size(); i++) {
-                        for (Account account : activeUsersList) {
-                            if (database.getConversationById(convoID).getParticipants().get(i).getUsername()
-                                    .equals(account.getUsername())) {
-                                for (ServerProcess serverProcess : serverProcessList) {
-                                    if (serverProcess.getCurrentAccount().getUsername().equals(database
+                        for (int j = 0; j < activeUsersList.size(); j++) {
+                            if (database.getConversationById(convoID).getParticipants().get(i).getUsername().equals
+                                    (activeUsersList.get(j).getUsername())) {
+                                for (int k = 0; k < serverProcessList.size(); k++) {
+                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
                                             .getConversationById(convoID).getParticipants().get(i).getUsername())) {
-                                        sendOtherClient(
-                                                "addMsg " + convoID + " " + tempMessage.getId() + " "
-                                                        + this.currentAccount.getUsername() + " "
-                                                        + tempMessage.getTimestamp() + " " + newMessageContent,
-                                                serverProcess.getClientSocket());
+                                        send("addMsg " + convoID + " " + tempMessage.getId() + " " +
+                                                this.currentAccount.getUsername() + " " + tempMessage.getTimestamp() + " " +
+                                                newMessageContent, serverProcessList.get(k).getClientSocket());
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-
                     break;
-                case ("editMsg"):
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received editMsg...");
 
-                    // SERVER HAS TO VALIDATE THAT USER HAS THE AUTHORITY (CLIENT ALREADY DOES THIS
-                    // BUT WE MAY NEED SERVER TO DO IT)
+                // case allows a user to edit a message that they sent
+                case ("editMsg"):
+                    //SERVER HAS TO VALIDATE THAT USER HAS THE AUTHORITY (CLIENT ALREADY DOES THIS BUT WE MAY NEED SERVER TO DO IT)
                     int convoIdentifier = Integer.parseInt(token[1]);
                     int initialID = Integer.parseInt(token[2]);
                     String placeH = commandString.substring(commandString.indexOf(" ") + 1);
                     String placeHo = placeH.substring(placeH.indexOf(" ") + 1);
                     String newMessageEdit = placeHo.substring(placeHo.indexOf(" ") + 1);
-                    try {
-                        Message messageToEdit = database.getMessageById(initialID);
-                        messageToEdit.editMessage(newMessageEdit);
-                        for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants()
-                                .size(); i++) {
-                            for (Account account : activeUsersList) {
-                                if (database.getConversationById(convoIdentifier).getParticipants().get(i).getUsername()
-                                        .equals(account.getUsername())) {
-                                    for (ServerProcess serverProcess : serverProcessList) {
-                                        if (serverProcess.getCurrentAccount().getUsername()
-                                                .equals(database.getConversationById(convoIdentifier).getParticipants()
-                                                        .get(i).getUsername()))
-                                            sendOtherClient(
-                                                    "editMsg " + convoIdentifier + " " + initialID + " "
-                                                            + currentAccount.getUsername() + " "
-                                                            + messageToEdit.getTimestamp() + " " + newMessageEdit,
-                                                    serverProcess.getClientSocket());
+                    Message messageToEdit = database.getMessageById(initialID);
+                    messageToEdit.editMessage(newMessageEdit);
+                    for (int i = 0; i < database.getConversationById(convoIdentifier).getParticipants().size(); i++) {
+                        for (int j = 0; j < activeUsersList.size(); j++) {
+                            if (database.getConversationById(convoIdentifier).getParticipants().get(i).getUsername()
+                                    .equals(activeUsersList.get(j).getUsername())) {
+                                for (int k = 0; k < serverProcessList.size(); k++) {
+                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
+                                            .getConversationById(convoIdentifier).getParticipants().get(i)
+                                            .getUsername()))
+                                        send("editMsg " + convoIdentifier + " " + initialID + " " + this.userID
+                                                        + " " + messageToEdit.getTimestamp() + " " + newMessageEdit,
+                                                serverProcessList.get(k).getClientSocket());
 
-                                    }
                                 }
                             }
                         }
-                    } catch (MessageNotFoundException e) {
-                        e.printStackTrace();
                     }
                     break;
-                case ("deleteMsg"):
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received deleteMsg...");
 
+                // case allows a user to delete a message that they sent
+                case ("deleteMsg"):
                     int convoIdent = Integer.parseInt(token[1]);
                     int messageIdentifier = Integer.parseInt(token[2]);
-                    try {
-                        database.getMessageById(messageIdentifier).deleteMessage();
-                        for (int i = 0; i < database.getConversationById(convoIdent).getParticipants().size(); i++) {
-                            for (Account account : activeUsersList) {
-                                if (database.getConversationById(convoIdent).getParticipants().get(i).getUsername()
-                                        .equals(account.getUsername())) {
-                                    for (ServerProcess serverProcess : serverProcessList) {
-                                        if (serverProcess.getCurrentAccount().getUsername()
-                                                .equals(database.getConversationById(convoIdent).getParticipants()
-                                                        .get(i).getUsername()))
-                                            sendOtherClient("removeMsg " + convoIdent + " " + messageIdentifier,
-                                                    serverProcess.getClientSocket());
-                                    }
+                    database.getMessageById(messageIdentifier).deleteMessage();
+                    for (int i = 0; i < database.getConversationById(convoIdent).getParticipants().size(); i++) {
+                        for (int j = 0; j < activeUsersList.size(); j++) {
+                            if (database.getConversationById(convoIdent).getParticipants().get(i).getUsername()
+                                    .equals(activeUsersList.get(j).getUsername())) {
+                                for (int k = 0; k < serverProcessList.size(); k++) {
+                                    if (serverProcessList.get(k).getCurrentAccount().getUsername().equals(database
+                                            .getConversationById(convoIdent).getParticipants().get(i).getUsername()))
+                                        send("removeMsg " + convoIdent + " " + messageIdentifier,
+                                                serverProcessList.get(k).getClientSocket());
                                 }
                             }
                         }
-                    } catch (MessageNotFoundException e) {
-                        e.printStackTrace();
                     }
                     break;
-                case ("logoutAccount"):
-                    System.out.println("SERVER (" + clientSocket.getPort() + ") - Received logoutAccount");
 
+                // case allows a user to logout.
+                case ("logoutAccount"):
                     ServerBackground.activeUsers.remove(this.currentAccount);
                     pw.write("logoutTrue");
                     pw.println();
                     pw.flush();
                     exit = true;
                     break;
-                default:
-                    System.out.println("ERROR - Unknow command: " + cmd);
+
+                // case checks that the client received the client database.
+                case ("Database Received Successfully"):
+                    System.out.println("Database Sent SuccessFully");
+                    pw.write("");
+                    pw.println();
+                    pw.flush();
+                    break;
             }
-        } while (!exit);
+        }while(!exit);
     }
 
-    private void dataDump() {
-
-        Database clientData = new Database(false);
-        for (int i = 0; i < database.getConversations().size(); i++) {
-            if (database.getConversations().get(i).getParticipants().contains(this.currentAccount))
-                clientData.addToDatabase(database.getConversations().get(i));
-        }
-
-        ArrayList<String> accountUsernameStrings = new ArrayList<>();
-        for (int i = 0; i < clientData.getConversations().size(); i++) {
-            for (int j = 0; j < clientData.getConversations().get(i).getParticipants().size(); j++) {
-                accountUsernameStrings.add(clientData.getConversations().get(i).getParticipants().get(j).getUsername());
-            }
-        }
-        ArrayList<String> finalAccountUsernameStrings = new ArrayList<>();
-        finalAccountUsernameStrings.add(accountUsernameStrings.get(0));
-
-        for (String accountUsernameString : accountUsernameStrings) {
-            for (int j = 0; j < finalAccountUsernameStrings.size(); j++) {
-                if (!finalAccountUsernameStrings.contains(accountUsernameString)) {
-                    finalAccountUsernameStrings.add(accountUsernameString);
-                }
-            }
-        }
-
-        ArrayList<String> conversationStrings = new ArrayList<>();
-        for (int i = 0; i < clientData.getConversations().size(); i++) {
-            String conversationString = Integer.toString(clientData.getConversations().get(i).getConversationId());
-            conversationString = conversationString + " ";
-
-            String thisConversationParticipants = "";
-            for (int j = 0; j < clientData.getConversations().get(i).getParticipants().size(); j++) {
-                thisConversationParticipants = thisConversationParticipants
-                        + clientData.getConversations().get(i).getParticipants().get(j).getUsername() + ",";
-            }
-            thisConversationParticipants = thisConversationParticipants.substring(0,
-                    thisConversationParticipants.length() - 1);
-
-            conversationString = conversationString + thisConversationParticipants;
-
-            conversationStrings.add(conversationString);
-        }
-
-        ArrayList<String> messageStrings = new ArrayList<>();
-        for (int i = 0; i < clientData.getConversations().size(); i++) {
-            for (int j = 0; j < clientData.getConversations().get(i).getMessages().size(); j++) {
-                String messageString = clientData.getConversations().get(i).getConversationId() + ",";
-                messageString = messageString + clientData.getConversations().get(i).getMessages().get(j).toString();
-                messageStrings.add(messageString);
-            }
-        }
-
-        int numAccsToSend = finalAccountUsernameStrings.size();
-        int numConvosToSend = conversationStrings.size();
-        int numMsgsToSend = messageStrings.size();
-
-        sendClient("prepareForDataDump " + numAccsToSend + " " + numConvosToSend + " " + numMsgsToSend);
-
-        for (String finalAccountUsernameString : finalAccountUsernameStrings) {
-            sendClient(finalAccountUsernameString);
-        }
-        for (String conversationString : conversationStrings) {
-            sendClient(conversationString);
-        }
-        for (String messageString : messageStrings) {
-            sendClient(messageString);
-        }
-    }
-
+    // checkUserLogin makes sure that a user's username and password are correct
     public Account checkUserLogin(String username, String password) throws AccountNotExistException {
 
-        ArrayList<Account> accounts = database.getAccounts();
+        ArrayList<Account> userList = database.getAccounts();
+        ArrayList<String> databaseUsernames = new ArrayList<>();
+        ArrayList<String> databasePasswords = new ArrayList<>();
 
-        for (Account account : accounts) {
-            if (account.getUsername().equals(username)) {
-                if (account.getPassword().equals(password)) {
-                    return account;
-                }
-            }
+        for (int i = 0; i < database.getAccounts().size(); i++) {
+            databaseUsernames.add(database.getAccounts().get(i).getUsername());
+            databasePasswords.add(database.getAccounts().get(i).getPassword());
         }
-        throw new AccountNotExistException();
+
+        if (databaseUsernames.contains(username) && databasePasswords.contains(password) //Final login
+                && (databaseUsernames.indexOf(username) == databasePasswords.indexOf(password))) {
+            return (database.getAccountByUsername(username));
+        } else {
+            throw new AccountNotExistException();
+        }
+
     }
 
-    public Account getAccount() {
-        return currentAccount;
-    }
-
-    public void sendClient(String message) {
+    // send allows for the sending of a message String to a specific client.
+    public void send(String message, Socket clientSocket) throws IOException {
+        OutputStream outputStreamSend = clientSocket.getOutputStream();
+        writer = new PrintWriter(outputStreamSend);
         writer.write(message);
         writer.println();
         writer.flush();
     }
 
-    public void sendOtherClient(String message, Socket clientSocket) {
-        try {
-            OutputStream outputStreamSend = clientSocket.getOutputStream();
-            PrintWriter sendWriter = new PrintWriter(outputStreamSend);
-
-            sendWriter.write(message);
-            sendWriter.println();
-            sendWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    // getClientSocket returns the client socket of a specific user.
     public Socket getClientSocket() {
         return clientSocket;
     }
 
+    // getCurrentAccount returns the active account within a specific ServerProcess.
     public Account getCurrentAccount() {
         return currentAccount;
     }
