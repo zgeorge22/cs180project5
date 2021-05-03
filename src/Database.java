@@ -173,6 +173,7 @@ public class Database {
     public Message getMessageById(int id) throws MessageNotFoundException {
         for (Message message : messages) {
             if (id == message.getId()) {
+                // System.out.println(id + " ? " + message.toString());
                 return message;
             }
         }
