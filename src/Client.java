@@ -6,26 +6,22 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
 public class Client {
-    private MainWindow mw;
+    private Socket socket;
+
     private Database db;
-    private String username;
+    private LoginWindow lw;
+    private MainWindow mw;
 
     private Scanner in;
     private PrintWriter out;
 
-
-    public Client() {
-        db = new Database(false);
-
-        // Login stuff
-    }
+    private String username;
 
     public static void main(String[] args) {
-       Client client = new Client();
+        Client client = new Client();
 
-       client.username = "jim"; //Do we need this?
+        client.username = "jim"; // Do we need this?
 
         try {
             client.run();
@@ -33,42 +29,54 @@ public class Client {
             e.printStackTrace();
         }
 
-
     }
 
     private void run() throws IOException {
-        Socket socket = new Socket("localhost", 4242);
+        socket = new Socket("localhost", 4242);
+        System.out.println("Client - Connected to server");
+
         in = new Scanner(socket.getInputStream());
         out = new PrintWriter(socket.getOutputStream(), true);
 
-        login();
+        lw = new LoginWindow(this);
 
-        ObjectInputStream ois = null;
-        ois = new ObjectInputStream(socket.getInputStream());
-        try {
-            db = (Database) ois.readObject();
-            //ois.close();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        serverMessageLoop: while (in.hasNextLine()) {
+            String serverInput = in.nextLine();
 
-        System.out.println("Database Received Successfully");
-        sendServer("Database Received Successfully");
+            // System.out.println(fullCommand);
 
-        mw = new MainWindow(this);
-
-        clientMessageLoop: while (in.hasNextLine()) {
-            String fullCommand = in.nextLine();
-            System.out.println(fullCommand);
-            String[] token = fullCommand.split(" ");
-            String inputcmd = token[0];
+            String command = serverInput;
             String details = "";
-            if (token.length > 1) {
-                details = fullCommand.substring(fullCommand.indexOf(" ") + 1);
+            if (serverInput.indexOf(" ") != -1) {
+                command = serverInput.substring(0, serverInput.indexOf(" "));
+                details = serverInput.substring(serverInput.indexOf(" ") + 1);
             }
 
-            if (username != null) {
-                switch (inputcmd) {
+            if (username == null) {
+                // User not logged in
+                switch (command) {
+                    case ("createAccountSuccessful"):
+                        receivedSuccessfulLogin(details);
+                        break;
+                    case ("createAccountFailed"):
+                        // reprompt user on login window
+                        break;
+                    case ("loginAccountSuccessful"):
+                        receivedSuccessfulLogin(details);
+                        break;
+                    case ("loginFailed"):
+                        // reprompt user on login window
+                        break;
+                    default:
+                        System.out.println("ERROR - Unknown command: " + command);
+                        break;
+                }
+            } else {
+                // User logged in
+                switch (command) {
+                    case ("prepareForDataDump"):
+                        receivedPrepareForDataDump();
+                        break;
                     case ("addConvo"):
                         receivedAddConvo(details);
                         break;
@@ -87,48 +95,21 @@ public class Client {
                     case ("logoutTrue"):
                         mw.dispose();
                         username = null;
-                        break clientMessageLoop;
+                        break serverMessageLoop;
                     case ("succeeded"):
-                        System.out.println("succeeded");
+                        System.out.println("succeeded"); // REMOVE?
                         break;
                     case ("failed"):
-                        System.out.println("failed");
+                        System.out.println("failed"); // REMOVE?
+                        break;
+                    default:
+                        System.out.println("ERROR - Unknown command: " + command);
                         break;
                 }
             }
         }
-    }
 
-    private void login() {
-        String confirm;
-        do {
-            System.out.println("Enter loginAccount (0) or createAccount (1)"); //Testing Input
-            Scanner scanner = new Scanner(System.in);
-            String loginChoice = scanner.nextLine();
-            String choice = null;
-            if (loginChoice.equals("0"))
-                choice = "loginAccount";
-            else if (loginChoice.equals("1"))
-                choice = "createAccount";
-            System.out.println("Username: ");
-            username = scanner.nextLine();
-            System.out.println("Password: ");
-            String password = scanner.nextLine();
-
-            String login = getLogin(choice, username, password); //GUI connection
-            out.write(login);
-            out.println();
-            out.flush();
-
-            confirm = in.nextLine();
-
-        } while(confirm.equals("false"));
-
-    }
-
-    private static String getLogin(String choice, String username, String password) {
-        String loginInformation = choice + " " + username + " " + password;
-        return loginInformation;
+        System.out.println("Client - Disconnected from server");
     }
 
     public boolean sendServer(String command) {
@@ -136,17 +117,25 @@ public class Client {
         out.println();
         out.flush();
 
-//        String response = "RESPONSE";
-//        System.out.println(response);
-//        if (in.hasNextLine()) {
-//            response = in.nextLine();
-//            System.out.println(response);
-//            if (response.equals("succeeded")) {
-                return true;
-//            }
-//        }
+        return true;
+    }
 
-//        return false;
+    // ===========================================================================
+    // ----------------------- Request commands TO server ------------------------
+    // ===========================================================================
+
+    public boolean requestLoginAccount(String username, String password) {
+        System.out.println(
+                "CLIENT - Requested loginAccount with username [" + username + "] and passowrd [" + password + "]");
+
+        return sendServer("loginAccount " + username + " " + password);
+    }
+
+    public boolean requestCreateAccount(String username, String password) {
+        System.out.println(
+                "CLIENT - Requested createAccount with username [" + username + "] and passowrd [" + password + "]");
+
+        return sendServer("createAccount " + username + " " + password);
     }
 
     public boolean requestEditPassword(String password) {
@@ -167,8 +156,8 @@ public class Client {
     }
 
     public boolean requestLeaveConvo(Conversation conversation) {
-        System.out.println("CLIENT - Requested leaveConvo for conversationID ["
-                + conversation.getConversationId() + "]");
+        System.out
+                .println("CLIENT - Requested leaveConvo for conversationID [" + conversation.getConversationId() + "]");
 
         return sendServer("leaveConvo " + conversation.getConversationId() + " " + username);
     }
@@ -184,8 +173,7 @@ public class Client {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
 
-        return sendServer("editMsg " + conversation.getConversationId() + " "
-                + message.getId() + " " + content);
+        return sendServer("editMsg " + conversation.getConversationId() + " " + message.getId() + " " + content);
     }
 
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
@@ -197,6 +185,35 @@ public class Client {
 
     public boolean requestLogoutAccount() {
         return sendServer("logoutAccount");
+    }
+
+    // ===========================================================================
+    // ---------------------- Recieved commands FROM server ----------------------
+    // ===========================================================================
+
+    public void receivedPrepareForDataDump() throws IOException {
+
+        System.out.println("CLIENT - Received prepareForDataDump");
+
+        // Get database data dump from server
+        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+        try {
+            db = (Database) ois.readObject();
+            // ois.close();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        // Start main window GUI
+        mw = new MainWindow(this);
+        mw.setChatList(db.getConversations());
+    }
+
+    public void receivedSuccessfulLogin(String details) {
+        username = details;
+        lw.dispose();
+
+        System.out.println("CLIENT - Received successfulLogin for username [" + username + "]");
     }
 
     public void receivedAddConvo(String details) {
