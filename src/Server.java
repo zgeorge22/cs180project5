@@ -3,18 +3,21 @@ import java.net.*;
 import java.util.ArrayList;
 
 /**
- * This is the main server class. When it is run, the server starts up and is ready to allow clients to connect. The
- * server handles all data storage and receives messages from clients and sends it to the respective recipients of
+ * This is the main server class. When it is run, the server starts up and is
+ * ready to allow clients to connect. The server handles all data storage and
+ * receives messages from clients and sends it to the respective recipients of
  * those messages.
  *
- * <p>Purdue University -- CS18000 -- Spring 2021 -- Project 5</p>
+ * <p>
+ * Purdue University -- CS18000 -- Spring 2021 -- Project 5
+ * </p>
  *
- * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack Dorkin
+ * @author Rishi Banerjee, Zach George, Natalie Wu, Benjamin Davenport, Jack
+ *         Dorkin
  * @version May 3rd, 2021
  */
 
 public class Server extends Thread {
-    private int serverPort;
     private static ArrayList<ServerProcess> serverList = new ArrayList<>();
 
     // This main class must be run to start the server.

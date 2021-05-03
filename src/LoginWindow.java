@@ -2,7 +2,11 @@ import javax.swing.*;
 import java.awt.event.*;
 
 /**
- * This class contains the GUI for the Login Window.
+ * This class contains the GUI for the Login Window. This class is designed to
+ * present a simple login system for a user that wants to access our messaging
+ * program. This GUI offers the user the ability to log in with an existing
+ * account or create a new one, and will present an error message if the
+ * potential credentials do not meet the required criteria
  *
  * <p>
  * Purdue University -- CS18000 -- Spring 2021 -- Project 5
@@ -16,6 +20,8 @@ public class LoginWindow extends JFrame {
 
     private Client client;
 
+    // All of the labels, text boxes, and buttons that will be used in the
+    // GUI for logging in and the one for account creation
     private JLabel usernameLabel;
     private JTextField usernameText;
     private JLabel passwordLabel;
@@ -23,6 +29,9 @@ public class LoginWindow extends JFrame {
     private JButton loginButton;
     private JButton signUpButton;
 
+    // Creates a new GUI upon being prompted with the "Sign Up" button
+    // on the initial login GUI. Prompts error popups if user uses incorrect
+    // criteria for username and/or password.
     public LoginWindow(Client client) {
         super("Chat Login");
 
@@ -45,6 +54,8 @@ public class LoginWindow extends JFrame {
         setVisible(true);
     }
 
+    // Sets up all GUI compoentns in the desired layout. Initializes any event
+    // listeners for buttons or key strokes.
     private void initializeComponents() {
         JPanel panel = new JPanel();
         panel.setLayout(null);

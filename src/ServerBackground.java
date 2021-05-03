@@ -14,6 +14,7 @@ public class ServerBackground {
     // activeUsers ArrayList keeps track of which users are online to know who can receive live messages.
     public static ArrayList<Account> activeUsers = new ArrayList<>();
 
+
     // getActiveUsers returns all users who are active on the server.
     public static ArrayList<Account> getActiveUsers() {
         return activeUsers;

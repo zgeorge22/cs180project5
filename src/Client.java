@@ -50,6 +50,8 @@ public class Client {
 
         lw = new LoginWindow(this);
 
+
+        // Waits for messages from the server
         serverMessageLoop:
         while (in.hasNextLine()) {
             String serverInput = in.nextLine();
@@ -123,6 +125,7 @@ public class Client {
         System.out.println("Client - Disconnected from server");
     }
 
+    // Sends a message to the server using proper output stream
     public boolean sendServer(String command) {
         out.write(command);
         out.println();
@@ -135,6 +138,9 @@ public class Client {
     // ----------------------- Request commands TO server ------------------------
     // ===========================================================================
 
+    // Send "loginAccount [username] [password]" to server
+    // Used when attempting to log in
+    // - called by MainWindow GUI (login button)
     public boolean requestLoginAccount(String username, String password) {
         System.out.println(
                 "CLIENT - Requested loginAccount with username [" + username + "] and passowrd [" + password + "]");
@@ -142,6 +148,9 @@ public class Client {
         return sendServer("loginAccount " + username + " " + password);
     }
 
+    // Send "createAccount [username] [password]" to server
+    // Used when attempting to create an account
+    // - called by MainWindow GUI (create account button)
     public boolean requestCreateAccount(String username, String password) {
         System.out.println(
                 "CLIENT - Requested createAccount with username [" + username + "] and passowrd [" + password + "]");
@@ -149,12 +158,18 @@ public class Client {
         return sendServer("createAccount " + username + " " + password);
     }
 
+    // Send "editPassword [password]" to server
+    // Used when attempting to edit account password
+    // - called by MainWindow GUI (edit password popup)
     public boolean requestEditPassword(String password) {
         System.out.println("CLIENT - Requested editPassword to [" + password + "]");
 
         return sendServer("editPassword " + password);
     }
 
+    // Send "createConvo [participantsString] [initialMsg]" to server
+    // Used when attempting to create a new account
+    // - called by MainWindow GUI (create chat button)
     public boolean requestCreateConvo(String participantsString, String initialMsg) {
         participantsString = participantsString.replaceAll("\\s", "");
         // VALIDATE characters better!
@@ -166,6 +181,9 @@ public class Client {
         return sendServer("createConvo " + participantsString + " " + initialMsg);
     }
 
+    // Send "leaveConvo [conversationID]" to server
+    // Used when attempting to leave a conversation
+    // - called by MainWindow GUI (leave chat button)
     public boolean requestLeaveConvo(Conversation conversation) {
         System.out
                 .println("CLIENT - Requested leaveConvo for conversationID [" + conversation.getConversationId() + "]");
@@ -173,6 +191,9 @@ public class Client {
         return sendServer("leaveConvo " + conversation.getConversationId() + " " + username);
     }
 
+    // Send "createMsg [conversationID] [content]" to server
+    // Used when attempting to send a message
+    // - called by MainWindow GUI ("send" action in attemptMessageAction() method)
     public boolean requestCreateMsg(Conversation conversation, String content) {
         System.out.println("CLIENT - Requested createMsg for conversationID [" + conversation.getConversationId()
                 + "] with content [" + content + "]");
@@ -180,6 +201,9 @@ public class Client {
         return sendServer("createMsg " + conversation.getConversationId() + " " + content);
     }
 
+    // Send "editMsg [conversationID] [messageID] [content]" to server
+    // Used when attempting to edit a message
+    // - called by MainWindow GUI ("edit" action in attemptMessageAction() method)
     public boolean requestEditMsg(Conversation conversation, Message message, String content) {
         System.out.println("CLIENT - Requested editMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "] with content [" + content + "]");
@@ -188,6 +212,9 @@ public class Client {
                 content);
     }
 
+    // Send "deleteMsg [conversationID] [messageID]" to server
+    // Used when attempting to delete a message
+    // - called by MainWindow GUI ("delete" action in attemptMessageAction() method)
     public boolean requestDeleteMsg(Conversation conversation, Message message) {
         System.out.println("CLIENT - Requested deleteMsg for conversationID [" + conversation.getConversationId()
                 + "] and messageID [" + message.getId() + "]");
@@ -195,10 +222,14 @@ public class Client {
         return sendServer("deleteMsg " + conversation.getConversationId() + " " + message.getId());
     }
 
+    // Send "cancelLogin" to server
+    // Used when user closes login window before loggin in
     public boolean requestCancelLogin() {
         return sendServer("cancelLogin");
     }
 
+    // Send "logoutAccount" to server
+    // Used when user closes main window or clicks sign out
     public boolean requestLogoutAccount() {
         return sendServer("logoutAccount");
     }
@@ -207,6 +238,9 @@ public class Client {
     // ---------------------- Recieved commands FROM server ----------------------
     // ===========================================================================
 
+    // Process "createAccountSuccessful" or "loginAccountSuccessful" server command
+    // Command details: "[username]"
+    // Used when server validates login/create account request
     public void receivedSuccessfulLogin(String details) {
         username = details;
         lw.dispose();
@@ -214,8 +248,11 @@ public class Client {
         System.out.println("CLIENT - Received successfulLogin for username [" + username + "]");
     }
 
+    // Process "prepareForDataDump" server command
+    // Command details: "[numAccounts] [numConversations] [numMessages]"
+    // Used when server sends relevant database info to client after login
+    // Starts up the main window GUI after database is initialized
     public void receivedPrepareForDataDump(String details) {
-
         String placeholder = details;
         int numAccsSent = Integer.parseInt(placeholder.substring(0, placeholder.indexOf(" ")));
         placeholder = placeholder.substring(placeholder.indexOf(" ") + 1);
@@ -231,7 +268,7 @@ public class Client {
         try {
             for (int i = 0; i < numAccsSent; i++) {
                 String accountDetails = in.nextLine();
-                Account account = new Account(accountDetails, "", db, false);
+                new Account(accountDetails, "", db, false);
             }
             for (int i = 0; i < numConvosSent; i++) {
                 String convoDetails = in.nextLine();
@@ -243,7 +280,7 @@ public class Client {
                     convoParticipants.add(db.getAccountByUsername(s));
                 }
                 String name = convoParticipants.size() > 2 ? "GC" : "DM";
-                Conversation thisConversation = new Conversation(convoId, name, convoParticipants, db);
+                new Conversation(convoId, name, convoParticipants, db);
             }
 
             for (int i = 0; i < numMsgsSent; i++) {
@@ -269,6 +306,9 @@ public class Client {
         mw.setChatList(db.getConversations());
     }
 
+    // Process "addConvo " server command
+    // Command details: "[conversationID] [participantsString]"
+    // Used when server validates a create conversation request
     public void receivedAddConvo(String details) {
         String placeholder = details;
 
@@ -305,6 +345,9 @@ public class Client {
         }
     }
 
+    // Process "removeUser" server command
+    // Command details: "[conversationID] [username]"
+    // Used when server validates a leave conversation request
     public void receivedRemoveUser(String details) {
         // Parse message details
         String placeholder = details;
@@ -320,6 +363,7 @@ public class Client {
             Conversation conversation = db.getConversationById(conversationID);
             conversation.removeParticipant(user);
 
+            // Update list differently depending on if current user was the one who left
             if (user.equals(username)) {
                 mw.removeChatEntry(conversation);
             } else {
@@ -332,6 +376,10 @@ public class Client {
         }
     }
 
+    // Process "addMsg" server command
+    // Command details: "[conversationID] [messageID] [sender] [timestamp]
+    // [initialMsg]"
+    // Used when server validates a create message request
     public void receivedAddMsg(String details) {
         // Parse message details
         String placeholder = details;
@@ -368,6 +416,10 @@ public class Client {
         }
     }
 
+    // Process "editMsg" server command
+    // Command details: "[conversationID] [messageID] [sender] [timestamp]
+    // [content]"
+    // Used when server validates an edit message request
     public void receivedEditMsg(String details) {
         // Parse message details
         String placeholder = details;
@@ -399,6 +451,9 @@ public class Client {
         }
     }
 
+    // Process "removeMsg" server command
+    // Command details: "[conversationID] [messageID]
+    // Used when server validates a delete message request
     public void receivedRemoveMsg(String details) {
         // Parse message details
         String placeholder = details;
@@ -424,26 +479,32 @@ public class Client {
         }
     }
 
+    // Getter for main window
     public MainWindow getMainWindow() {
         return mw;
     }
 
+    // Setter for main window
     public void setMainWindow(MainWindow mw) {
         this.mw = mw;
     }
 
+    // Getter for database
     public Database getDatabase() {
         return db;
     }
 
+    // Setter for database
     public void setDatabase(Database db) {
         this.db = db;
     }
 
+    // Getter for username
     public String getUsername() {
         return username;
     }
 
+    // Checks username string format (null, empty, has spaces, alphanumeric)
     public static boolean validUsername(String username) {
         if (username == null) {
             return false;
@@ -465,6 +526,7 @@ public class Client {
         return true;
     }
 
+    // Checks password string format (null, empty, has spaces, alphanumeric)
     public static boolean validPassword(String password) {
         if (password == null) {
             return false;
